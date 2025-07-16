@@ -1,5 +1,27 @@
 
+<!--- 
+================================================================================
+DocketWatch - Main Cases Dashboard
+================================================================================
+This page provides the main interface for managing court cases within the 
+DocketWatch system. It allows users to:
+
+- View and filter cases by status (Review, Tracked, Removed)
+- Search cases by various criteria (tool, owner, state, county, courthouse, celebrity)
+- Perform bulk operations (track, remove, or set to review)
+- Add new cases manually
+- Configure column visibility
+- Search document OCR content
+
+The page uses DataTables for the main cases grid with server-side filtering
+and AJAX loading for optimal performance.
+================================================================================
+--->
+
+<!--- Get current authenticated user --->
 <cfset currentuser = getAuthUser()>
+
+<!--- JavaScript configuration for DataTables column definitions --->
 <script>
 const allColumnKeys = [
     { key: "tool_name", label: "Source" },
@@ -16,28 +38,29 @@ const allColumnKeys = [
     { key: "case_url", label: "Case Link" }
 ];
 </script>
+
+<!--- Set case status from URL parameter --->
 <cfset caseStatus = url.status ?: "Review">
 
+<!--- Query to get user's column visibility preferences --->
 <cfquery name="columnDefaults" datasource="Reach">
-SELECT column_key, is_visible
-FROM docketwatch.dbo.column_visibility_defaults
-WHERE (username = <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar"> OR username IS NULL)
-AND status = <cfqueryparam value="#caseStatus#" cfsqltype="cf_sql_varchar">
+    SELECT column_key, is_visible
+    FROM docketwatch.dbo.column_visibility_defaults
+    WHERE (username = <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar"> OR username IS NULL)
+    AND status = <cfqueryparam value="#caseStatus#" cfsqltype="cf_sql_varchar">
 </cfquery>
 
+<!--- Build visibility map for JavaScript consumption --->
 <cfset visibilityMap = {}>
-
 <cfloop query="columnDefaults">
     <cfset visibilityMap[column_key] = is_visible>
 </cfloop>
 
-
-
-<!--- Check for URL parameter --->
+<!--- URL parameter defaults --->
 <cfparam name="url.status" default="Review">
-
 <cfparam name="idlist" default="">
 
+<!--- Query to get list of users for ownership filter --->
 <cfquery name="owners" datasource="Reach">
     SELECT 
         username AS value,
@@ -48,6 +71,8 @@ AND status = <cfqueryparam value="#caseStatus#" cfsqltype="cf_sql_varchar">
         CASE WHEN username = <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar"> THEN 0 ELSE 1 END,
         firstname, lastname
 </cfquery>
+
+<!--- Query to get celebrities that have case matches --->
 <cfquery name="celebrities" datasource="Reach">
     SELECT DISTINCT ce.id, ce.name as celebrity_name
     FROM docketwatch.dbo.celebrities ce
@@ -59,26 +84,31 @@ AND status = <cfqueryparam value="#caseStatus#" cfsqltype="cf_sql_varchar">
     ORDER BY ce.name
 </cfquery>
 
+<!--- Query to get tools that have associated cases --->
 <cfquery name="tools" datasource="Reach">
     SELECT id, tool_name
     FROM docketwatch.dbo.tools
-    where id in (
-    select distinct fk_tool from [docketwatch].[dbo].[cases] where fk_tool is not null)
+    WHERE id IN (
+        SELECT DISTINCT fk_tool 
+        FROM docketwatch.dbo.cases 
+        WHERE fk_tool IS NOT NULL
+    )
     ORDER BY tool_name
 </cfquery>
+
+<!--- Query to get all states --->
 <cfquery name="states" datasource="Reach">
     SELECT state_code, state_name
     FROM docketwatch.dbo.states
     ORDER BY state_name
 </cfquery>
+
+<!--- Query to get courts with associated county and state information --->
 <cfquery name="courts" datasource="Reach">
-SELECT c.[court_code]
-      ,c.[court_name]
-      ,c.[fk_county]
-	  ,o.[state_code]
-  FROM [docketwatch].[dbo].[courts] c
-  INNER JOIN [docketwatch].[dbo].[counties] o ON o.id = c.fk_county
-  ORDER by c.[court_name]
+    SELECT c.court_code, c.court_name, c.fk_county, o.state_code
+    FROM docketwatch.dbo.courts c
+    INNER JOIN docketwatch.dbo.counties o ON o.id = c.fk_county
+    ORDER BY c.court_name
 </cfquery>
 
 <!DOCTYPE html>
@@ -87,123 +117,110 @@ SELECT c.[court_code]
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DocketWatch</title>
-
-    <Cfinclude template="head.cfm">
-
+    <cfinclude template="head.cfm">
 </head>
 <body>
 
-<Cfinclude template="navbar.cfm">
+<cfinclude template="navbar.cfm">
 
-<!--- Page Container --->
-<!--- Page Container --->
 <div class="container mt-4">
+    <!--- Page header with title and status filter --->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0 page-title">Cases</h2>
-<select id="statusFilter" class="form-select form-select-sm w-auto">
-    <option value="Review" <cfif url.status EQ "Review">selected</cfif>>For Review</option>
-    <option value="Tracked" <cfif url.status EQ "Tracked">selected</cfif>>Tracked</option>
-    <option value="Removed" <cfif url.status EQ "Removed">selected</cfif>>Removed</option>
-</select>
+        <select id="statusFilter" class="form-select form-select-sm w-auto">
+            <option value="Review" <cfif url.status EQ "Review">selected</cfif>>For Review</option>
+            <option value="Tracked" <cfif url.status EQ "Tracked">selected</cfif>>Tracked</option>
+            <option value="Removed" <cfif url.status EQ "Removed">selected</cfif>>Removed</option>
+        </select>
+    </div>
+
+    <!--- Filter Panel --->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                
+                <!--- Owner Filter --->
+                <div class="col-auto">
+                    <select id="ownerFilter" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        <cfoutput query="owners">
+                            <option value="#value#" <cfif value EQ currentUser>selected</cfif>>#display#</option>
+                        </cfoutput>
+                    </select>
+                </div>
+
+                <!--- Tool Filter --->
+                <div class="col-auto">
+                    <select id="toolFilter" name="toolFilter" class="form-select form-select-sm case-filter">
+                        <option value="">All Tools</option>
+                    </select>
+                </div>
+
+                <!--- State Filter --->
+                <div class="col-auto">
+                    <select id="stateFilter" name="stateFilter" class="form-select form-select-sm case-filter">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+
+                <!--- County Filter --->
+                <div class="col-auto">
+                    <select id="county_id" name="county_id" class="form-select form-select-sm case-filter">
+                        <option value="">All Counties</option>
+                    </select>
+                </div>
+
+                <!--- Courthouse Filter --->
+                <div class="col-auto">
+                    <select id="courthouseFilter" name="courthouseFilter" class="form-select form-select-sm case-filter">
+                        <option value="">All Courthouses</option>
+                    </select>
+                </div>
+
+                <!--- Celebrity Filter --->
+                <div class="col-auto">
+                    <select id="celebrityFilter" name="celebrityFilter" class="form-select form-select-sm case-filter">
+                        <option value="">All Celebrities</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!--- Document OCR Search Panel --->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <input type="text" class="form-control" id="documentSearch" placeholder="Search document OCR text..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--- Action Panel --->
+    <div class="card mb-3">
+        <div class="card-body">
+            <cfoutput>
+                <button id="removeCases" class="btn btn-danger">Remove Cases</button>
+                <button id="trackCases" class="btn btn-primary">Track Cases</button>
+                <button id="ReviewCases" class="btn btn-primary">Set to Review</button>
+                <a href="add_blank_case.cfm"><button id="AddCase" class="btn btn-primary">Track a New Case</button></a>
+                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="##columnVisibilityModal">Column Options</button>
+                <button id="refreshFilters" class="btn btn-secondary">Refresh</button>
+            </cfoutput>
+        </div>
     </div>
 
 
-
-<!--- Filter Panel --->
-<!--- Filter Panel --->
-<div class="card mb-3">
-  <div class="card-body">
-    <div class="row g-3 align-items-end">
-
-      <!--- Owner --->
-      <div class="col-auto">
-<select id="ownerFilter" class="form-select form-select-sm">
-    <option value="">All</option>
-    <cfoutput query="owners">
-        <option value="#value#" <cfif value EQ currentUser>selected</cfif>>#display#</option>
-    </cfoutput>
-</select>
-
-      </div>
-
- 
-<!-- Tool -->
-<div class="col-auto">
-  <select id="toolFilter" name="toolFilter" class="form-select form-select-sm case-filter">
-    <option value="">All Tools</option>
-  </select>
-</div>
-
-<!-- State -->
-<div class="col-auto">
-  <select id="stateFilter" name="stateFilter" class="form-select form-select-sm case-filter">
-    <option value="">All States</option>
-  </select>
-</div>
-
-<!-- County -->
-<div class="col-auto">
-  <select id="county_id" name="county_id" class="form-select form-select-sm case-filter">
-    <option value="">All Counties</option>
-  </select>
-</div>
-
-<!-- Courthouse -->
-<div class="col-auto">
-  <select id="courthouseFilter" name="courthouseFilter" class="form-select form-select-sm case-filter">
-    <option value="">All Courthouses</option>
-  </select>
-</div>
-
-<!-- Celebrity -->
-<div class="col-auto">
-  <select id="celebrityFilter" name="celebrityFilter" class="form-select form-select-sm case-filter">
-    <option value="">All Celebrities</option>
-  </select>
-</div>
-
-
-
-
-    </div>
-  </div>
-</div>
-
-<!--- Document (OCR) Search Row --->
-<div class="card mb-3">
-  <div class="card-body">
-    <div class="row">
-      <div class="col">
-        <input type="text" class="form-control" id="documentSearch" placeholder="Search document OCR text..." autocomplete="off">
-      </div>
-    </div>
-  </div>
-</div>
-<!--- Action Panel --->
-<div class="card mb-3">
-<div class="card-body">
-<Cfoutput>
-<button id="removeCases"   class="btn btn-danger">Remove Cases</button>
-<button id="trackCases"   class="btn btn-primary">Track Cases</button>
-<button id="ReviewCases"  class="btn btn-primary">Set to Review</button>
-<a href="add_blank_case.cfm"><button id="AddCase" class="btn btn-primary" >Track a New Case</button></a>
-<button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="##columnVisibilityModal">Column Options</button>
-
-<button id="refreshFilters" class="btn btn-secondary">Refresh</button>
-
-</cfoutput>
-
-  </div>
-</div>
-
-
-    <!--- Cases Table --->
+    <!--- Main Cases DataTable --->
     <table id="casesTable" class="table w-100 table-striped table-bordered">
         <thead class="table-dark">
             <tr>
                 <th><input type="checkbox" id="select-all"></th>
                 <th>Source</th>
-                <th style="display:none;">ID</th> <!-- ADD THIS for 'id' -->
+                <th style="display:none;">ID</th> <!--- Hidden ID column for internal use --->
                 <th>Case Number</th>
                 <th>Case Name</th>
                 <th>Courthouse</th>
@@ -216,41 +233,14 @@ SELECT c.[court_code]
                 <th>Status</th>
                 <th>Link</th>
             </tr>
-            <!--- filters no longer needed
-            <tr class="filters">
-                <th></th>
-                <th><input type="text" class="column-filter" data-column="1" placeholder="Search ID"></th>
-                <th><input type="text" class="column-filter" data-column="2" placeholder="Search Case #"></th>
-                <th><input type="text" class="column-filter" data-column="3" placeholder="Search Name"></th>
-                <th>
-                    <select class="column-filter" data-column="4">
-                        <option value="">All Courthouses</option>
-                    </select>
-                </th>
-                <th>
-                    <select class="column-filter" data-column="5">
-                        <option value="">All Divisions</option>
-                    </select>
-                </th>
-                <th><input type="text" class="column-filter" data-column="6" placeholder="Search Details"></th>
-                <th><input type="text" class="column-filter" data-column="7" placeholder="Search Date"></th>
-                <th>
-                    <select class="column-filter" data-column="8">
-                        <option value="">All Celebrities</option>
-                    </select>
-                </th>
-            </tr>
-            --->
-
         </thead>
         <tbody></tbody>
     </table>
 </div>
 
-
 <cfinclude template="footer_script.cfm">
 
-<!--- Move user activity logging to Application.cfc or a separate included file for better performance --->
+<!--- User Activity Logging (only log once per session) --->
 <cfif NOT isDefined("session.userActivityLogged") OR session.userActivityLogged NEQ true>
     <cftry>
         <cfset login_name = getAuthUser()>
@@ -268,103 +258,108 @@ SELECT c.[court_code]
             );
         </cfquery>
         <cfset session.userActivityLogged = true>
-    <cfcatch type="any">
-        <!--- Log error silently without affecting page load --->
-    </cfcatch>
+        <cfcatch type="any">
+            <!--- Log error silently without affecting page load --->
+        </cfcatch>
     </cftry>
 </cfif>
 
-<!-- Column Visibility Modal -->
+<!--- Column Visibility Modal --->
 <div class="modal fade" id="columnVisibilityModal" tabindex="-1" aria-labelledby="columnVisibilityLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Customize Column Visibility</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <select id="statusSelector" class="form-select mb-3">
-          <option value="Review">Review</option>
-          <option value="Tracked">Tracked</option>
-        </select>
-
-        <div id="columnOptionsContainer" class="row g-2">
-          <!-- checkboxes go here -->
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Customize Column Visibility</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <select id="statusSelector" class="form-select mb-3">
+                    <option value="Review">Review</option>
+                    <option value="Tracked">Tracked</option>
+                </select>
+                <div id="columnOptionsContainer" class="row g-2">
+                    <!--- Checkboxes populated dynamically by JavaScript --->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveColumnVisibility()">Save</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" onclick="saveColumnVisibility()">Save</button>
-      </div>
     </div>
-  </div>
 </div>
 
- 
+<!--- Track New Case Modal --->
 <div class="modal fade" id="trackCaseModal" tabindex="-1" aria-labelledby="trackCaseModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="trackCaseModalLabel">Track a New Case</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="trackCaseForm">
-        <Cfoutput><input type="hidden" id="currentuser" name="currentuser" value="#currentuser#"></cfoutput>
-          <div class="mb-3">
-            <label for="toolSelect" class="form-label">Tool <span class="text-danger">*</span></label>
-            <select class="form-select" id="toolSelect" required onchange="updateFieldRequirements()">
-              <option value="">Select Tool</option>
-              <cfquery name="getUserTools" datasource="Reach">
-                SELECT [id] as fk_tool, [tool_name]
-                FROM [docketwatch].[dbo].[tools]
-                WHERE owners LIKE <cfqueryparam value="%#currentUser#%" cfsqltype="cf_sql_varchar">
-                and addNew = 1
-                ORDER BY tool_name
-              </cfquery>
-              <cfoutput query="getUserTools">
-                <option value="#fk_tool#">#tool_name#</option>
-              </cfoutput>
-            </select>
-          </div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="trackCaseModalLabel">Track a New Case</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="trackCaseForm">
+                    <cfoutput>
+                        <input type="hidden" id="currentuser" name="currentuser" value="#currentuser#">
+                    </cfoutput>
+                    
+                    <div class="mb-3">
+                        <label for="toolSelect" class="form-label">Tool <span class="text-danger">*</span></label>
+                        <select class="form-select" id="toolSelect" required onchange="updateFieldRequirements()">
+                            <option value="">Select Tool</option>
+                            <cfquery name="getUserTools" datasource="Reach">
+                                SELECT id as fk_tool, tool_name
+                                FROM docketwatch.dbo.tools
+                                WHERE owners LIKE <cfqueryparam value="%#currentUser#%" cfsqltype="cf_sql_varchar">
+                                AND addNew = 1
+                                ORDER BY tool_name
+                            </cfquery>
+                            <cfoutput query="getUserTools">
+                                <option value="#fk_tool#">#tool_name#</option>
+                            </cfoutput>
+                        </select>
+                    </div>
 
-<!-- Case URL -->
-<div class="mb-3" id="caseUrlGroup" style="display: none;">
-  <label for="caseUrl" class="form-label">Case URL <span class="text-danger">*</span></label>
-  <input type="text" class="form-control" id="caseUrl">
-</div>
+                    <!--- Case URL Field (shown for specific tools) --->
+                    <div class="mb-3" id="caseUrlGroup" style="display: none;">
+                        <label for="caseUrl" class="form-label">Case URL <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="caseUrl">
+                    </div>
 
-<!-- Case Number -->
-<div class="mb-3" id="caseNumberGroup" style="display: none;">
-  <label for="caseNumber" class="form-label">Case Number <span class="text-danger">*</span></label>
-  <input type="text" class="form-control" id="caseNumber">
-</div>
+                    <!--- Case Number Field (shown for specific tools) --->
+                    <div class="mb-3" id="caseNumberGroup" style="display: none;">
+                        <label for="caseNumber" class="form-label">Case Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="caseNumber">
+                    </div>
 
-<!-- Case Name -->
-<div class="mb-3" id="caseNameGroup" style="display: none;">
-  <label for="caseName" class="form-label">Case Name</label>
-  <input type="text" class="form-control" id="caseName">
-</div>
+                    <!--- Case Name Field (optional) --->
+                    <div class="mb-3" id="caseNameGroup" style="display: none;">
+                        <label for="caseName" class="form-label">Case Name</label>
+                        <input type="text" class="form-control" id="caseName">
+                    </div>
 
-        </form>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="submitNewCase()">Submit</button>
-      </div>
-
-      
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitNewCase()">Submit</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
  
 <script>
+/**
+ * Configuration and Utility Functions
+ * ==================================
+ */
+
+// Column visibility defaults from server-side ColdFusion
 const columnVisibilityDefaults = <cfoutput>#serializeJSON(visibilityMap)#</cfoutput>;
 
-// Utility function for debouncing
+// Utility function for debouncing user input to prevent excessive API calls
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -377,7 +372,7 @@ function debounce(func, wait) {
     };
 }
 
-// Centralized localStorage management
+// Centralized localStorage management for filter persistence
 const LocalStorageManager = {
     keys: {
         tool: 'selectedTool',
@@ -586,18 +581,22 @@ columns: [
 }
 
 
+/**
+ * Main Application Initialization
+ * ===============================
+ */
 $(document).ready(function () {
-    // Async: Wait for all dropdowns/options loaded and filters set
+    // Initialize page: Load all dropdown filters and set up table
     reloadDropdownsAsync().then(function() {
-        // Now, init table (filters are set and selects populated)
+        // Initialize DataTable after filters are loaded
         initializeCasesTable();
 
-        // --- Unified Filter Change Handlers ---
+        // Setup unified filter change handlers for all dropdowns
         $('#toolFilter, #county_id, #courthouseFilter, #celebrityFilter, #ownerFilter, #stateFilter, #statusFilter').on('change', function () {
             const id = $(this).attr('id');
             const val = $(this).val();
             
-            // Use centralized localStorage management
+            // Map filter IDs to localStorage keys
             const storageMap = {
                 'toolFilter': 'tool',
                 'ownerFilter': 'owner',
@@ -607,15 +606,17 @@ $(document).ready(function () {
                 'celebrityFilter': 'celebrity'
             };
             
+            // Save filter state to localStorage
             if (storageMap[id]) {
                 LocalStorageManager.set(storageMap[id], val);
             }
 
-            // Wait for any new dropdown loads, THEN reload table
+            // Reload dependent dropdowns and refresh table
             reloadDropdownsAsync().then(function() {
                 $('#casesTable').DataTable().ajax.reload();
             });
 
+            // Update page title based on status filter
             if (id === 'statusFilter') {
                 const statusText = {
                     "Review": "New Cases Review",
@@ -626,11 +627,12 @@ $(document).ready(function () {
             }
         });
 
+        // Setup document search with debouncing
         $('#documentSearch').on('input', debounce(function() {
             $('#casesTable').DataTable().ajax.reload();
         }, 300));
 
-        // --- Button/Checkbox logic ---
+        // Configure action button visibility based on status and selection
         const actionButtons = {
             '#removeCases': { hideOnLoad: true, showWhen: (status, hasChecked) => status === 'Review' && hasChecked },
             '#trackCases': { hideOnLoad: true, showWhen: (status, hasChecked) => status === 'Review' && hasChecked },
@@ -640,13 +642,14 @@ $(document).ready(function () {
             '#refreshFilters': { hideOnLoad: true, showWhen: (status, hasChecked, hasFilters) => hasFilters }
         };
 
-        // Hide buttons initially
+        // Hide action buttons initially
         Object.keys(actionButtons).forEach(selector => {
             if (actionButtons[selector].hideOnLoad) {
                 $(selector).hide();
             }
         });
 
+        // Function to update action button visibility
         function updateActionButtons() {
             const status = $('#statusFilter').val();
             const anyChecked = $('.row-checkbox:checked').length > 0;
@@ -658,16 +661,20 @@ $(document).ready(function () {
                 $(selector).toggle(shouldShow);
             });
         }
+
+        // Bind action button update events
         $(document).on('change', '.row-checkbox', updateActionButtons);
         $('#statusFilter, #toolFilter, #ownerFilter, #stateFilter, #county_id, #courthouseFilter, #celebrityFilter')
             .on('change', updateActionButtons);
         $('#casesTable').on('draw.dt', updateActionButtons);
 
-        // Select-all logic
+        // Setup select-all checkbox functionality
         $('#select-all').on('click', function() {
             var isChecked = this.checked;
             $('.row-checkbox').prop('checked', isChecked).trigger('change');
         });
+
+        // Allow clicking on checkbox cell to toggle checkbox
         $('#casesTable tbody').on('click', 'td.select-checkbox', function(event) {
             if (!$(event.target).is('input')) {
                 var checkbox = $(this).find('input.row-checkbox');
@@ -675,7 +682,7 @@ $(document).ready(function () {
             }
         });
 
-        // Refresh button clears everything and reloads clean
+        // Setup refresh button to clear all filters
         $('#refreshFilters').on('click', function () {
             LocalStorageManager.clearAll();
             $('#statusFilter').val('Review');
@@ -688,6 +695,12 @@ $(document).ready(function () {
     });
 });
 
+/**
+ * Case Status Management Functions
+ * ===============================
+ */
+
+// Generic function to update case status with confirmation
 function updateCaseStatus(caseId, newStatus) {
     Swal.fire({
         title: 'Are you sure?',
@@ -725,22 +738,26 @@ function updateCaseStatus(caseId, newStatus) {
     });
 }
 
+// Button event handlers for case status changes
 $('#removeCases').on('click', function () {
     const selected = getSelectedCaseIds();
     if (selected.length === 0) return alert("No cases selected.");
     updateCaseStatus(selected.join(','), 'Removed');
 });
+
 $('#trackCases').on('click', function () {
     const selected = getSelectedCaseIds();
     if (selected.length === 0) return alert("No cases selected.");
     updateCaseStatus(selected.join(','), 'Tracked');
 });
+
 $('#ReviewCases').on('click', function () {
     const selected = getSelectedCaseIds();
     if (selected.length === 0) return alert("No cases selected.");
     updateCaseStatus(selected.join(','), 'Review');
 });
 
+// Utility function to get selected case IDs
 function getSelectedCaseIds() {
     const ids = [];
     $('.row-checkbox:checked').each(function () {
@@ -748,6 +765,13 @@ function getSelectedCaseIds() {
     });
     return ids;
 }
+
+/**
+ * New Case Modal Functions
+ * =======================
+ */
+
+// Update form field requirements based on selected tool
 function updateFieldRequirements() {
     const tool = document.getElementById('toolSelect').value;
     const caseUrlGroup = document.getElementById('caseUrlGroup');
@@ -757,33 +781,33 @@ function updateFieldRequirements() {
     const caseNumber = document.getElementById('caseNumber');
     const caseName = document.getElementById('caseName');
 
-    // Hide all by default
+    // Hide all fields by default
     caseUrlGroup.style.display = 'none';
     caseNumberGroup.style.display = 'none';
     caseNameGroup.style.display = 'none';
     caseUrl.required = false;
     caseNumber.required = false;
 
-    // Show relevant fields for specific tools
-    if (tool === "2") { // Example: UniCourt
+    // Show relevant fields based on tool selection
+    if (tool === "2") { // UniCourt
         caseUrlGroup.style.display = 'block';
         caseUrl.required = true;
-    } else if (tool === "13" || tool === "25") { // Example: PACER, Broward, etc.
+    } else if (tool === "13" || tool === "25") { // PACER, Broward, etc.
         caseNumberGroup.style.display = 'block';
         caseNumber.required = true;
     }
 }
 
-// Attach change event handler (safe in case of dynamic page)
+// Initialize field requirements when DOM is ready
 document.addEventListener('DOMContentLoaded', function () {
     const toolSelect = document.getElementById('toolSelect');
     if (toolSelect) {
         toolSelect.addEventListener('change', updateFieldRequirements);
-        // Run on load to apply if tool is preselected
-        updateFieldRequirements();
+        updateFieldRequirements(); // Run on load in case tool is preselected
     }
 });
 
+// Submit new case form
 function submitNewCase() {
     const tool = document.getElementById('toolSelect').value;
     const caseUrlEl = document.getElementById('caseUrl');
@@ -791,7 +815,7 @@ function submitNewCase() {
     const caseNameEl = document.getElementById('caseName');
     const currentuser = document.getElementById('currentuser').value.trim();
 
-    // Only send fields that are visible
+    // Only collect values from visible fields
     const caseUrl = caseUrlEl.offsetParent !== null ? caseUrlEl.value.trim() : '';
     const caseNumber = caseNumberEl.offsetParent !== null ? caseNumberEl.value.trim() : '';
     const caseName = caseNameEl.offsetParent !== null ? caseNameEl.value.trim() : '';
@@ -801,6 +825,7 @@ function submitNewCase() {
         return;
     }
 
+    // Show loading indicator
     Swal.fire({
         title: 'Tracking Case...',
         html: 'Please wait while the case is processed.',
@@ -808,6 +833,7 @@ function submitNewCase() {
         didOpen: () => { Swal.showLoading(); }
     });
 
+    // Submit case data
     fetch('insert_new_case.cfm?bypass=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -827,13 +853,18 @@ function submitNewCase() {
 </script>
 
 <script>
+/**
+ * Column Visibility Modal Functions
+ * =================================
+ */
 document.addEventListener('DOMContentLoaded', function () {
-    // When the modal opens, load column checkboxes
+    // Setup column visibility modal - populate checkboxes when modal opens
     $('#columnVisibilityModal').on('show.bs.modal', function () {
         const status = $('#statusSelector').val();
         const container = $('#columnOptionsContainer');
         container.empty();
 
+        // Create checkbox for each column
         allColumnKeys.forEach(col => {
             const checked = columnVisibilityDefaults[col.key] === 1;
             const checkbox = `
@@ -850,22 +881,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Allow switching status dropdown to reload checkboxes
+    // Refresh modal when status selector changes
     $('#statusSelector').on('change', function () {
-        $('#columnVisibilityModal').modal('show'); // Force re-trigger
+        $('#columnVisibilityModal').modal('show'); // Force re-trigger modal setup
     });
 });
 
+// Save column visibility preferences
 function saveColumnVisibility() {
     const status = $('#statusSelector').val();
     const updates = [];
 
+    // Collect all checkbox states
     $('.col-check').each(function () {
         const col = $(this).data('col');
         const isVisible = $(this).is(':checked') ? 1 : 0;
         updates.push({ column_key: col, is_visible: isVisible });
     });
 
+    // Send updates to server
     fetch('save_column_visibility.cfm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -875,14 +909,13 @@ function saveColumnVisibility() {
     .then(data => {
         if (data.success) {
             Swal.fire("Saved", "Column visibility saved successfully.", "success")
-                .then(() => location.reload()); // Refresh to apply
+                .then(() => location.reload()); // Refresh page to apply changes
         } else {
             Swal.fire("Error", data.message || "Failed to save settings.", "error");
         }
     })
     .catch(err => Swal.fire("Error", err.message, "error"));
 }
-
 </script>
 
 
