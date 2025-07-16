@@ -23,7 +23,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Will be populated via AJAX -->
+            <!--- Will be populated via AJAX --->
         </tbody>
     </table>
 </div>

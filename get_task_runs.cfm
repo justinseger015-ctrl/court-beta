@@ -31,7 +31,7 @@
 
 
 
-    <!-- Ensure runs is always defined -->
+    <!--- Ensure runs is always defined --->
     <cfset runs = []>
 
     <cfif getRuns.recordCount GT 0>
@@ -52,7 +52,7 @@
 
     </cfif>
 
-    <!-- Corrected JSON Format for DataTables -->
+    <!--- Corrected JSON Format for DataTables --->
     <cfoutput>#serializeJSON({"data": runs})#</cfoutput>
 
 <cfcatch>

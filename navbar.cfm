@@ -1,22 +1,22 @@
-<!-- Navigation Bar -->
+<!--- Navigation Bar --->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <!-- App Title -->
+        <!--- App Title --->
         <a class="navbar-brand" href="#">DocketWatch</a>
 
-        <!-- Navbar Toggle (For Mobile View) -->
+        <!--- Navbar Toggle (For Mobile View) --->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-                <!-- Dashboard -->
+                <!--- Dashboard --->
                 <li class="nav-item">
                     <a class="nav-link active" href="#">Dashboard</a>
                 </li>
 
-                <!-- Case Management Dropdown -->
+                <!--- Case Management Dropdown --->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         Case Management
@@ -32,7 +32,7 @@
                     </ul>
                 </li>
 
-                <!-- Reports Dropdown -->
+                <!--- Reports Dropdown --->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         Reports
@@ -45,7 +45,7 @@
                     </ul>
                 </li>
 
-                <!-- Admin Dropdown -->
+                <!--- Admin Dropdown --->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAdmin" role="button" data-bs-toggle="dropdown">
                         Admin
@@ -56,7 +56,7 @@
                     </ul>
                 </li>
 
-                <!-- Archive Dropdown -->
+                <!--- Archive Dropdown --->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         Archive
@@ -67,7 +67,7 @@
                 </li>
             </ul>
 
-            <!-- Right-aligned Logout link -->
+            <!--- Right-aligned Logout link --->
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="../index.cfm?logout=true&m=d">Logout</a>

@@ -23,7 +23,7 @@
     <title>New Surrogate Court Records Alert</title>
 
     <Cfinclude template="head.cfm">
-    <!-- Auto-refresh every 20 seconds -->
+    <!--- Auto-refresh every 20 seconds --->
     <script>
         setTimeout(function() {
             location.reload();

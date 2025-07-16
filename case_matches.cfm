@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DocketWatch - Case Matches</title>
 
-    <cfinclude template="head.cfm"> <!-- Bootstrap, FontAwesome, etc. -->
+    <cfinclude template="head.cfm"> <!--- Bootstrap, FontAwesome, etc. --->
 </head>
 <body>
 
 <cfinclude template="navbar.cfm">
 
-<!-- Page Container -->
+<!--- Page Container --->
 <div class="container mt-4">
     <h2 class="mb-4">Celebrity Case Matches</h2>
 
-    <!-- Case Matches Table -->
+    <!--- Case Matches Table --->
     <table id="caseMatchesTable" class="table table-striped table-bordered">
         <thead class="table-dark">
             <tr>
@@ -27,7 +27,7 @@
                 <th nowrap>Date Created</th>
                 <th>Ranking Score</th>
                 <th>Match Quality</th>
-                <th>Actions</th> <!-- NEW COLUMN: Buttons -->
+                <th>Actions</th> <!--- NEW COLUMN: Buttons --->
             </tr>
         </thead>
         <tbody></tbody>
@@ -36,7 +36,7 @@
 
 <cfinclude template="footer_script.cfm">
 
-<!-- DataTables Initialization -->
+<!--- DataTables Initialization --->
 <script>
 $(document).ready(function () {
     var table = $('#caseMatchesTable').DataTable({

@@ -34,7 +34,7 @@
   </table>
 </div>
 
-<!-- Tool Modal -->
+<!--- Tool Modal --->
 <div class="modal fade" id="toolModal" tabindex="-1" aria-labelledby="toolModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -44,10 +44,10 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <!-- Hidden Tool ID -->
+        <!--- Hidden Tool ID --->
  
 
-        <!-- Modal Form Fields -->
+        <!--- Modal Form Fields --->
     
 
         <div class="modal-footer">

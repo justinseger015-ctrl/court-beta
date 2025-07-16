@@ -65,7 +65,7 @@
 <<div class="container-fluid mt-3">
     <div class="row">
 
-        <!-- Sidebar: List of Doc IDs -->
+        <!--- Sidebar: List of Doc IDs --->
         <div class="col-md-2">
             <h5>Recent Docs</h5>
             <ul class="list-group">
@@ -79,7 +79,7 @@
             </ul>
         </div>
 
-        <!-- Main Content -->
+        <!--- Main Content --->
         <div class="col-md-10">
             <cfoutput>
                 <h1>Document Review</h1>
@@ -87,7 +87,7 @@
                 <h4>Case: #getDoc.case_name# - [#getDoc.event_no#] #getDoc.event_description#</h4>
                 <h4>AI Processed At: #getDoc.ai_processed_at#</h4>
 
-                <!-- View Button -->
+                <!--- View Button --->
                 <a href="#getDoc.http_url#" target="_blank" class="btn btn-primary mb-3">
                     <i class="fas fa-file-pdf"></i> View Document
                 </a>

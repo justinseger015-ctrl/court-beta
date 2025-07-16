@@ -11,11 +11,11 @@
 
 <cfinclude template="navbar.cfm" />
 
-<!-- Page Container -->
+<!--- Page Container --->
 <div class="container mt-4">
     <h2 class="mb-4">Active Alerts</h2>
 
-    <!-- Tool Alerts Table -->
+    <!--- Tool Alerts Table --->
     <table id="toolAlertsTable" class="table table-striped table-bordered">
         <thead class="table-dark">
             <tr>
@@ -63,7 +63,7 @@
 
 <cfinclude template="footer_script.cfm">
 
-<!-- DataTables Initialization -->
+<!--- DataTables Initialization --->
 <script>
     $(document).ready(function() {
         $('#toolAlertsTable').DataTable({

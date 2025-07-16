@@ -223,7 +223,7 @@ ORDER BY r.created_at DESC
 </div>
 
     <cfoutput>
-    <div class="row gx-4"> <!-- Bootstrap Row with horizontal gutter -->
+    <div class="row gx-4"> <!--- Bootstrap Row with horizontal gutter --->
 
         <!--- Case Detail Section --->
         <div class="col-12 col-xl-6">
@@ -317,7 +317,7 @@ ORDER BY r.created_at DESC
         </div>
 
     </div>
-<!-- Set active tab variables -->
+<!--- Set active tab variables --->
 <cfset links_tab_status = "">
 <cfset dockets_tab_status = "">
 <cfset hearings_tab_status = "">
@@ -364,7 +364,7 @@ ORDER BY r.created_at DESC
 <div class="card shadow-sm mt-4">
     <div class="card-body">
 
- <!-- Tab headings -->
+ <!--- Tab headings --->
 <cfoutput>
 <ul class="nav nav-tabs" id="caseTabs" role="tablist">
     <cfif len(trim(case_details.summarize_html))>
@@ -393,7 +393,7 @@ ORDER BY r.created_at DESC
 </ul>
 </cfoutput>
 
-<!-- Tab content panes -->
+<!--- Tab content panes --->
  
 
         <div class="tab-content mt-3" id="caseTabsContent">
@@ -425,7 +425,7 @@ ORDER BY r.created_at DESC
         <th>Category</th>
         <th>Created By</th>
         <th>Date Added</th>
-        <th>Actions</th> <!-- New column -->
+        <th>Actions</th> <!--- New column --->
     </tr>
 </thead>
 <tbody>
@@ -458,7 +458,7 @@ ORDER BY r.created_at DESC
 
 
           
-            <!-- Dockets Tab -->
+            <!--- Dockets Tab --->
     <div class="tab-pane p-3 #dockets_tab_status#" id="dockets" role="tabpanel">
           <cfif dockets.recordcount GT 0>
                 <table id="docketTable" class="table table-striped table-bordered mt-3">
@@ -522,7 +522,7 @@ ORDER BY r.created_at DESC
            
 
           
-            <!-- Hearings Tab -->
+            <!--- Hearings Tab --->
 <div class="tab-pane p-3  #hearings_tab_status#" id="hearings" role="tabpanel">
               <cfif hearings.recordcount GT 0>
                 <table id="hearingTable" class="table table-striped table-bordered mt-3">
@@ -555,7 +555,7 @@ ORDER BY r.created_at DESC
    
 
   
-            <!-- Log Tab -->
+            <!--- Log Tab --->
   <div class="tab-pane p-3  #log_tab_status#" id="log" role="tabpanel">       
                  <cfif logs.recordcount GT 0>
                 <table id="logTable" class="table table-striped table-bordered mt-3">
@@ -652,7 +652,7 @@ ORDER BY r.created_at DESC
   <span id="celebrityNameBadge" class="badge badge-info">No celebrity selected</span>
 
 
-  <!-- Always render the table but hide it if there are no records -->
+  <!--- Always render the table but hide it if there are no records --->
   <div id="celebrityTableWrapper" <cfif celebrities.recordcount EQ 0>style="display:none;"</cfif>>
     <table id="celebTable" class="table table-striped table-bordered mt-3">
       <thead class="table-dark">
@@ -787,7 +787,7 @@ function deleteCelebrityMatch(matchId) {
 
 
 
-        </div> <!-- /.tab-content -->
+        </div> <!--- /.tab-content --->
 
     </div>
 </div>
@@ -947,7 +947,7 @@ function deleteLink(linkId) {
 
 
 
-<!-- Add Link Modal -->
+<!--- Add Link Modal --->
 <div class="modal " id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form id="addLinkForm">

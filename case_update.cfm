@@ -166,7 +166,7 @@ ORDER BY o.court_name
   </div>
 
 <div class="d-flex justify-content-between align-items-center mt-4">
-  <!-- Left: Update Case -->
+  <!--- Left: Update Case --->
   <button type="submit" class="btn btn-primary">Update Case</button>
   
 <cfoutput>

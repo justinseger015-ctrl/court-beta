@@ -11,11 +11,11 @@
 
 <cfinclude template="navbar.cfm">
 
-<!-- Page Container -->
+<!--- Page Container --->
 <div class="container mt-4">
     <h2 class="mb-4">Scheduled Task Log</h2>
     
-    <!-- Scheduled Tasks Table -->
+    <!--- Scheduled Tasks Table --->
     <table id="scheduledTasksTable" class="table table-striped">
         <thead>
             <tr>
@@ -29,7 +29,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Task Data Will be Loaded Here -->
+            <!--- Task Data Will be Loaded Here --->
         </tbody>
     </table>
 </div>
@@ -72,7 +72,7 @@ var runsTable = `<table class="table">
         <th>End Time</th>
         <th>Status</th>
         <th>Summary</th>
-        <th>Cases</th>  <!-- NEW COLUMN -->
+        <th>Cases</th>  <!--- NEW COLUMN --->
         <th>Actions</th>
     </tr></thead><tbody>`;
 
@@ -83,7 +83,7 @@ response.data.forEach(run => {
         <td>${run.timestamp_ended}</td>
         <td>${run.status}</td>
         <td>${run.summary}</td>
-        <td>${run.total_cases}</td>  <!-- NEW COLUMN -->
+        <td>${run.total_cases}</td>  <!--- NEW COLUMN --->
         <td><button class='expand-run btn btn-sm btn-secondary' data-run="${run.id}">View Logs</button></td>
     </tr>`;
 });

@@ -94,35 +94,35 @@ SELECT c.[court_code]
       </div>
 
  
-<!-- Tool -->
+<!--- Tool --->
 <div class="col-auto">
   <select id="toolFilter" name="toolFilter" class="form-select form-select-sm case-filter">
     <option value="">All Tools</option>
   </select>
 </div>
 
-<!-- State -->
+<!--- State --->
 <div class="col-auto">
   <select id="stateFilter" name="stateFilter" class="form-select form-select-sm case-filter">
     <option value="">All States</option>
   </select>
 </div>
 
-<!-- County -->
+<!--- County --->
 <div class="col-auto">
   <select id="county_id" name="county_id" class="form-select form-select-sm case-filter">
     <option value="">All Counties</option>
   </select>
 </div>
 
-<!-- Courthouse -->
+<!--- Courthouse --->
 <div class="col-auto">
   <select id="courthouseFilter" name="courthouseFilter" class="form-select form-select-sm case-filter">
     <option value="">All Courthouses</option>
   </select>
 </div>
 
-<!-- Celebrity -->
+<!--- Celebrity --->
 <div class="col-auto">
   <select id="celebrityFilter" name="celebrityFilter" class="form-select form-select-sm case-filter">
     <option value="">All Celebrities</option>
@@ -168,7 +168,7 @@ SELECT c.[court_code]
             <tr>
                 <th><input type="checkbox" id="select-all"></th>
                 <th>Source</th>
-                <th style="display:none;">ID</th> <!-- ADD THIS for 'id' -->
+                <th style="display:none;">ID</th> <!--- ADD THIS for 'id' --->
                 <th>Case Number</th>
                 <th>Case Name</th>
                 <th>Courthouse</th>
@@ -696,19 +696,19 @@ function saveFiltersToLocalStorage() {
             </select>
           </div>
 
-<!-- Case URL -->
+<!--- Case URL --->
 <div class="mb-3" id="caseUrlGroup" style="display: none;">
   <label for="caseUrl" class="form-label">Case URL <span class="text-danger">*</span></label>
   <input type="text" class="form-control" id="caseUrl">
 </div>
 
-<!-- Case Number -->
+<!--- Case Number --->
 <div class="mb-3" id="caseNumberGroup" style="display: none;">
   <label for="caseNumber" class="form-label">Case Number <span class="text-danger">*</span></label>
   <input type="text" class="form-control" id="caseNumber">
 </div>
 
-<!-- Case Name -->
+<!--- Case Name --->
 <div class="mb-3" id="caseNameGroup" style="display: none;">
   <label for="caseName" class="form-label">Case Name</label>
   <input type="text" class="form-control" id="caseName">

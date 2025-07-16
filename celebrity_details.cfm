@@ -63,13 +63,13 @@ WHERE  c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_varchar">
     <cfset wikidata = deserializeJSON(wikidataResponse.fileContent)>
     <cfset entity = structKeyExists(wikidata.entities, celebID) ? wikidata.entities[celebID] : {}>
 
-    <!-- Description -->
+    <!--- Description --->
     <cfset description = "">
     <cfif structKeyExists(entity, "descriptions") AND structKeyExists(entity.descriptions, "en")>
         <cfset description = entity.descriptions["en"].value>
     </cfif>
 
-    <!-- Profile Picture -->
+    <!--- Profile Picture --->
     <cfset profilePic = "../services/avatar_placeholder.png">
     <cfif structKeyExists(entity, "claims") AND structKeyExists(entity.claims, "P18")>
         <cfset imageFilename = entity.claims.P18[1].mainsnak.datavalue.value>
@@ -77,7 +77,7 @@ WHERE  c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_varchar">
         <cfset profilePic = "https://commons.wikimedia.org/wiki/Special:FilePath/" & encodedName & "?width=400">
     </cfif>
 
-    <!-- Roles -->
+    <!--- Roles --->
     <cfset roles = []>
     <cfif structKeyExists(entity, "claims") AND structKeyExists(entity.claims, "P106")>
         <cfloop array="#entity.claims.P106#" index="roleItem">
@@ -102,7 +102,7 @@ WHERE  c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_varchar">
         </cfloop>
     </cfif>
 <cfelse>
-    <!-- No wikidata_id: fallback values -->
+    <!--- No wikidata_id: fallback values --->
     <cfset description = "">
     <cfset profilePic = "../services/avatar_placeholder.png">
     <cfset roles = []>
@@ -163,7 +163,7 @@ WHERE  c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_varchar">
 
 
 
-<!-- Tabs Navigation -->
+<!--- Tabs Navigation --->
 <ul class="nav nav-tabs mt-4" id="celebTabs" role="tablist">
   <li class="nav-item" role="presentation">
     <button class="nav-link active" id="cases-tab" data-bs-toggle="tab" data-bs-target="#cases" type="button" role="tab">Cases</button>
@@ -176,14 +176,14 @@ WHERE  c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_varchar">
   </li>
 </ul>
 
-<!-- Tab Content -->
+<!--- Tab Content --->
 <div class="tab-content border rounded-bottom p-3 bg-white" id="celebTabsContent">
   <div class="tab-pane fade show active" id="cases" role="tabpanel" aria-labelledby="cases-tab">
-    <!-- TODO: Case matches will go here -->
+    <!--- TODO: Case matches will go here --->
     <p class="text-muted">Linked cases will appear here.</p>
   </div>
   <div class="tab-pane fade" id="names" role="tabpanel" aria-labelledby="names-tab">
-    <!-- Aliases Table -->
+    <!--- Aliases Table --->
 <table class="table table-bordered table-striped mt-3">
   <thead class="table-light">
     <tr>
@@ -212,7 +212,7 @@ WHERE  c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_varchar">
     <p class="text-muted">Alternate names for this celebrity will appear here.</p>
   </div>
   <div class="tab-pane fade" id="log" role="tabpanel" aria-labelledby="log-tab">
-    <!-- TODO: System logs -->
+    <!--- TODO: System logs --->
     <p class="text-muted">System update logs will appear here.</p>
   </div>
 </div>

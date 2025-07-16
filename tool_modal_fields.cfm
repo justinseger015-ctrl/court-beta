@@ -21,7 +21,7 @@
   <form method="post" action="save_tool.cfm">
     <input type="hidden" id="tool_id" name="tool_id">
 
-    <!-- Basic Tool Info -->
+    <!--- Basic Tool Info --->
     <div class="mb-4">
       <h3>Basic Info</h3>
 
@@ -61,7 +61,7 @@
       </div>
     </div>
 
-    <!-- API Configuration -->
+    <!--- API Configuration --->
     <div class="mb-4">
       <h3>API Configuration</h3>
 
@@ -81,7 +81,7 @@
       </div>
     </div>
 
-    <!-- Login Configuration -->
+    <!--- Login Configuration --->
     <div class="mb-4" id="loginSection" style="display:none;">
       <h3>Login Configuration</h3>
 
@@ -116,7 +116,7 @@
       </div>
     </div>
 
-    <!-- Scraper Selectors -->
+    <!--- Scraper Selectors --->
     <div class="mb-4">
       <h3>Court Scraper Selectors</h3>
 
@@ -151,7 +151,7 @@
       </div>
     </div>
 
-    <!-- CAPTCHA -->
+    <!--- CAPTCHA --->
     <div class="mb-4">
       <h3>CAPTCHA Configuration</h3>
 
@@ -176,7 +176,7 @@
       </div>
     </div>
 
-    <!-- Optional Case Fields -->
+    <!--- Optional Case Fields --->
     <div class="mb-4">
       <h3>Optional Case Metadata</h3>
 

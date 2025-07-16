@@ -14,7 +14,7 @@ HAVING COUNT(DISTINCT a.fk_celebrity) > 1
 <cfloop query="qDupAliasNames">
     <cfset aliasName = qDupAliasNames.name>
 
-    <!-- Get all celebrities sharing this alias -->
+    <!--- Get all celebrities sharing this alias --->
     <cfquery name="qRelatedCelebs" datasource="Reach">
         SELECT 
             c.id AS celebrity_id,
@@ -27,7 +27,7 @@ HAVING COUNT(DISTINCT a.fk_celebrity) > 1
           AND c.isDeleted = 0
     </cfquery>
 
-    <!-- Determine which celebrity to keep -->
+    <!--- Determine which celebrity to keep --->
     <cfset keepId = "">
     <cfset keepName = "">
     <cfset maxAppearances = -1>
@@ -49,10 +49,10 @@ HAVING COUNT(DISTINCT a.fk_celebrity) > 1
     <ul>
     </cfoutput>
 
-    <!-- Delete all other celebrities and their aliases -->
+    <!--- Delete all other celebrities and their aliases --->
     <cfloop query="qRelatedCelebs">
         <cfif qRelatedCelebs.celebrity_id NEQ keepId>
-            <!-- Soft-delete the duplicate celebrity -->
+            <!--- Soft-delete the duplicate celebrity --->
             <cfquery datasource="Reach">
                 UPDATE docketwatch.dbo.celebrities
                 SET isDeleted = 1,
@@ -60,7 +60,7 @@ HAVING COUNT(DISTINCT a.fk_celebrity) > 1
                 WHERE id = <cfqueryparam value="#qRelatedCelebs.celebrity_id#" cfsqltype="cf_sql_varchar">
             </cfquery>
 
-            <!-- Soft-delete all celebrity_names for the deleted celebrity -->
+            <!--- Soft-delete all celebrity_names for the deleted celebrity --->
             <cfquery datasource="Reach">
                 UPDATE docketwatch.dbo.celebrity_names
                 SET isDeleted = 1

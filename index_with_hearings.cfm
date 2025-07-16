@@ -7,7 +7,7 @@
 
     <cfinclude template="head.cfm">
     
-    <!-- CSS Addition for Hearings Details Control -->
+    <!--- CSS Addition for Hearings Details Control --->
     <style>
         /* Column for hearings details control */
         td.details-control {
@@ -27,7 +27,7 @@
 <div class="container mt-4">
     <h2 class="mb-4">New Cases Review</h2>
 
-    <!-- Filter Panel -->
+    <!--- Filter Panel --->
     <div class="card mb-3">
       <div class="card-body">
         <div class="row">
@@ -42,14 +42,14 @@
             <label for="countyFilter" class="form-label">County:</label>
             <select id="countyFilter" class="form-select">
               <option value="">All Counties</option>
-              <!-- Options will be populated from the SQL query -->
+              <!--- Options will be populated from the SQL query --->
             </select>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Action Panel -->
+    <!--- Action Panel --->
     <div class="card mb-3">
       <div class="card-body">
         <button id="removeCases" class="btn btn-danger">Remove Cases</button>
@@ -62,7 +62,7 @@
     <table id="casesTable" class="table table-striped table-bordered">
         <thead class="table-dark">
             <tr>
-                <!-- New details-control column for hearings -->
+                <!--- New details-control column for hearings --->
                 <th></th>
                 <th><input type="checkbox" id="select-all"></th>
                 <th>ID</th>
@@ -113,7 +113,7 @@
 
 
 
-<!-- DataTables Initialization with Hearings Child Row -->
+<!--- DataTables Initialization with Hearings Child Row --->
 <script>
 // Function to format hearings data into an HTML table
 function formatHearings(data) {
@@ -480,7 +480,7 @@ $(document).ready(function() {
 
 
 <cftry>
-    <!-- Get the authenticated user's name -->
+    <!--- Get the authenticated user's name --->
     <cfset login_name = getauthuser()>
     <cfif NOT isDefined("login_name") OR len(trim(login_name)) EQ 0>
         <cfset login_name = "user">
@@ -495,7 +495,7 @@ $(document).ready(function() {
         );
     </cfquery>
 <cfcatch type="any">
-    <!-- Optionally log error -->
+    <!--- Optionally log error --->
 </cfcatch>
 </cftry>
  

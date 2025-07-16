@@ -1,4 +1,4 @@
-<!-- Celebrity Lookup Modal -->
+<!--- Celebrity Lookup Modal --->
 <div class="modal fade" id="celebrityLookupModal" tabindex="-1" aria-labelledby="celebrityLookupLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">

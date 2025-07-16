@@ -27,7 +27,7 @@
 <div class="container mt-4">
   <h2 class="mb-4">Celebrity Gallery</h2>
 
-  <!-- Search and Toggle Buttons -->
+  <!--- Search and Toggle Buttons --->
   <div class="row mb-4">
     <div class="col-md-6">
       <input type="text" id="celebritySearch" class="form-control" placeholder="Search celebrities...">
@@ -39,10 +39,10 @@
 
   </div>
 
-  <!-- Celebrity Cards -->
+  <!--- Celebrity Cards --->
   <div id="celebrityGallery" class="row"></div>
 
-  <!-- Modal (no longer used but keeping for potential future) -->
+  <!--- Modal (no longer used but keeping for potential future) --->
   <div class="modal fade" id="celebrityModal" tabindex="-1" aria-labelledby="celebrityModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -51,7 +51,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" id="celebrityModalBody">
-          <!-- Filled dynamically -->
+          <!--- Filled dynamically --->
         </div>
       </div>
     </div>
