@@ -294,7 +294,7 @@ const allColumnKeys = [
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="trackCaseModalLabel">Track a New Case</h5>
+                <h5 class="modal-title" id="trackCaseModalLabel">Track New Case</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
