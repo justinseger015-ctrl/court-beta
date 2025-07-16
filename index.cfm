@@ -219,7 +219,7 @@ const allColumnKeys = [
         <thead class="table-dark">
             <tr>
                 <th><input type="checkbox" id="select-all"></th>
-                <th>Source</th>
+                <th>Sources</th>
                 <th style="display:none;">ID</th> <!--- Hidden ID column for internal use --->
                 <th>Case Number</th>
                 <th>Case Name</th>
