@@ -445,6 +445,11 @@ const ColumnRenderers = {
                      <i class="fa-solid fa-up-right-from-square"></i></a>`;
         }
         
+        // Debug: log available fields to console
+        console.log("Row data fields:", Object.keys(row));
+        console.log("courtcasenumber:", row.courtcasenumber);
+        console.log("case_number:", row.case_number);
+        
         if (row.courtcasenumber && row.courtcasenumber !== "Unfiled" && row.courtcasenumber.trim() !== "") {
             html += `<a href="E${row.courtcasenumber}.pdf" target="_blank" title="View PDF" class="text-danger ms-2">
                      <i class="fa-solid fa-file-pdf"></i></a>`;
