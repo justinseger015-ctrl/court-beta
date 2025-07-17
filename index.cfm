@@ -1,4 +1,3 @@
-
 <!--- 
 ================================================================================
 DocketWatch - Main Cases Dashboard
@@ -446,8 +445,8 @@ const ColumnRenderers = {
                      <i class="fa-solid fa-up-right-from-square"></i></a>`;
         }
         
-        if (row.pdf_link) {
-            html += `<a href="${row.pdf_link}" target="_blank" title="View PDF" class="text-danger ms-2">
+        if (row.case_number) {
+            html += `<a href="E${row.case_number}.pdf" target="_blank" title="View PDF" class="text-danger ms-2">
                      <i class="fa-solid fa-file-pdf"></i></a>`;
         }
         
@@ -920,4 +919,5 @@ function saveColumnVisibility() {
 
 
 </body>
+</html>
 </html>
