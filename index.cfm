@@ -445,8 +445,8 @@ const ColumnRenderers = {
                      <i class="fa-solid fa-up-right-from-square"></i></a>`;
         }
         
-        if (row.case_number) {
-            html += `<a href="E${row.case_number}.pdf" target="_blank" title="View PDF" class="text-danger ms-2">
+        if (row.courtcasenumber && row.courtcasenumber !== "Unfiled" && row.courtcasenumber.trim() !== "") {
+            html += `<a href="E${row.courtcasenumber}.pdf" target="_blank" title="View PDF" class="text-danger ms-2">
                      <i class="fa-solid fa-file-pdf"></i></a>`;
         }
         
