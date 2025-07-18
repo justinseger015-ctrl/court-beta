@@ -84,6 +84,7 @@ SELECT
     e.[additional_information],
     e.[emailed],
     e.[summarize],
+    e.[summarize_html],
     e.[tmz_summarize],
     e.[event_url],
     e.[isDoc],
@@ -425,6 +426,7 @@ ORDER BY r.created_at DESC
         <th>Category</th>
         <th>Created By</th>
         <th>Date Added</th>
+           <th>Summary</th>
         <th>Actions</th> <!--- New column --->
     </tr>
 </thead>
@@ -467,11 +469,8 @@ ORDER BY r.created_at DESC
                             <th>Event No</th>
                             <th>Date</th>
                             <th>Description</th>
-                
-                                 <th>Actions</th> <!--- New Column for the button --->
-                                 
-                                 
-                                 </tr>
+                            <th>Actions</th> <!--- Now contains both PDF and modal buttons --->
+                        </tr>
                     </thead>
                     <tbody>
                         <cfloop query="dockets">
@@ -481,10 +480,19 @@ ORDER BY r.created_at DESC
  
                                 <td>#event_description#</td>
 <td nowrap>
+    <!--- Info button for summarize_html modal if content exists --->
+    <cfif len(trim(dockets.summarize_html))>
+        <button class="btn btn-sm btn-outline-info me-1" 
+                onclick="showSummarizeModal(#dockets.id#)" 
+                title="View Summary">
+            <i class="fas fa-info-circle"></i>
+        </button>
+    </cfif>
+    
     <!--- PDF action buttons container --->
-    <div id="button-container-#dockets.id#">
+    <div id="button-container-#dockets.id#" style="display:inline-block;">
         <!--- View Docket PDF if downloaded --->
-        <cfif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
+        <cfif dockets.isDownloaded NEQ 1 AND len(dockets.local_pdf_filename)>
             <a href="/mediaroot/pacer_pdfs/#dockets.local_pdf_filename#"
                target="_blank"
                class="btn btn-sm btn-outline-success"
@@ -941,187 +949,50 @@ function deleteLink(linkId) {
 }
 </script>
 
-</body>
-</html>
-
-
-
-
-<!--- Add Link Modal --->
-<div class="modal " id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="addLinkForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addLinkModalLabel">Add New Link</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="fk_case" value="<cfoutput>#case_details.id#</cfoutput>">
-          <input type="hidden" name="fk_user" value="<cfoutput>#fk_user#</cfoutput>">
-
-          <div class="mb-3">
-            <label for="case_url" class="form-label">URL</label>
-            <input type="url" class="form-control" id="case_url" name="case_url" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Add Link</button>
-        </div>
+<!-- Modal for displaying docket summary -->
+<div class="modal fade" id="summarizeModal" tabindex="-1" aria-labelledby="summarizeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="summarizeModalLabel">Docket Summary</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-    </form>
+      <div class="modal-body" id="summarizeModalBody">
+        <!-- Content loaded dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-$(document).ready(function () {
-  const caseId = <cfoutput>#case_details.id#</cfoutput>;
-
-  // Init Select2 inline
-  $('#celebritySearch').select2({
-  placeholder: 'Lookup a celebrity to add...',
-  allowClear: true,
-  width: '50%',
-  minimumInputLength: 0,
-  ajax: {
-    url: 'lookup_celebrity_autocomplete.cfm',
-    dataType: 'json',
-    delay: 250,
-    data: function (params) {
-      return { term: params.term };
-    },
-    processResults: function (data) {
-      return {
-        results: data.map(function (item) {
-          return {
-            id: item.celebrity_id,
-            text: item.display_name,
-            verified: item.verified,
-            celebrity_name: item.celebrity_name
-          };
-        })
-      };
-    }
-  }
-});
-
-// Show dropdown on click
-$('#celebritySearch').on('focus', function () {
-  $(this).select2('open');
-});
-
-  // Selection handler
-  $('#celebritySearch').on('select2:select', function (e) {
-    const data = e.params.data;
-    $('#celebrityId').val(data.id);
-    $('#submitCelebrityBtn').show();
-    $('#celebrityWarnings').show();
-
-    if (data.text !== data.celebrity_name) {
-      $('#primaryNotice').html(
-        `You selected <strong>${data.text}</strong>. This will be linked to the public-facing name <strong>${data.celebrity_name}</strong>.`
-      ).show();
-    } else {
-      $('#primaryNotice').hide();
-    }
-
-    if (data.verified !== 'Verified') {
-      $('#verifyWarning').html(` This name has not been verified yet.`).show();
-    } else {
-      $('#verifyWarning').hide();
-    }
-  });
-
-  // Submission handler
-  $('#submitCelebrityBtn').click(function () {
-    const celebId = $('#celebrityId').val();
-    const selectedData = $('#celebritySearch').select2('data')[0];
-    const name = selectedData ? selectedData.text : '';
-
-    if (!celebId) return;
-
-    $.post("insert_case_celebrity.cfm", {
-      fk_case: caseId,
-      fk_celebrity: celebId
-    }, function (response) {
-      if (response.status === "success") {
-        $('#celebrityId').val('');
-        $('#celebrityNameBadge').text(name);
-
-        const newRow = `
-          <tr>
-            <td>
-              ${response.celebrity_name}
-              <a href="celebrity_details.cfm?id=${response.celebrity_id}" target="_blank" class="text-decoration-none">
-                <i class="fa-solid fa-up-right-from-square ms-1"></i>
-              </a>
-            </td>
-            <td>${response.match_status}</td>
-            <td>${response.probability_score || '0.00'}</td>
-            <td>${response.priority_score || '0.00'}</td>
-            <td>${response.ranking_score || '0.00'}</td>
-            <td>
-              <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteCelebrityMatch('${response.match_id}')">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </td>
-          </tr>`;
-
-        $('#celebrityTableWrapper').show();
-        $('#celebTable tbody').append(newRow);
-
-        $('#submitCelebrityBtn').hide();
-        $('#celebrityWarnings, #primaryNotice, #verifyWarning').hide();
-        $('#celebritySearch').val(null).trigger('change.select2');
-      } else {
-        alert("Insert failed: " + (response.error || "Unknown error"));
-      }
-    }, "json");
-  });
-});
+// Function to show the docket summary modal
+function showSummarizeModal(docketId) {
+    // Get the summarize_html content for this docket
+    <cfoutput>
+    const docketSummaries = {
+        <cfloop query="dockets">
+            <cfif len(trim(dockets.summarize_html))>
+                "#dockets.id#": "#JSStringFormat(dockets.summarize_html)#",
+            </cfif>
+        </cfloop>
+    };
+    </cfoutput>
+    
+    // Set content in modal body
+    const modalBody = document.getElementById('summarizeModalBody');
+    modalBody.innerHTML = docketSummaries[docketId] || 'No summary available.';
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('summarizeModal'));
+    modal.show();
+}
 </script>
 
-
-<script>
-document.getElementById('addSubscriberBtn').addEventListener('click', function () {
-    const caseId = <cfoutput>#case_details.id#</cfoutput>;
-    const select = document.getElementById('addUserSelect');
-    const username = select.value;
-
-    if (!username) {
-        Swal.fire('Error', 'Please select a user to add.', 'warning');
-        return;
-    }
-
-    fetch('insert_case_subscriber.cfm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fk_case: caseId, fk_username: username })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            const tableBody = document.querySelector('#alertsTable tbody');
-            const row = document.createElement('tr');
-            row.id = 'subscriberRow_' + data.id;
-
-            row.innerHTML = `
-                <td>${data.firstname} ${data.lastname}</td>
-                <td>${data.email}</td>
-                <td>${data.userRole || 'user'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-danger" onclick="removeSubscriber(${data.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            `;
-
-            tableBody.appendChild(row);
-
-            // Remove from dropdown
-            select.querySelector(`option[value="${username}"]`)?.remove();
-            select.selectedIndex = 0;
-        } else {
+</body>
+</html>        } else {
             Swal.fire('Error', data.message || 'Insert failed.', 'error');
         }
     })
