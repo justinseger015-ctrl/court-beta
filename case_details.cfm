@@ -992,39 +992,4 @@ function showSummarizeModal(docketId) {
 </script>
 
 </body>
-</html>        } else {
-            Swal.fire('Error', data.message || 'Insert failed.', 'error');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        Swal.fire('Error', err.message, 'error');
-    });
-});
-function removeSubscriber(id) {
-    fetch('delete_case_subscriber.cfm?id=' + id)
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the row from the table
-                const row = document.getElementById('subscriberRow_' + id);
-                if (row) {
-                    // Get name and username before removing
-                    const fullName = row.querySelector('td:nth-child(1)').textContent.trim();
-                    const username = data.fk_username;
-                    row.remove();
-
-                    // Add user back to dropdown
-                    const select = document.getElementById('addUserSelect');
-                    const option = document.createElement('option');
-                    option.value = username;
-                    option.textContent = fullName;
-                    select.appendChild(option);
-                }
-            } else {
-                Swal.fire('Error', data.message || 'Could not remove user.', 'error');
-            }
-        })
-        .catch(err => Swal.fire('Error', err.message, 'error'));
-}
-</script>
+</html>
