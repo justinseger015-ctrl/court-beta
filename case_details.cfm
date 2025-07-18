@@ -824,7 +824,7 @@ function updateCaseStatus(caseId, newStatus) {
                 body: JSON.stringify({id: caseId, status: newStatus})
             })
             .then(response => response.json())
-            .then(data => {
+            .then data => {
                 if (data.success) {
                     Swal.fire({
                         title: 'Updated!',
@@ -975,7 +975,7 @@ function showSummarizeModal(docketId) {
     const docketSummaries = {
         <cfloop query="dockets">
             <cfif len(trim(dockets.summarize_html))>
-                "#dockets.id#": "#JSStringFormat(dockets.summarize_html)#",
+                "#dockets.id#": "<cfset escapedSummary = replaceNoCase(dockets.summarize_html, '"', '\"', 'all')>#escapedSummary#",
             </cfif>
         </cfloop>
     };
@@ -983,13 +983,83 @@ function showSummarizeModal(docketId) {
     
     // Set content in modal body
     const modalBody = document.getElementById('summarizeModalBody');
-    modalBody.innerHTML = docketSummaries[docketId] || 'No summary available.';
-    
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('summarizeModal'));
-    modal.show();
+    if (modalBody && docketSummaries[docketId]) {
+        modalBody.innerHTML = docketSummaries[docketId];
+        // Show the modal
+        const modalElement = document.getElementById('summarizeModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('Modal element not found');
+        }
+    } else {
+        console.error('Modal body element not found or summary not available');
+    }
 }
-</script>
 
-</body>
-</html>
+// Make sure document is ready before attaching event handlers
+$(document).ready(function() {
+    // Initialize Hearings DataTable
+    $('#hearingTable').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 10
+    });
+
+
+    $('#docketTable').DataTable({
+             order: [[1, 'desc']],
+        "paging": false,           // Disable pagination
+
+        "info": false,             // Hide "Showing X of Y entries"
+        "lengthChange": false,     // Hide "Show entries" dropdown
+        "searching": true,         // Optional: keep search bar
+        "ordering": true           // Optional: allow column sorting
+    });
+
+
+
+
+    // Initialize Logs DataTable
+    $('#logTable').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 25
+    });
+
+    // Make the showAddLinkModal function globally accessible
+    window.showAddLinkModal = function() {
+        $('#addLinkModal').modal('show');
+    };
+
+    // Only attach event listener if the form exists
+    const addLinkForm = document.getElementById("addLinkForm");
+    if (addLinkForm) {
+        addLinkForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            fetch("insert_case_link.cfm?bypass=1", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    fk_case: this.fk_case.value,
+                    fk_user: this.fk_user.value,
+                    case_url: this.case_url.value
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                   Swal.fire("Success", "Link added!", "success").then(() => {
+    window.location.href = window.location.pathname + "?id=" + encodeURIComponent(getUrlParam("id")) + "&tab=links";
+});
+                } else {
+                    Swal.fire("Error", data.message || "Something went wrong", "error");
+                }
+            })
+            .catch(err => Swal.fire("Error", err.message, "error"));
+        });
+    }
+});
+</script>
