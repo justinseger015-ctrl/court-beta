@@ -969,7 +969,7 @@ function deleteLink(linkId) {
 
 <script>
 // Function to show the docket summary modal
-function showSummarizeModal(docketId) {
+function showSummarizeModal("docketId") {
     // Get the summarize_html content for this docket
     <cfoutput>
     const docketSummaries = {
