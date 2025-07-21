@@ -18,6 +18,12 @@
     
     // Log which environment we're using (helpful for debugging)
     writeLog(file="docketwatch", text="Application started in environment: #application.appType# on server: #serverName#");
+    
+    // Set site title based on environment
+    application.siteTitle = application.appType eq "docketwatch" ? "DocketWatch" : "TMZ Tools";
+    
+    // Set web root for relative paths
+    application.webRoot = "./";
 </cfscript>
 
 <!-- another check -->
