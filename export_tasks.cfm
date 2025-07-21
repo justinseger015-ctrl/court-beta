@@ -1,7 +1,7 @@
 <cfsetting showdebugoutput="false">
 <cfscript>
-    // Load WDDX file path
-    wddxFilePath = "U:/TMZTOOLS/wwwroot/court-beta/docketwatch/scheduled_tasks.wddx";
+    // Load WDDX file path - dynamically determined by environment
+    wddxFilePath = application.fileSharePath & "scheduled_tasks.wddx";
     
     // Read the WDDX file
     if (!fileExists(wddxFilePath)) {
