@@ -20,3 +20,4 @@
     writeLog(file="docketwatch", text="Application started in environment: #application.appType# on server: #serverName#");
 </cfscript>
 
+<!-- another check -->
