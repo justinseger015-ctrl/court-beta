@@ -19,13 +19,12 @@
 <cftry>
     <!--- Define full, absolute paths for the Python executable and your script --->
     <cfset pythonExecutable = "C:\Program Files\Python312\python.exe">
-    <cfset pythonScriptPath = "\\10.146.176.84\general\tmztools\python\download_pacer_pdf.py">
-
+    <cfset pythonScriptPath = "#application.fileSharePath#python\download_pacer_pdf.py">
     <!---
         Define the folder where PDFs will be saved and create a consistent filename.
         Ensure this folder exists and the ColdFusion user has write permissions to it.
     --->
-    <cfset pdfSaveFolder = "\\10.146.176.84\general\tmztools\python\pacer_docs\">
+    <cfset pdfSaveFolder = "#application.fileSharePath#python\pacer_docs\">
     <cfset pdfFilename = "case_#form.caseID#_doc_#form.docID#.pdf">
     <cfset fullPdfPath = pdfSaveFolder & pdfFilename>
     <cfset webAccessiblePath = "/pacer_docs/#pdfFilename#"> <!--- Assuming this network path is mapped to a web-accessible directory --->
