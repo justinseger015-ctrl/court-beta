@@ -23,7 +23,7 @@
         CAST(d.doc_id AS VARCHAR) + '.pdf' AS file_name,
 
         -- Constructed virtual HTTP link
-        'http://#application.serverDomain#/dwdocs/cases/' + 
+        'http://#application.serverDomain#/docs/cases/' + 
             CAST(d.fk_case AS VARCHAR) + '/' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS http_url,
 
