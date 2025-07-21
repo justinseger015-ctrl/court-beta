@@ -22,8 +22,8 @@
                         Case Management
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="../index.cfm?status=Review">New Cases Review</a></li>
-                        <li><a class="dropdown-item" href="../index.cfm?status=Tracked">Tracked Cases</a></li>
+                        <li><a class="dropdown-item" href="/?status=Review">New Cases Review</a></li>
+                        <li><a class="dropdown-item" href="/?status=Tracked">Tracked Cases</a></li>
                         <li><a class="dropdown-item" href="case_events.cfm">Case Events</a></li>
                         <li><a class="dropdown-item" href="latest_pacer_pdfs.cfm">Latest Pacer PDFs</a></li>
                         <li><a class="dropdown-item" href="case_matches.cfm">Celebrity Matches</a></li>
