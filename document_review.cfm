@@ -22,12 +22,12 @@
 
         CAST(d.doc_id AS VARCHAR) + '.pdf' AS file_name,
 
-        -- Constructed virtual HTTP link
+        --- Constructed virtual HTTP link
         'http://tmztools.tmz.local/dwdocs/cases/' + 
             CAST(d.fk_case AS VARCHAR) + '/' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS http_url,
 
-        -- Constructed file system path
+        --- Constructed file system path
         '\\10.146.176.84\general\DOCKETWATCH\docs\cases\' + 
             CAST(d.fk_case AS VARCHAR) + '\' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS local_path
