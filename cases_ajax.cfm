@@ -144,7 +144,7 @@ AND celeb_data.fk_celebrity is NULL
         "status": cases.status,
         "internal_case_url": cases.internal_case_url,
         "external_case_url": cases.external_case_url,
-        "pdf_link": pdfExists ? cases.pdfFilePath : "",
+        "pdf_link": cases.pdfFilePath,
         "case_keywords": cases.case_keywords,
         "tool_name": cases.tool_name,
         "not_found_count": cases.not_found_count
