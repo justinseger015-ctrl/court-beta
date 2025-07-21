@@ -10,7 +10,7 @@
     startTime="03:00",
     endTime="20:00",
     interval="20",
-    publish="http://tmztools.tmz.local/docketwatch_scheduler/docketwatch_pacer_scraper_critical.cfm?bypass=1",
+    publish="http://#application.serverDomain#/docketwatch_scheduler/docketwatch_pacer_scraper_critical.cfm?bypass=1",
     requestTimeOut=600,
     httpMethod="GET",
     daysOfWeek="Monday,Tuesday,Wednesday,Thursday,Friday"

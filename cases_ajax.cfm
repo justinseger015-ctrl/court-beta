@@ -43,7 +43,7 @@ SELECT
     ct.id AS county_id,
     ct.name AS county,
     c.not_found_count,
-'http://docketwatch.tmz.local/docs/cases/' + cast(c.id AS VARCHAR) + '/E' + cast(c.courtCaseNumber AS VARCHAR) + '.pdf' AS pdfFilePath,
+'http://#application.serverDomain#/docs/cases/' + cast(c.id AS VARCHAR) + '/E' + cast(c.courtCaseNumber AS VARCHAR) + '.pdf' AS pdfFilePath,
 cd.id as case_doc_id,
     c.status,
     'case_details.cfm?id=' + CAST(c.id AS VARCHAR) AS internal_case_url,
