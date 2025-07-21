@@ -43,8 +43,8 @@ SELECT
     ct.id AS county_id,
     ct.name AS county,
     c.not_found_count,
-'http://#application.serverDomain#/docs/cases/' + cast(c.id AS VARCHAR) + '/E' + cast(c.courtCaseNumber AS VARCHAR) + '.pdf' AS pdfFilePath,
-cd.id as case_doc_id,
+    'http://#application.serverDomain#/dwdocs/cases/' + cast(c.id AS VARCHAR) + '/E' + cast(c.courtCaseNumber AS VARCHAR) + '.pdf' AS pdfFilePath,
+    cd.id as case_doc_id,
     c.status,
     'case_details.cfm?id=' + CAST(c.id AS VARCHAR) AS internal_case_url,
     c.case_url AS external_case_url,
@@ -123,8 +123,8 @@ AND celeb_data.fk_celebrity is NULL
 <cfset data = []>
 
 <cfloop query="cases">
-    <!--- Check if PDF file exists - docs is a virtual directory --->
-    <cfset pdfFilePath = "u:\docketwatch\docs\cases\" & cases.id & "\E" & cases.courtCaseNumber & ".pdf">
+    <!--- Check if PDF file exists using environment-aware path --->
+    <cfset pdfFilePath = "#application.fileSharePath#docs\cases\" & cases.id & "\E" & cases.courtCaseNumber & ".pdf">
     <cfset pdfExists = fileExists(pdfFilePath)>
     
     <cfset row = {
