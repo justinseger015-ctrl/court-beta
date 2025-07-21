@@ -32,18 +32,16 @@ SELECT
     c.created_at,
     CONVERT(VARCHAR, c.created_at, 126) AS sortable_created_at,
     FORMAT(c.created_at, 'MM-dd-yy hh:mm tt') AS formatted_created_at,
-
     co.court_name,
     c.case_type AS division,
     c.courtCaseNumber,
     celeb_data.fk_celebrity,
     celeb_data.celebrity_name,
     celeb_data.case_keywords,
-    
     ct.id AS county_id,
     ct.name AS county,
     c.not_found_count,
-    'http://#application.serverDomain#/dwdocs/cases/' + cast(c.id AS VARCHAR) + '/E' + cast(c.courtCaseNumber AS VARCHAR) + '.pdf' AS pdfFilePath,
+    'http://#application.serverDomain#/docs/cases/' + cast(c.id AS VARCHAR) + '/E' + cast(c.courtCaseNumber AS VARCHAR) + '.pdf' AS pdfFilePath,
     cd.id as case_doc_id,
     c.status,
     'case_details.cfm?id=' + CAST(c.id AS VARCHAR) AS internal_case_url,
@@ -124,7 +122,7 @@ AND celeb_data.fk_celebrity is NULL
 
 <cfloop query="cases">
     <!--- Check if PDF file exists using environment-aware path --->
-    <cfset pdfFilePath = "#application.fileSharePath#docs\cases\" & cases.id & "\E" & cases.courtCaseNumber & ".pdf">
+    <cfset pdfFilePath = "#application.fileSharePath#\docs\cases\" & cases.id & "\E" & cases.courtCaseNumber & ".pdf">
     <cfset pdfExists = fileExists(pdfFilePath)>
     
     <cfset row = {
