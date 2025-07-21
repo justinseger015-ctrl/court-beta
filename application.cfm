@@ -12,7 +12,7 @@
         application.appType = "docketwatch";
     } else {
         application.serverDomain = "tmztools.tmz.local";
-        application.fileSharePath = "\\10.146.176.84\general\TMZTOOLS\";
+        application.fileSharePath = "\\10.146.176.84\general\TMZTOOLS\wwwroot\";
         application.appType = "tmztools";
     }
     
