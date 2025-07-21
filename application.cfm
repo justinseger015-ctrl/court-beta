@@ -19,4 +19,3 @@
     // Log which environment we're using (helpful for debugging)
     writeLog(file="docketwatch", text="Application started in environment: #application.appType# on server: #serverName#");
 </cfscript>
-
