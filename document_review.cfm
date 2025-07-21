@@ -28,7 +28,7 @@
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS http_url,
 
         --- Constructed file system path
-        '\\10.146.176.84\general\DOCKETWATCH\docs\cases\' + 
+        '#application.fileSharePath#docs\cases\' + 
             CAST(d.fk_case AS VARCHAR) + '\' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS local_path
 
@@ -57,7 +57,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><cfoutput>Document Review</cfoutput></title>
+    <title><cfoutput>#application.siteTitle# - Document Review</cfoutput></title>
     <cfinclude template="head.cfm"> <!--- Includes Bootstrap & DataTables CSS --->
 </head>
 <body>

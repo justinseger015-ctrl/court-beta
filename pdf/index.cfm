@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DocketWatch - Transcript Highlights</title>
+  <title><cfoutput>#application.siteTitle# - Transcript Highlights</cfoutput></title>
   <cfinclude template="/docketwatch-beta/head.cfm">
 
   <style>

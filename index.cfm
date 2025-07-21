@@ -115,7 +115,7 @@ const allColumnKeys = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DocketWatches</title>
+    <title><cfoutput>#application.siteTitle#</cfoutput></title>
     <cfinclude template="head.cfm">
 </head>
 <body>
