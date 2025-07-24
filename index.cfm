@@ -441,18 +441,15 @@ const ColumnRenderers = {
                     <i class="fa-solid fa-file-lines"></i></a>`;
         
         if (row.external_case_url) {
-            html += `<a href="${row.external_case_url}" target="_blank" title="Open Official Court Page" class="text-muted">
-                     <i class="fa-solid fa-up-right-from-square"></i></a>`;
+            html += `<a href="${row.external_case_url}" target="_blank" title="Open Official Court Page" class="text-muted"><i class="fa-solid fa-up-right-from-square"></i></a>`;
         }
         
         if (row.pdf_link && row.pdf_link.trim() !== "") {
-            html += `<a href="${row.pdf_link}" target="_blank" title="View PDF" class="text-danger ms-2">
-                     <i class="fa-solid fa-file-pdf"></i></a>`;
+            html += `<a href="${row.pdf_link}" target="_blank" title="View PDF" class="text-danger ms-2"><i class="fa-solid fa-file-pdf"></i></a>`;
         }
         
         return data + ' ' + html;
     },
-    
     dateFormat: function(data, type, row, formattedField) {
         return type === 'display' ? (row[formattedField] || "(No Date)") : data;
     },
