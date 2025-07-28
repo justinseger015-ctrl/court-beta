@@ -1208,8 +1208,6 @@ ORDER BY r.created_at DESC
         </cfoutput>
     </div>
 </div>
-
-<script>
 // Enhanced DataTable initialization with loading states
 $(document).ready(function() {
     // Show loading overlay for tables
