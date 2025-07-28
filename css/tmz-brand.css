@@ -534,10 +534,9 @@ h1, h2, h3, h4, h5, h6, .navbar-brand, .sorting {
     margin-bottom: 1.5rem;
     border: 1px solid #e9ecef;
 }
-
 .form-section h6 {
     color: var(--tmz-black);
-    font-weight: 600;
+    font-weight: 400;
     margin-bottom: 1rem;
     display: flex;
     align-items: center;

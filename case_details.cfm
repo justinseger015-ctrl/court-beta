@@ -324,6 +324,7 @@ ORDER BY r.created_at DESC
                         </a>
                     </h5>
 
+                    
                     <dl class="row mb-0">
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-flag me-1 text-muted" aria-hidden="true"></i>
