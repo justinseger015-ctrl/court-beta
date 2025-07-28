@@ -212,6 +212,13 @@ ORDER BY r.created_at DESC
             flex-wrap: wrap;
         }
         
+        .filter-card .card-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid #cbd5e1;
+            font-weight: 500;
+            color: #475569;
+        }
+        
         .courthouse-image {
             width: 64px;
             height: 64px;
@@ -270,36 +277,28 @@ ORDER BY r.created_at DESC
 <cfinclude template="navbar.cfm"> <!--- Navigation Bar --->
 
 <div class="container-fluid mt-4">
-    <!-- Enhanced header section -->
-    <div class="case-header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-2 display-6">
-                        <i class="fas fa-gavel me-3" aria-hidden="true"></i>
-                        Case Details
-                    </h1>
-                    <p class="mb-0 lead opacity-90">
-                        <cfoutput>#case_details.case_name#</cfoutput>
-                    </p>
-                </div>
-                <div class="col-md-4">
-                    <div class="case-actions justify-content-md-end">
+    <!-- Minimal header section matching search form style -->
+    <div class="container">
+        <div class="card shadow-sm mb-4 filter-card">
+            <div class="card-header">
+                <h6 class="mb-0 d-flex align-items-center">
+                    <i class="fas fa-gavel me-2"></i>Case Details - <cfoutput>#case_details.case_name#</cfoutput>
+                    <div class="ms-auto d-flex gap-2">
                         <a href="case_update.cfm?id=<cfoutput>#case_details.id#</cfoutput>" 
-                           class="btn btn-light btn-lg" 
+                           class="btn btn-primary btn-sm" 
                            role="button"
                            aria-label="Update case details">
-                            <i class="fas fa-edit me-2" aria-hidden="true"></i>
+                            <i class="fas fa-edit me-1" aria-hidden="true"></i>
                             Update
                         </a>
                         <button onclick="history.back()" 
-                                class="btn btn-outline-light btn-lg"
+                                class="btn btn-outline-secondary btn-sm"
                                 aria-label="Go back to previous page">
-                            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>
                             Back
                         </button>
                     </div>
-                </div>
+                </h6>
             </div>
         </div>
     </div>
@@ -309,11 +308,10 @@ ORDER BY r.created_at DESC
 
         <!--- Case Detail Section --->
         <div class="col-12 col-xl-6">
-            <div class="info-card shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <h5 class="card-title mb-3 d-flex align-items-center">
-                        <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
-                        <cfoutput>Case Number: #case_details.case_number#</cfoutput>
+            <div class="card shadow-sm mb-4 filter-card">
+                <div class="card-header">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-file-alt me-2"></i>Case Information
                         <a href="<cfoutput>#case_details.case_url#</cfoutput>" 
                            target="_blank" 
                            class="ms-auto text-decoration-none btn btn-primary btn-sm" 
@@ -321,7 +319,13 @@ ORDER BY r.created_at DESC
                            aria-label="View full case in new window">
                             <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                         </a>
-                    </h5>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Case Number:</strong> <cfoutput>#case_details.case_number#</cfoutput><br>
+                        <strong>Case Name:</strong> <cfoutput>#case_details.case_name#</cfoutput>
+                    </div>
 
 
                     <dl class="row mb-0">
@@ -439,11 +443,10 @@ ORDER BY r.created_at DESC
 
         <!--- Courthouse Info Section --->
         <div class="col-12 col-xl-6">
-            <div class="info-card shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <h5 class="card-title mb-3 d-flex align-items-center">
-                        <i class="fas fa-university me-2 text-primary" aria-hidden="true"></i>
-                        Courthouse Info
+            <div class="card shadow-sm mb-4 filter-card">
+                <div class="card-header">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-university me-2"></i>Courthouse Information
                         <cfoutput>
                         <cfif len(trim(courthouse.court_url))>
                             <a href="#courthouse.court_url#" 
@@ -455,7 +458,9 @@ ORDER BY r.created_at DESC
                             </a>
                         </cfif>
                         </cfoutput>
-                    </h5>
+                    </h6>
+                </div>
+                <div class="card-body">
 
                     <cfoutput>
                     <cfif case_details.court_name_pacer neq "">
