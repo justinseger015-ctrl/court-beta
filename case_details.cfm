@@ -524,13 +524,13 @@ ORDER BY r.created_at DESC
 <cfif structKeyExists(url, "tab")>
     <cfset tabName = lcase(trim(url.tab))>
     <cfif listFind("summary,links,dockets,hearings,log,celebrities,alerts", tabName)>
-        <cfset "#tabName#_tab_status" = "show active">
+        <cfset "#tabName#_tab_status" = "active">
     <cfelse>
-        <cfset summary_tab_status = "show active"> <!--- fallback for invalid tab param --->
+        <cfset summary_tab_status = "active"> <!--- fallback for invalid tab param --->
     </cfif>
 <cfelse>
     <!--- Default to Summary tab for consistent behavior --->
-    <cfset summary_tab_status = "show active">
+    <cfset summary_tab_status = "active">
 </cfif>
 
 
