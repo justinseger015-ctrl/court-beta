@@ -284,6 +284,55 @@
     color: var(--status-removed-text); 
 }
 
+/* Status Change Buttons - Standardized with Status Colors */
+/* Review Button Styling */
+.btn-outline-secondary {
+    color: var(--status-review-text);
+    border-color: var(--status-review-text);
+    background-color: var(--tmz-white);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active,
+.btn-outline-secondary.active {
+    background-color: var(--status-review-bg);
+    border-color: var(--status-review-text);
+    color: var(--status-review-text);
+}
+
+/* Track Button Styling (using success variant) */
+.btn-outline-success {
+    color: var(--status-tracked-text);
+    border-color: var(--status-tracked-text);
+    background-color: var(--tmz-white);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active,
+.btn-outline-success.active {
+    background-color: var(--status-tracked-bg);
+    border-color: var(--status-tracked-text);
+    color: var(--status-tracked-text);
+}
+
+/* Remove Button Styling (using danger variant) */
+.btn-outline-danger {
+    color: var(--status-removed-text);
+    border-color: var(--status-removed-text);
+    background-color: var(--tmz-white);
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active,
+.btn-outline-danger.active {
+    background-color: var(--status-removed-bg);
+    border-color: var(--status-removed-text);
+    color: var(--status-removed-text);
+}
+
 /* Cards and Info Panels */
 .info-card {
     background: var(--tmz-white);
