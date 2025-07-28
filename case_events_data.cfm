@@ -15,7 +15,7 @@
     JOIN 
         docketwatch.dbo.cases c ON ce.fk_cases = c.id
     WHERE 
-        ce.event_date >= '2025-01-01'
+        ce.event_date >= '2025-01-01' anc c.case_number <> 'Unfiled'
     ORDER BY 
         ce.id DESC
 </cfquery>
