@@ -287,50 +287,50 @@
 /* Status Change Buttons - Standardized with Status Colors */
 /* Review Button Styling */
 .btn-outline-secondary {
-    color: var(--status-review-text);
-    border-color: var(--status-review-text);
-    background-color: var(--tmz-white);
+    color: var(--status-review-text) !important;
+    border-color: var(--status-review-text) !important;
+    background-color: var(--tmz-white) !important;
 }
 
 .btn-outline-secondary:hover,
 .btn-outline-secondary:focus,
 .btn-outline-secondary:active,
 .btn-outline-secondary.active {
-    background-color: var(--status-review-bg);
-    border-color: var(--status-review-text);
-    color: var(--status-review-text);
+    background-color: var(--status-review-bg) !important;
+    border-color: var(--status-review-text) !important;
+    color: var(--status-review-text) !important;
 }
 
 /* Track Button Styling (using success variant) */
 .btn-outline-success {
-    color: var(--status-tracked-text);
-    border-color: var(--status-tracked-text);
-    background-color: var(--tmz-white);
+    color: var(--status-tracked-text) !important;
+    border-color: var(--status-tracked-text) !important;
+    background-color: var(--tmz-white) !important;
 }
 
 .btn-outline-success:hover,
 .btn-outline-success:focus,
 .btn-outline-success:active,
 .btn-outline-success.active {
-    background-color: var(--status-tracked-bg);
-    border-color: var(--status-tracked-text);
-    color: var(--status-tracked-text);
+    background-color: var(--status-tracked-bg) !important;
+    border-color: var(--status-tracked-text) !important;
+    color: var(--status-tracked-text) !important;
 }
 
 /* Remove Button Styling (using danger variant) */
 .btn-outline-danger {
-    color: var(--status-removed-text);
-    border-color: var(--status-removed-text);
-    background-color: var(--tmz-white);
+    color: var(--status-removed-text) !important;
+    border-color: var(--status-removed-text) !important;
+    background-color: var(--tmz-white) !important;
 }
 
 .btn-outline-danger:hover,
 .btn-outline-danger:focus,
 .btn-outline-danger:active,
 .btn-outline-danger.active {
-    background-color: var(--status-removed-bg);
-    border-color: var(--status-removed-text);
-    color: var(--status-removed-text);
+    background-color: var(--status-removed-bg) !important;
+    border-color: var(--status-removed-text) !important;
+    color: var(--status-removed-text) !important;
 }
 
 /* Cards and Info Panels */
