@@ -17,7 +17,7 @@
         c.court_name_pacer,
         c.[summarize_html],
         t.[id] AS tool_id,
-        t.[name] AS tool_name,
+        t.[tool_name] AS tool_name,
         t.[search_url] as tool_url
     FROM [docketwatch].[dbo].[cases] c
     LEFT JOIN [docketwatch].[dbo].[tool_cases] tc ON tc.fk_case = c.id
