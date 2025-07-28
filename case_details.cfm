@@ -1575,7 +1575,281 @@ $(document).ready(function() {
             });
         });
     }
+
+    // Celebrity Search Functionality
+    const caseId = $('#case_details input[name="fk_case"]').val() || <cfoutput>#case_details.id#</cfoutput>;
+
+    // Initialize Select2 for celebrity search
+    $('#celebritySearch').select2({
+        placeholder: 'Lookup a celebrity to add...',
+        allowClear: true,
+        width: '50%',
+        minimumInputLength: 0,
+        ajax: {
+            url: 'lookup_celebrity_autocomplete.cfm',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return { term: params.term };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                        return {
+                            id: item.celebrity_id,
+                            text: item.display_name,
+                            verified: item.verified,
+                            celebrity_name: item.celebrity_name
+                        };
+                    })
+                };
+            }
+        }
+    });
+
+    // Show dropdown on click
+    $('#celebritySearch').on('focus', function () {
+        $(this).select2('open');
+    });
+
+    // Celebrity selection handler
+    $('#celebritySearch').on('select2:select', function (e) {
+        const data = e.params.data;
+        $('#celebrityId').val(data.id);
+        $('#submitCelebrityBtn').show();
+        $('#celebrityWarnings').show();
+
+        if (data.text !== data.celebrity_name) {
+            $('#primaryNotice').html(
+                `You selected <strong>${data.text}</strong>. This will be linked to the public-facing name <strong>${data.celebrity_name}</strong>.`
+            ).show();
+        } else {
+            $('#primaryNotice').hide();
+        }
+
+        if (data.verified !== 'Verified') {
+            $('#verifyWarning').html(' This name has not been verified yet.').show();
+        } else {
+            $('#verifyWarning').hide();
+        }
+    });
+
+    // Celebrity submission handler
+    $('#submitCelebrityBtn').click(function () {
+        const celebId = $('#celebrityId').val();
+        const selectedData = $('#celebritySearch').select2('data')[0];
+        const name = selectedData ? selectedData.text : '';
+
+        if (!celebId) return;
+
+        $.post("insert_case_celebrity.cfm", {
+            fk_case: caseId,
+            fk_celebrity: celebId
+        }, function (response) {
+            if (response.status === "success") {
+                $('#celebrityId').val('');
+
+                const newRow = `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-star me-2 text-warning" aria-hidden="true"></i>
+                                ${response.celebrity_name}
+                                <a href="celebrity_details.cfm?id=${response.celebrity_id}" 
+                                   target="_blank" 
+                                   class="ms-2 text-decoration-none btn btn-sm btn-outline-primary"
+                                   title="View celebrity details">
+                                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${response.match_status}</span>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" 
+                                     role="progressbar" 
+                                     style="width: ${response.probability_score || '0.00'}%">
+                                    ${response.probability_score || '0.00'}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">${response.priority_score || '0.00'}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-dark">${response.ranking_score || '0.00'}</span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    title="Remove celebrity match" 
+                                    onclick="deleteCelebrityMatch('${response.match_id}')">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+
+                $('#celebrityTableWrapper').show();
+                $('#celebTable tbody').append(newRow);
+
+                $('#submitCelebrityBtn').hide();
+                $('#celebrityWarnings, #primaryNotice, #verifyWarning').hide();
+                $('#celebritySearch').val(null).trigger('change.select2');
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire("Error", "Insert failed: " + (response.error || "Unknown error"), "error");
+                } else {
+                    alert("Insert failed: " + (response.error || "Unknown error"));
+                }
+            }
+        }, "json");
+    });
+
+    // Subscriber Management
+    document.getElementById('addSubscriberBtn').addEventListener('click', function () {
+        const caseId = <cfoutput>#case_details.id#</cfoutput>;
+        const select = document.getElementById('addUserSelect');
+        const username = select.value;
+
+        if (!username) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Error', 'Please select a user to add.', 'warning');
+            } else {
+                alert('Please select a user to add.');
+            }
+            return;
+        }
+
+        fetch('insert_case_subscriber.cfm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fk_case: caseId, fk_username: username })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const tableBody = document.querySelector('#alertsTable tbody');
+                const row = document.createElement('tr');
+                row.id = 'subscriberRow_' + data.id;
+
+                row.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
+                            ${data.firstname} ${data.lastname}
+                        </div>
+                    </td>
+                    <td>
+                        <a href="mailto:${data.email}" class="text-decoration-none">
+                            ${data.email}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">${data.userRole || 'user'}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="removeSubscriber(${data.id})"
+                                title="Remove subscriber"
+                                aria-label="Remove ${data.firstname} ${data.lastname} from subscribers">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+
+                // Remove from dropdown
+                select.querySelector(`option[value="${username}"]`)?.remove();
+                select.selectedIndex = 0;
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', data.message || 'Insert failed.', 'error');
+                } else {
+                    alert('Error: ' + (data.message || 'Insert failed.'));
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Error', 'Network error occurred', 'error');
+            } else {
+                alert('Network error: ' + err.message);
+            }
+        });
+    });
 });
+
+// Subscriber removal function
+function removeSubscriber(id) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Remove Subscriber?',
+            text: 'This will remove the user from case notifications.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-user-minus me-2"></i>Yes, remove',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('delete_case_subscriber.cfm?id=' + id)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove the row from the table
+                            const row = document.getElementById('subscriberRow_' + id);
+                            if (row) {
+                                // Get name and username before removing
+                                const fullName = row.querySelector('td:nth-child(1)').textContent.trim();
+                                const username = data.fk_username;
+                                row.remove();
+
+                                // Add user back to dropdown
+                                const select = document.getElementById('addUserSelect');
+                                const option = document.createElement('option');
+                                option.value = username;
+                                option.textContent = fullName;
+                                select.appendChild(option);
+                            }
+                            Swal.fire('Removed!', 'Subscriber has been removed.', 'success');
+                        } else {
+                            Swal.fire('Error', data.message || 'Could not remove user.', 'error');
+                        }
+                    })
+                    .catch(err => Swal.fire('Error', err.message, 'error'));
+            }
+        });
+    } else {
+        if (confirm('Remove this subscriber?')) {
+            fetch('delete_case_subscriber.cfm?id=' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const row = document.getElementById('subscriberRow_' + id);
+                        if (row) {
+                            const fullName = row.querySelector('td:nth-child(1)').textContent.trim();
+                            const username = data.fk_username;
+                            row.remove();
+
+                            const select = document.getElementById('addUserSelect');
+                            const option = document.createElement('option');
+                            option.value = username;
+                            option.textContent = fullName;
+                            select.appendChild(option);
+                        }
+                        alert('Subscriber removed successfully!');
+                    } else {
+                        alert('Error: ' + (data.message || 'Could not remove user.'));
+                    }
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+    }
+}
 
 // Utility function for URL parameters
 function getUrlParam(key) {
@@ -1827,12 +2101,6 @@ function deleteLink(linkId) {
 }
 </script>
 
-</body>
-</html>
-
-
-
-
 <!--- Add Link Modal --->
 <div class="modal " id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -1859,187 +2127,5 @@ function deleteLink(linkId) {
   </div>
 </div>
 
-<script>
-$(document).ready(function () {
-  const caseId = <cfoutput>#case_details.id#</cfoutput>;
-
-  // Init Select2 inline
-  $('#celebritySearch').select2({
-  placeholder: 'Lookup a celebrity to add...',
-  allowClear: true,
-  width: '50%',
-  minimumInputLength: 0,
-  ajax: {
-    url: 'lookup_celebrity_autocomplete.cfm',
-    dataType: 'json',
-    delay: 250,
-    data: function (params) {
-      return { term: params.term };
-    },
-    processResults: function (data) {
-      return {
-        results: data.map(function (item) {
-          return {
-            id: item.celebrity_id,
-            text: item.display_name,
-            verified: item.verified,
-            celebrity_name: item.celebrity_name
-          };
-        })
-      };
-    }
-  }
-});
-
-// Show dropdown on click
-$('#celebritySearch').on('focus', function () {
-  $(this).select2('open');
-});
-
-  // Selection handler
-  $('#celebritySearch').on('select2:select', function (e) {
-    const data = e.params.data;
-    $('#celebrityId').val(data.id);
-    $('#submitCelebrityBtn').show();
-    $('#celebrityWarnings').show();
-
-    if (data.text !== data.celebrity_name) {
-      $('#primaryNotice').html(
-        `You selected <strong>${data.text}</strong>. This will be linked to the public-facing name <strong>${data.celebrity_name}</strong>.`
-      ).show();
-    } else {
-      $('#primaryNotice').hide();
-    }
-
-    if (data.verified !== 'Verified') {
-      $('#verifyWarning').html(` This name has not been verified yet.`).show();
-    } else {
-      $('#verifyWarning').hide();
-    }
-  });
-
-  // Submission handler
-  $('#submitCelebrityBtn').click(function () {
-    const celebId = $('#celebrityId').val();
-    const selectedData = $('#celebritySearch').select2('data')[0];
-    const name = selectedData ? selectedData.text : '';
-
-    if (!celebId) return;
-
-    $.post("insert_case_celebrity.cfm", {
-      fk_case: caseId,
-      fk_celebrity: celebId
-    }, function (response) {
-      if (response.status === "success") {
-        $('#celebrityId').val('');
-        $('#celebrityNameBadge').text(name);
-
-        const newRow = `
-          <tr>
-            <td>
-              ${response.celebrity_name}
-              <a href="celebrity_details.cfm?id=${response.celebrity_id}" target="_blank" class="text-decoration-none">
-                <i class="fa-solid fa-up-right-from-square ms-1"></i>
-              </a>
-            </td>
-            <td>${response.match_status}</td>
-            <td>${response.probability_score || '0.00'}</td>
-            <td>${response.priority_score || '0.00'}</td>
-            <td>${response.ranking_score || '0.00'}</td>
-            <td>
-              <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteCelebrityMatch('${response.match_id}')">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </td>
-          </tr>`;
-
-        $('#celebrityTableWrapper').show();
-        $('#celebTable tbody').append(newRow);
-
-        $('#submitCelebrityBtn').hide();
-        $('#celebrityWarnings, #primaryNotice, #verifyWarning').hide();
-        $('#celebritySearch').val(null).trigger('change.select2');
-      } else {
-        alert("Insert failed: " + (response.error || "Unknown error"));
-      }
-    }, "json");
-  });
-});
-</script>
-
-
-<script>
-document.getElementById('addSubscriberBtn').addEventListener('click', function () {
-    const caseId = <cfoutput>#case_details.id#</cfoutput>;
-    const select = document.getElementById('addUserSelect');
-    const username = select.value;
-
-    if (!username) {
-        Swal.fire('Error', 'Please select a user to add.', 'warning');
-        return;
-    }
-
-    fetch('insert_case_subscriber.cfm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fk_case: caseId, fk_username: username })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            const tableBody = document.querySelector('#alertsTable tbody');
-            const row = document.createElement('tr');
-            row.id = 'subscriberRow_' + data.id;
-
-            row.innerHTML = `
-                <td>${data.firstname} ${data.lastname}</td>
-                <td>${data.email}</td>
-                <td>${data.userRole || 'user'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-danger" onclick="removeSubscriber(${data.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            `;
-
-            tableBody.appendChild(row);
-
-            // Remove from dropdown
-            select.querySelector(`option[value="${username}"]`)?.remove();
-            select.selectedIndex = 0;
-        } else {
-            Swal.fire('Error', data.message || 'Insert failed.', 'error');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        Swal.fire('Error', err.message, 'error');
-    });
-});
-function removeSubscriber(id) {
-    fetch('delete_case_subscriber.cfm?id=' + id)
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the row from the table
-                const row = document.getElementById('subscriberRow_' + id);
-                if (row) {
-                    // Get name and username before removing
-                    const fullName = row.querySelector('td:nth-child(1)').textContent.trim();
-                    const username = data.fk_username;
-                    row.remove();
-
-                    // Add user back to dropdown
-                    const select = document.getElementById('addUserSelect');
-                    const option = document.createElement('option');
-                    option.value = username;
-                    option.textContent = fullName;
-                    select.appendChild(option);
-                }
-            } else {
-                Swal.fire('Error', data.message || 'Could not remove user.', 'error');
-            }
-        })
-        .catch(err => Swal.fire('Error', err.message, 'error'));
-}
-</script>
+</body>
+</html>

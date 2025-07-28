@@ -117,4 +117,3 @@
   }
 </style>
 
-<link rel="stylesheet" type="text/css" href="https://static.tmz.com/tmz-web/client/v3.37/main.desktop.d86ec34b3185ca6d3faf.css">
