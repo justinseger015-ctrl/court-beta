@@ -177,21 +177,25 @@
     border-color: var(--tmz-red) !important;
 }
 
-/* DataTables Header Styling - Remove Bold for Better Readability */
+/* DataTables Header Styling - Dark Grey with White Bold Text */
 .dataTables_wrapper table.dataTable thead th,
 .dataTables_wrapper table.dataTable thead td {
-    font-weight: normal !important;
-    font-size: 0.95rem !important;
-    color: var(--tmz-dark-gray) !important;
-    background-color: var(--tmz-light-gray) !important;
-    border-bottom: 2px solid var(--tmz-red) !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    color: var(--tmz-white) !important;
+    background-color: var(--tmz-dark-gray) !important;
+    border-bottom: 1px solid var(--tmz-gray) !important;
+    border-top: none !important;
     padding: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* DataTables Header Hover Effects */
 .dataTables_wrapper table.dataTable thead th:hover,
 .dataTables_wrapper table.dataTable thead td:hover {
-    background-color: #e9ecef !important;
+    background-color: var(--tmz-black) !important;
+    color: var(--tmz-white) !important;
 }
 
 /* DataTables Sorting Icons */
@@ -201,7 +205,15 @@
 .dataTables_wrapper table.dataTable thead .sorting_asc:after,
 .dataTables_wrapper table.dataTable thead .sorting_desc:before,
 .dataTables_wrapper table.dataTable thead .sorting_desc:after {
-    color: var(--tmz-gray) !important;
+    color: var(--tmz-white) !important;
+    opacity: 0.7;
+}
+
+/* Active sorting arrows */
+.dataTables_wrapper table.dataTable thead .sorting_asc:after,
+.dataTables_wrapper table.dataTable thead .sorting_desc:after {
+    opacity: 1 !important;
+    color: var(--tmz-white) !important;
 }
 
 /* Navigation Styling */
