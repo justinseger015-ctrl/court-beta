@@ -9,15 +9,15 @@
     --tmz-black: #201c1c;
     --tmz-red: #9d3433;
     --tmz-dark-gray: #2d2d2d;
-    --tmz-gray: #666666;
+    --tmz-gray: #515866;
     --tmz-light-gray: #f5f5f5;
     --tmz-white: #ffffff;
     
     /* Functional Status Colors (keep existing for clarity) */
     --status-review-bg: #fff3cd;
     --status-review-text: #856404;
-    --status-tracked-bg: #d1ecf1;
-    --status-tracked-text: #0c5460;
+    --status-tracked-bg: #3189d7;
+    --status-tracked-text:#65aef2;
     --status-removed-bg: #f8d7da;
     --status-removed-text: #721c24;
     
