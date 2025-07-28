@@ -651,7 +651,6 @@ ORDER BY r.created_at DESC
             </div>
 
             <div class="tab-pane p-4 #links_tab_status#" id="links" role="tabpanel" aria-labelledby="links-tab">
-            </cfoutput>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-link me-2 text-primary" aria-hidden="true"></i>
@@ -1202,6 +1201,7 @@ ORDER BY r.created_at DESC
             </div>
 
         </div>
+        </cfoutput>
     </div>
 </div>
 // Enhanced DataTable initialization with loading states
