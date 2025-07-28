@@ -14,7 +14,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <!--- TMZ Brand Styling (MUST come after Bootstrap to override) --->
-<link rel="stylesheet" href="css/tmz-brand.css?ver=1.0.3">
+<link rel="stylesheet" href="css/tmz-brand.css?ver=1.0.5">
 
 <!--- jQuery (must come first) --->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
