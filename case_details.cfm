@@ -441,13 +441,17 @@ ORDER BY r.created_at DESC
                         </cfif>
                         </cfoutput>
 
+                        <cfoutput>
+                        <cfif len(trim(case_details.details))>
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-tag me-1 text-muted" aria-hidden="true"></i>
                             Category
                         </dt>
                         <dd class="col-sm-8 mb-0">
-                            <cfoutput>#htmlEditFormat(case_details.details)#</cfoutput>
+                            #htmlEditFormat(case_details.details)#
                         </dd>
+                        </cfif>
+                        </cfoutput>
                     </dl>
                 </div>
             </div>
