@@ -339,6 +339,16 @@ ORDER BY r.created_at DESC
                         <strong>Case Name:</strong> <cfoutput>#case_details.case_name#</cfoutput>
                     </div>
 
+                    <!-- Timestamp info -->
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
+                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                            &nbsp;&nbsp;
+                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
+                        </small>
+                    </div>
 
                     <dl class="row mb-0">
                         <dt class="col-sm-4 mb-2">
@@ -413,40 +423,31 @@ ORDER BY r.created_at DESC
                             <cfoutput>#case_details.case_type#</cfoutput>
                         </dd>
 
+                        <cfoutput>
+                        <cfif len(trim(case_details.tool_name))>
                         <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-user me-1 text-muted" aria-hidden="true"></i>
-                            Owner
+                            <i class="fas fa-tools me-1 text-muted" aria-hidden="true"></i>
+                            Tool
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            <cfoutput>#case_details.owner#</cfoutput>
+                            <cfif len(trim(case_details.tool_url))>
+                                <a href="#case_details.tool_url#" target="_blank" class="text-decoration-none">
+                                    #case_details.tool_name#
+                                    <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
+                                </a>
+                            <cfelse>
+                                #case_details.tool_name#
+                            </cfif>
                         </dd>
+                        </cfif>
+                        </cfoutput>
 
                         <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-calendar-plus me-1 text-muted" aria-hidden="true"></i>
-                            Created
-                        </dt>
-                        <dd class="col-sm-8 mb-2">
-                            <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
-                        </dd>
-
-                        <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-clock me-1 text-muted" aria-hidden="true"></i>
-                            Last Updated
-                        </dt>
-                        <dd class="col-sm-8 mb-2">
-                            <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
-                        </dd>
-
-                        <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-sticky-note me-1 text-muted" aria-hidden="true"></i>
-                            Notes / Details
+                            <i class="fas fa-tag me-1 text-muted" aria-hidden="true"></i>
+                            Category
                         </dt>
                         <dd class="col-sm-8 mb-0">
-                            <div class="bg-light p-3 rounded">
-                                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit; font-size: inherit;">
-                                    <cfoutput>#htmlEditFormat(case_details.details)#</cfoutput>
-                                </pre>
-                            </div>
+                            <cfoutput>#htmlEditFormat(case_details.details)#</cfoutput>
                         </dd>
                     </dl>
                 </div>
