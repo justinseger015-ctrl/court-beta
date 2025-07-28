@@ -630,17 +630,16 @@ ORDER BY r.created_at DESC
 
         <!--- Tab content panes with enhanced styling --->
         <div class="tab-content mt-0" id="caseTabsContent">
+            <cfoutput>
             <div class="tab-pane p-4 #summary_tab_status#" id="summary" role="tabpanel" aria-labelledby="summary-tab">
                 <cfif len(trim(case_details.summarize_html))>
                     <div class="summary-content">
-                        <cfoutput>
-                            #REReplace(
-                                case_details.summarize_html,
-                                "<h3(.*?)>(.*?)</h3>",
-                                "<h5\1>\2</h5>",
-                                "all"
-                            )#
-                        </cfoutput>
+                        #REReplace(
+                            case_details.summarize_html,
+                            "<h3(.*?)>(.*?)</h3>",
+                            "<h5\1>\2</h5>",
+                            "all"
+                        )#
                     </div>
                 <cfelse>
                     <div class="empty-state">
@@ -652,6 +651,7 @@ ORDER BY r.created_at DESC
             </div>
 
             <div class="tab-pane p-4 #links_tab_status#" id="links" role="tabpanel" aria-labelledby="links-tab">
+            </cfoutput>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-link me-2 text-primary" aria-hidden="true"></i>
@@ -1201,9 +1201,9 @@ ORDER BY r.created_at DESC
                 </cfif>
             </div>
 
+        </div>
+    </div>
 </div>
-
-<script>
 // Enhanced DataTable initialization with loading states
 $(document).ready(function() {
     // Show loading overlay for tables
