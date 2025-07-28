@@ -1,0 +1,641 @@
+/*
+ * TMZ Brand Styling for DocketWatch
+ * Consistent color scheme and styling across the application
+ */
+
+/* TMZ Brand Color Variables */
+:root {
+    /* Primary TMZ Colors */
+    --tmz-black: #201c1c;
+    --tmz-red: #8e0000;
+    --tmz-dark-gray: #232b30;
+    --tmz-gray: #7a7979;
+    --tmz-light-gray: #f5f5f5;
+    --tmz-white: #f5f5f5;
+    
+    /* Functional Status Colors (keep existing for clarity) */
+    --status-review-bg: #fff3cd;
+    --status-review-text: #856404;
+    --status-tracked-bg: #d1ecf1;
+    --status-tracked-text: #0c5460;
+    --status-removed-bg: #f8d7da;
+    --status-removed-text: #8e0000;
+    
+    /* Success/Warning/Error (standard but TMZ-influenced) */
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: var(--tmz-red);
+}
+
+/* Override Bootstrap Primary Colors with TMZ Red */
+.btn-primary {
+    background-color: var(--tmz-red);
+    border-color: var(--tmz-red);
+    color: var(--tmz-white);
+}
+
+.btn-primary:hover, 
+.btn-primary:focus, 
+.btn-primary:active,
+.btn-primary.active {
+    background-color: #750000;
+    border-color: #750000;
+    color: var(--tmz-white);
+}
+
+.btn-outline-primary {
+    color: var(--tmz-red);
+    border-color: var(--tmz-red);
+}
+
+.btn-outline-primary:hover, 
+.btn-outline-primary:focus, 
+.btn-outline-primary:active,
+.btn-outline-primary.active {
+    background-color: var(--tmz-red);
+    border-color: var(--tmz-red);
+    color: var(--tmz-white);
+}
+
+/* Override Bootstrap Secondary Colors with TMZ Dark Gray */
+.btn-secondary {
+    background-color: var(--tmz-dark-gray);
+    border-color: var(--tmz-dark-gray);
+    color: var(--tmz-white);
+}
+
+.btn-secondary:hover, 
+.btn-secondary:focus, 
+.btn-secondary:active,
+.btn-secondary.active {
+    background-color: var(--tmz-black);
+    border-color: var(--tmz-black);
+    color: var(--tmz-white);
+}
+
+/* Text Color Overrides */
+.text-primary {
+    color: var(--tmz-red) !important;
+}
+
+.text-muted {
+    color: var(--tmz-gray) !important;
+}
+
+/* Form Controls with TMZ Focus */
+.form-control:focus, 
+.form-select:focus {
+    border-color: var(--tmz-red);
+    box-shadow: 0 0 0 0.2rem rgba(142, 0, 0, 0.25);
+}
+
+/* Button Focus States */
+.btn:focus,
+.btn.focus {
+    box-shadow: 0 0 0 0.2rem rgba(142, 0, 0, 0.25);
+}
+
+/* DataTable Styling */
+.table-dark {
+    background-color: var(--tmz-black);
+    color: var(--tmz-white);
+}
+
+.table-dark th,
+.table-dark td {
+    border-color: var(--tmz-dark-gray);
+}
+
+/* Bootstrap Pagination Override - TMZ Red Theme */
+.pagination {
+    --bs-pagination-padding-x: 0.75rem !important;
+    --bs-pagination-padding-y: 0.375rem !important;
+    --bs-pagination-font-size: 1rem !important;
+    --bs-pagination-color: var(--tmz-red) !important;
+    --bs-pagination-bg: var(--bs-body-bg) !important;
+    --bs-pagination-border-width: var(--bs-border-width) !important;
+    --bs-pagination-border-color: var(--bs-border-color) !important;
+    --bs-pagination-border-radius: var(--bs-border-radius) !important;
+    --bs-pagination-hover-color: #750000 !important;
+    --bs-pagination-hover-bg: var(--bs-tertiary-bg) !important;
+    --bs-pagination-hover-border-color: var(--tmz-red) !important;
+    --bs-pagination-focus-color: #750000 !important;
+    --bs-pagination-focus-bg: var(--bs-secondary-bg) !important;
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(142, 0, 0, 0.25) !important;
+    --bs-pagination-active-color: var(--tmz-white) !important;
+    --bs-pagination-active-bg: var(--tmz-red) !important;
+    --bs-pagination-active-border-color: var(--tmz-red) !important;
+    --bs-pagination-disabled-color: var(--bs-secondary-color) !important;
+    --bs-pagination-disabled-bg: var(--bs-secondary-bg) !important;
+    --bs-pagination-disabled-border-color: var(--bs-border-color) !important;
+}
+
+/* Force pagination link colors */
+.page-link {
+    color: var(--tmz-red) !important;
+}
+
+.page-link:hover {
+    color: #750000 !important;
+    background-color: var(--bs-tertiary-bg) !important;
+    border-color: var(--tmz-red) !important;
+}
+
+.page-link:focus {
+    color: #750000 !important;
+    background-color: var(--bs-secondary-bg) !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.25rem rgba(142, 0, 0, 0.25) !important;
+}
+
+.page-item.active .page-link {
+    color: var(--tmz-white) !important;
+    background-color: var(--tmz-red) !important;
+    border-color: var(--tmz-red) !important;
+}
+
+.page-item.disabled .page-link {
+    color: var(--bs-secondary-color) !important;
+    background-color: var(--bs-secondary-bg) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+/* Additional DataTables pagination styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: var(--tmz-red) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    color: var(--tmz-white) !important;
+    background: var(--tmz-red) !important;
+    border-color: var(--tmz-red) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    color: var(--tmz-white) !important;
+    background: var(--tmz-red) !important;
+    border-color: var(--tmz-red) !important;
+}
+
+/* DataTables Header Styling - Dark Grey with White Bold Text */
+.dataTables_wrapper table.dataTable thead th,
+.dataTables_wrapper table.dataTable thead td {
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    color: var(--tmz-white) !important;
+    background-color: var(--tmz-dark-gray) !important;
+    border-bottom: 1px solid var(--tmz-gray) !important;
+    border-top: none !important;
+    padding: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* DataTables Header Hover Effects */
+.dataTables_wrapper table.dataTable thead th:hover,
+.dataTables_wrapper table.dataTable thead td:hover {
+    background-color: var(--tmz-black) !important;
+    color: var(--tmz-white) !important;
+}
+
+/* DataTables Sorting Icons */
+.dataTables_wrapper table.dataTable thead .sorting:before,
+.dataTables_wrapper table.dataTable thead .sorting:after,
+.dataTables_wrapper table.dataTable thead .sorting_asc:before,
+.dataTables_wrapper table.dataTable thead .sorting_asc:after,
+.dataTables_wrapper table.dataTable thead .sorting_desc:before,
+.dataTables_wrapper table.dataTable thead .sorting_desc:after {
+    color: var(--tmz-white) !important;
+    opacity: 0.7;
+}
+
+/* Active sorting arrows */
+.dataTables_wrapper table.dataTable thead .sorting_asc:after,
+.dataTables_wrapper table.dataTable thead .sorting_desc:after {
+    opacity: 1 !important;
+    color: var(--tmz-white) !important;
+}
+
+/* Navigation Styling */
+.navbar-dark .navbar-brand {
+    color: var(--tmz-red) !important;
+    font-weight: 600;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--tmz-white) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link:focus {
+    color: var(--tmz-red) !important;
+}
+
+/* Tab Navigation */
+.nav-tabs .nav-link {
+    border: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    color: var(--tmz-gray);
+    background: var(--tmz-light-gray);
+    margin-right: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    background: var(--tmz-dark-gray);
+    color: var(--tmz-white);
+    border-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--tmz-white);
+    color: var(--tmz-black);
+    border: 2px solid #dee2e6;
+    border-bottom: 2px solid var(--tmz-white);
+    margin-bottom: -2px;
+}
+
+/* Status Badges (keep functional colors) */
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-review { 
+    background-color: var(--status-review-bg); 
+    color: var(--status-review-text); 
+}
+
+.status-tracked { 
+    background-color: var(--status-tracked-bg); 
+    color: var(--status-tracked-text); 
+}
+
+.status-removed { 
+    background-color: var(--status-removed-bg); 
+    color: var(--status-removed-text); 
+}
+
+/* Cards and Info Panels */
+.info-card {
+    background: var(--tmz-white);
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.info-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--tmz-gray);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    color: var(--tmz-gray);
+}
+
+/* Control Panels */
+.celebrity-search-container,
+.subscriber-controls {
+    background: var(--tmz-light-gray);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+/* Data Table Wrappers */
+.data-table-wrapper {
+    position: relative;
+    background: var(--tmz-white);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: 0.5rem;
+}
+
+/* Tab Content */
+.tab-content {
+    background: var(--tmz-white);
+    border-radius: 0 0 0.75rem 0.75rem;
+    border: 1px solid #dee2e6;
+    border-top: none;
+}
+
+.tab-pane {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.tab-pane.active {
+    opacity: 1;
+}
+
+/* Case Header Styling */
+.case-header {
+    background: linear-gradient(135deg, var(--tmz-black) 0%, var(--tmz-dark-gray) 100%);
+    color: var(--tmz-white);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+}
+
+/* Badge Styling */
+.badge.bg-secondary {
+    background-color: var(--tmz-dark-gray) !important;
+}
+
+/* Alert Styling */
+.alert-info {
+    border-color: var(--tmz-red);
+    background-color: rgba(142, 0, 0, 0.1);
+    color: var(--tmz-black);
+}
+
+/* SweetAlert2 Customization */
+.swal2-popup {
+    border-radius: 0.75rem;
+}
+
+.swal2-confirm {
+    background-color: var(--tmz-red) !important;
+    border-color: var(--tmz-red) !important;
+}
+
+.swal2-confirm:hover,
+.swal2-confirm:focus {
+    background-color: #750000 !important;
+    border-color: #750000 !important;
+}
+
+/* Typography and Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&family=Roboto:wght@400;700&display=swap');
+
+body {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand, .sorting {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* Specific heading weights for better hierarchy */
+h1, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-weight: 700;
+}
+
+h2 {
+    font-weight: 600;
+}
+
+h3, h4 {
+    font-weight: 600;
+}
+
+h5, h6 {
+    font-weight: 600;
+}
+
+/* Improve button typography */
+.btn {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Improve form control typography */
+.form-control, .form-select {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* DataTables typography improvements */
+.dataTables_wrapper {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Navigation Styling (Enhanced) */
+.navbar-dark .navbar-nav .nav-link,
+.navbar-brand {
+    color: var(--tmz-white) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link.active,
+.navbar-dark .navbar-nav .nav-link.show .navbar-brand {
+    color: var(--tmz-white) !important;
+}
+
+.dropdown-item {
+    color: var(--tmz-black) !important;
+}
+
+.navbar-brand {
+    color: var(--tmz-red) !important;
+    font-weight: 600;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--tmz-white) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link:focus {
+    color: var(--tmz-red) !important;
+}
+
+/* Table Column Sizing */
+.description-column {
+    min-width: 500px !important;
+    width: 500px !important;
+}
+
+/* Celebrity Gallery Styling */
+.card:hover .celeb-image {
+    transform: scale(1.05);
+}
+
+.celeb-card {
+    transition: opacity 0.2s ease;
+}
+
+.highlighted-celeb {
+    color: var(--tmz-red);
+}
+
+.celeb-image {
+    object-fit: cover;
+    object-position: top;
+    height: 215px;
+    width: 100%;
+    transition: transform 0.3s ease;
+}
+
+.celeb-image:hover {
+    transform: scale(1.05);
+}
+
+.card-other {
+    transition: transform 0.3s ease;
+}
+
+.card-other:hover {
+    transform: scale(1.02);
+}
+
+/* Utility Classes */
+.nowrap {
+    white-space: nowrap;
+}
+
+.select-checkbox {
+    cursor: pointer;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+}
+
+/* Form Styling */
+::placeholder {
+    color: #aaa !important;
+    opacity: 1; /* Needed for Firefox */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .data-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .description-column {
+        min-width: 300px !important;
+        width: 300px !important;
+    }
+}
+
+/* ========================================
+   Case Update Page Specific Styling
+   ======================================== */
+
+/* Update page header with gradient */
+.update-header {
+    background: linear-gradient(135deg, var(--tmz-black) 0%, var(--tmz-dark-gray) 100%);
+    color: var(--tmz-white);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+}
+
+/* Form card styling */
+.form-card {
+    background: var(--tmz-white);
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+/* Form section containers */
+.form-section {
+    background: var(--tmz-light-gray);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+.form-section h6 {
+    color: var(--tmz-black);
+    font-weight: 400;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Action button section */
+.btn-actions {
+    background: var(--tmz-light-gray);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-top: 2rem;
+}
+
+/* Loading spinner overlay */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner-content {
+    background: var(--tmz-white);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3);
+}
+
+/* Responsive adjustments for case update */
+@media (max-width: 768px) {
+    .update-header {
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-actions {
+        padding: 1rem;
+    }
+}
