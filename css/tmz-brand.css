@@ -20,7 +20,7 @@
     --status-tracked-text:#65aef2;
     --status-removed-bg: #f8d7da;
     --status-removed-text: #721c24;
-    
+    --bs-link-color-rgb: #3189d7;
     /* Success/Warning/Error (standard but TMZ-influenced) */
     --success-color: #28a745;
     --warning-color: #ffc107;
