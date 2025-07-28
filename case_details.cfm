@@ -2,22 +2,29 @@
 <cfset subscribers_tab_status = "">
 
 <cfquery name="case_details" datasource="Reach">
-    SELECT [id],
-           [case_number],
-           [case_name],
-           [notes] AS details,
-           [last_updated],
-           [owner],
-           [created_at],
-           [status],
-           ISNULL([case_type], 'Unknown') AS case_type,
-           [case_url],
-           fk_court AS court_code,
-           court_name_pacer,
-           [summarize_html]
-    FROM [docketwatch].[dbo].[cases]
-    WHERE id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
+    SELECT 
+        c.[id],
+        c.[case_number],
+        c.[case_name],
+        c.[notes] AS details,
+        c.[last_updated],
+        c.[owner],
+        c.[created_at],
+        c.[status],
+        ISNULL(c.[case_type], 'Unknown') AS case_type,
+        c.[case_url],
+        c.fk_court AS court_code,
+        c.court_name_pacer,
+        c.[summarize_html],
+        t.[id] AS tool_id,
+        t.[name] AS tool_name,
+        t.[search_url] as tool_url
+    FROM [docketwatch].[dbo].[cases] c
+    LEFT JOIN [docketwatch].[dbo].[tool_cases] tc ON tc.fk_case = c.id
+    LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = tc.fk_tool
+    WHERE c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
 </cfquery>
+
 
 <cfquery name="subscribers" datasource="Reach">
 SELECT r.id,
