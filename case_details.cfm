@@ -316,10 +316,11 @@ ORDER BY r.created_at DESC
                         <cfif len(trim(case_details.case_url))>
                         <a href="#case_details.case_url#" 
                            target="_blank" 
-                           class="ms-auto text-decoration-none btn btn-primary btn-sm" 
-                           title="View full case"
-                           aria-label="View full case in new window">
-                            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                           class="ms-auto btn btn-primary btn-sm" 
+                           role="button"
+                           aria-label="View full case in external site">
+                            <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
+                            External Link
                         </a>
                         </cfif>
                         </cfoutput>
@@ -455,10 +456,11 @@ ORDER BY r.created_at DESC
                         <cfif len(trim(courthouse.court_url))>
                             <a href="#courthouse.court_url#" 
                                target="_blank" 
-                               class="ms-auto text-decoration-none btn btn-primary btn-sm" 
-                               title="View Courthouse"
-                               aria-label="View courthouse information in new window">
-                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                               class="ms-auto btn btn-primary btn-sm" 
+                               role="button"
+                               aria-label="View courthouse information in external site">
+                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
+                                External Link
                             </a>
                         </cfif>
                         </cfoutput>
