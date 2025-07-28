@@ -26,7 +26,9 @@
     --warning-color: #ffc107;
     --danger-color: var(--tmz-red);
 }
-
+.bg-success {
+    background-color: #65aef2 !important;
+}
 /* Override Bootstrap Primary Colors with TMZ Red */
 .btn-primary {
     background-color: var(--tmz-red);
