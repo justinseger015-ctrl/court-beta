@@ -117,6 +117,61 @@ const allColumnKeys = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><cfoutput>#application.siteTitle#</cfoutput></title>
     <cfinclude template="head.cfm">
+    
+    <style>
+        /* Professional improvements for DocketWatch interface */
+        .page-title {
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-card .card-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid #cbd5e1;
+            font-weight: 500;
+            color: #475569;
+        }
+        
+        .cases-table-wrapper {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        #casesTable tbody tr:hover {
+            background-color: #f1f5f9 !important;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-group-actions .btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+        
+        .priority-high { color: #dc2626; font-weight: 600; }
+        .priority-medium { color: #d97706; font-weight: 500; }
+        .priority-low { color: #16a34a; }
+        
+        @media (max-width: 768px) {
+            .filter-row > div {
+                margin-bottom: 0.5rem;
+            }
+            .btn-group-actions .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -134,14 +189,20 @@ const allColumnKeys = [
     </div>
 
     <!--- Filter Panel --->
-    <div class="card mb-3">
+    <div class="card mb-3 filter-card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fa-solid fa-filter me-2"></i>Search Filters
+            </h6>
+        </div>
         <div class="card-body">
-            <div class="row g-3 align-items-end">
+            <div class="row g-3 align-items-end filter-row">
                 
                 <!--- Owner Filter --->
                 <div class="col-auto">
-                    <select id="ownerFilter" class="form-select form-select-sm">
-                        <option value="">All</option>
+                    <label for="ownerFilter" class="form-label small text-muted mb-1">Owner</label>
+                    <select id="ownerFilter" class="form-select form-select-sm" aria-label="Filter by case owner">
+                        <option value="">All Owners</option>
                         <cfoutput query="owners">
                             <option value="#value#" <cfif value EQ currentUser>selected</cfif>>#display#</option>
                         </cfoutput>
@@ -150,37 +211,49 @@ const allColumnKeys = [
 
                 <!--- Tool Filter --->
                 <div class="col-auto">
-                    <select id="toolFilter" name="toolFilter" class="form-select form-select-sm case-filter">
+                    <label for="toolFilter" class="form-label small text-muted mb-1">Source Tool</label>
+                    <select id="toolFilter" name="toolFilter" class="form-select form-select-sm case-filter" aria-label="Filter by source tool">
                         <option value="">All Tools</option>
                     </select>
                 </div>
 
                 <!--- State Filter --->
                 <div class="col-auto">
-                    <select id="stateFilter" name="stateFilter" class="form-select form-select-sm case-filter">
+                    <label for="stateFilter" class="form-label small text-muted mb-1">State</label>
+                    <select id="stateFilter" name="stateFilter" class="form-select form-select-sm case-filter" aria-label="Filter by state">
                         <option value="">All States</option>
                     </select>
                 </div>
 
                 <!--- County Filter --->
                 <div class="col-auto">
-                    <select id="county_id" name="county_id" class="form-select form-select-sm case-filter">
+                    <label for="county_id" class="form-label small text-muted mb-1">County</label>
+                    <select id="county_id" name="county_id" class="form-select form-select-sm case-filter" aria-label="Filter by county">
                         <option value="">All Counties</option>
                     </select>
                 </div>
 
                 <!--- Courthouse Filter --->
                 <div class="col-auto">
-                    <select id="courthouseFilter" name="courthouseFilter" class="form-select form-select-sm case-filter">
+                    <label for="courthouseFilter" class="form-label small text-muted mb-1">Courthouse</label>
+                    <select id="courthouseFilter" name="courthouseFilter" class="form-select form-select-sm case-filter" aria-label="Filter by courthouse">
                         <option value="">All Courthouses</option>
                     </select>
                 </div>
 
                 <!--- Celebrity Filter --->
                 <div class="col-auto">
-                    <select id="celebrityFilter" name="celebrityFilter" class="form-select form-select-sm case-filter">
+                    <label for="celebrityFilter" class="form-label small text-muted mb-1">Celebrity</label>
+                    <select id="celebrityFilter" name="celebrityFilter" class="form-select form-select-sm case-filter" aria-label="Filter by celebrity">
                         <option value="">All Celebrities</option>
                     </select>
+                </div>
+                
+                <!--- Clear Filters Button --->
+                <div class="col-auto">
+                    <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear all filters">
+                        <i class="fa-solid fa-times me-1"></i>Clear
+                    </button>
                 </div>
 
             </div>
@@ -190,9 +263,24 @@ const allColumnKeys = [
     <!--- Document OCR Search Panel --->
     <div class="card mb-3">
         <div class="card-body">
-            <div class="row">
+            <div class="row align-items-center">
                 <div class="col">
-                    <input type="text" class="form-control" id="documentSearch" placeholder="Search document OCR text..." autocomplete="off">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control" id="documentSearch" 
+                               placeholder="Search document OCR text (e.g., contract terms, defendant names)..." 
+                               autocomplete="off"
+                               aria-label="Search document OCR text">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch" title="Clear search">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        Search across scanned document content and case descriptions
+                    </small>
                 </div>
             </div>
         </div>
@@ -201,40 +289,72 @@ const allColumnKeys = [
     <!--- Action Panel --->
     <div class="card mb-3">
         <div class="card-body">
-            <cfoutput>
-                <button id="removeCases" class="btn btn-danger">Remove Cases</button>
-                <button id="trackCases" class="btn btn-primary">Track Cases</button>
-                <button id="ReviewCases" class="btn btn-primary">Set to Review</button>
-                <a href="add_blank_case.cfm"><button id="AddCase" class="btn btn-primary">Track a New Case</button></a>
-                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="##columnVisibilityModal">Column Options</button>
-                <button id="refreshFilters" class="btn btn-secondary">Refresh</button>
-            </cfoutput>
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                <div class="btn-group-actions">
+                    <cfoutput>
+                        <button id="removeCases" class="btn btn-danger btn-sm" aria-label="Remove selected cases">
+                            <i class="fa-solid fa-trash me-1"></i>Remove Cases
+                        </button>
+                        <button id="trackCases" class="btn btn-success btn-sm" aria-label="Track selected cases">
+                            <i class="fa-solid fa-eye me-1"></i>Track Cases
+                        </button>
+                        <button id="ReviewCases" class="btn btn-warning btn-sm" aria-label="Set selected cases to review">
+                            <i class="fa-solid fa-undo me-1"></i>Set to Review
+                        </button>
+                        <a href="add_blank_case.cfm" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-plus me-1"></i>Track New Case
+                        </a>
+                    </cfoutput>
+                </div>
+                <div class="btn-group-settings">
+                    <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#columnVisibilityModal">
+                        <i class="fa-solid fa-columns me-1"></i>Columns
+                    </button>
+                    <button id="refreshFilters" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-sync me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
 
     <!--- Main Cases DataTable --->
-    <table id="casesTable" class="table w-100 table-striped table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th><input type="checkbox" id="select-all"></th>
-                <th>Sources</th>
-                <th style="display:none;">ID</th> <!--- Hidden ID column for internal use --->
-                <th>Case Number</th>
-                <th>Case Name</th>
-                <th>Courthouse</th>
-                <th>Priority</th>
-                <th>Details</th>
-                <th>Discovered</th>
-                <th>Last Tracked</th>
-                <th nowrap>Possible Celebs</th>
-                <th>County</th>
-                <th>Status</th>
-                <th>Link</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="cases-table-wrapper">
+        <div id="tableLoadingOverlay" class="d-none position-absolute w-100 h-100 d-flex align-items-center justify-content-center" 
+             style="background: rgba(255,255,255,0.8); z-index: 10;">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading cases...</span>
+                </div>
+                <div class="mt-2 text-muted">Loading cases...</div>
+            </div>
+        </div>
+        
+        <table id="casesTable" class="table w-100 table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 40px;">
+                        <input type="checkbox" id="select-all" aria-label="Select all cases">
+                    </th>
+                    <th>Source</th>
+                    <th style="display:none;" class="noVis">ID</th> <!--- Hidden ID column for internal use --->
+                    <th>Case Number</th>
+                    <th>Case Name</th>
+                    <th>Courthouse</th>
+                    <th>Priority</th>
+                    <th>Details</th>
+                    <th>Discovered</th>
+                    <th>Last Tracked</th>
+                    <th nowrap>Possible Celebs</th>
+                    <th>County</th>
+                    <th>Status</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
 
 <cfinclude template="footer_script.cfm">
@@ -437,19 +557,50 @@ const ColumnRenderers = {
     defaultOrFallback: (data, fallback = "(None)") => data || fallback,
     
     caseNumber: function(data, type, row) {
-        let html = `<a href="${row.internal_case_url}" title="View in DocketWatch" class="text-muted me-2">
-                    <i class="fa-solid fa-file-lines"></i></a>`;
+        let html = '<div class="d-flex align-items-center">';
+        html += '<span class="me-2 fw-medium">' + data + '</span>';
+        
+        html += '<div class="btn-group btn-group-sm" role="group">';
+        html += '<a href="' + row.internal_case_url + '" title="View Case Details" class="btn btn-outline-primary btn-sm">';
+        html += '<i class="fa-solid fa-file-lines"></i></a>';
         
         if (row.external_case_url) {
-            html += `<a href="${row.external_case_url}" target="_blank" title="Open Official Court Page" class="text-muted"><i class="fa-solid fa-up-right-from-square"></i></a>`;
+            html += '<a href="' + row.external_case_url + '" target="_blank" title="Open Official Court Page" class="btn btn-outline-secondary btn-sm">';
+            html += '<i class="fa-solid fa-up-right-from-square"></i></a>';
         }
         
         if (row.pdf_link && row.pdf_link.trim() !== "") {
-            html += `<a href="${row.pdf_link}" target="_blank" title="View PDF" class="text-danger ms-2"><i class="fa-solid fa-file-pdf"></i></a>`;
+            html += '<a href="' + row.pdf_link + '" target="_blank" title="View PDF Document" class="btn btn-outline-danger btn-sm">';
+            html += '<i class="fa-solid fa-file-pdf"></i></a>';
         }
+        html += '</div></div>';
         
-        return data + ' ' + html;
+        return html;
     },
+    
+    priority: function(data) {
+        if (!data || data === "(None)") return '<span class="text-muted">—</span>';
+        
+        const priorityClass = data.toLowerCase().includes('high') ? 'priority-high' :
+                             data.toLowerCase().includes('medium') ? 'priority-medium' : 'priority-low';
+        
+        return '<span class="' + priorityClass + '">' + data + '</span>';
+    },
+    
+    status: function(data) {
+        if (!data) return '<span class="text-muted">—</span>';
+        
+        const statusMap = {
+            'Review': 'warning',
+            'Tracked': 'success', 
+            'Removed': 'secondary',
+            'Active': 'primary'
+        };
+        
+        const badgeClass = statusMap[data] || 'secondary';
+        return '<span class="badge bg-' + badgeClass + ' status-badge">' + data + '</span>';
+    },
+    
     dateFormat: function(data, type, row, formattedField) {
         return type === 'display' ? (row[formattedField] || "(No Date)") : data;
     },
@@ -502,12 +653,19 @@ function initializeCasesTable() {
                 d.celebrity  = $('#celebrityFilter').val();
                 d.docsearch  = $('#documentSearch').val();
             },
+            beforeSend: function() {
+                $('#tableLoadingOverlay').removeClass('d-none');
+            },
+            complete: function() {
+                $('#tableLoadingOverlay').addClass('d-none');
+            },
             dataSrc: function (json) {
                 console.log("AJAX Response Data:", json);
                 return Array.isArray(json) ? json : [];
             },
             error: function (xhr, error, thrown) {
                 console.error("AJAX Error:", error, thrown);
+                $('#tableLoadingOverlay').addClass('d-none');
             }
         },
 columns: [
@@ -534,7 +692,12 @@ columns: [
         render: function(data) { return ColumnRenderers.defaultOrFallback(data); }
     },
     { data: "court_name", visible: columnVisibilityDefaults["court_name"] === 1, defaultContent: "(Unknown)" },
-    { data: "priority", visible: columnVisibilityDefaults["priority"] === 1, defaultContent: "(None)" },
+    { 
+        data: "priority", 
+        visible: columnVisibilityDefaults["priority"] === 1, 
+        defaultContent: "(None)",
+        render: ColumnRenderers.priority
+    },
     {
         data: "notes",
         visible: columnVisibilityDefaults["notes"] === 1,
@@ -560,7 +723,12 @@ columns: [
         render: function(data) { return ColumnRenderers.celebrities(data); }
     },
     { data: "county", visible: columnVisibilityDefaults["county"] === 1, defaultContent: "(None)" },
-    { data: "status", visible: columnVisibilityDefaults["status"] === 1, defaultContent: "(None)" },
+    { 
+        data: "status", 
+        visible: columnVisibilityDefaults["status"] === 1, 
+        defaultContent: "(None)",
+        render: ColumnRenderers.status
+    },
     { data: "case_url", visible: columnVisibilityDefaults["case_url"] === 1, defaultContent: "(None)" }
 ],
 
@@ -627,6 +795,22 @@ $(document).ready(function () {
         $('#documentSearch').on('input', debounce(function() {
             $('#casesTable').DataTable().ajax.reload();
         }, 300));
+        
+        // Clear search functionality
+        $('#clearSearch').on('click', function() {
+            $('#documentSearch').val('');
+            $('#casesTable').DataTable().ajax.reload();
+        });
+        
+        // Clear all filters functionality
+        $('#clearFilters').on('click', function() {
+            LocalStorageManager.clearAll();
+            $('#toolFilter, #ownerFilter, #stateFilter, #county_id, #courthouseFilter, #celebrityFilter').val('');
+            $('#documentSearch').val('');
+            reloadDropdownsAsync().then(function() {
+                $('#casesTable').DataTable().ajax.reload();
+            });
+        });
 
         // Configure action button visibility based on status and selection
         const actionButtons = {
