@@ -316,7 +316,7 @@ ORDER BY r.created_at DESC
                         <cfoutput>#case_details.case_number# - #case_details.case_name#</cfoutput>
                         <a href="<cfoutput>#case_details.case_url#</cfoutput>" 
                            target="_blank" 
-                           class="ms-auto text-decoration-none btn btn-outline-primary btn-sm" 
+                           class="ms-auto text-decoration-none btn btn-primary btn-sm" 
                            title="View full case"
                            aria-label="View full case in new window">
                             <i class="fas fa-external-link-alt" aria-hidden="true"></i>
@@ -448,7 +448,7 @@ ORDER BY r.created_at DESC
                         <cfif len(trim(courthouse.court_url))>
                             <a href="#courthouse.court_url#" 
                                target="_blank" 
-                               class="ms-auto text-decoration-none btn btn-outline-primary btn-sm" 
+                               class="ms-auto text-decoration-none btn btn-primary btn-sm" 
                                title="View Courthouse"
                                aria-label="View courthouse information in new window">
                                 <i class="fas fa-external-link-alt" aria-hidden="true"></i>
@@ -470,7 +470,7 @@ ORDER BY r.created_at DESC
                                  alt="Courthouse" 
                                  class="courthouse-image rounded-circle me-3">
                             <div>
-                                <h6 class="mb-1 fw-bold">#courthouse.court_name#</h6>
+                                <h6 class="mb-1 ">#courthouse.court_name#</h6>
                                 <p class="mb-0 text-muted">
                                     <i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>
                                     #courthouse.address#<br>
@@ -771,7 +771,7 @@ ORDER BY r.created_at DESC
                                 <cfloop query="dockets">
                                 <cfoutput>
                                     <tr>
-                                        <td class="fw-bold">#event_no#</td>
+                                        <td class="">#event_no#</td>
                                         <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
                                             #dateFormat(event_date, 'mm/dd/yyyy')#
                                         </td>
@@ -925,7 +925,7 @@ ORDER BY r.created_at DESC
                                     <tr>
                                         <td>
                                             <div class="d-flex flex-column">
-                                                <span class="fw-bold">#dateFormat(timestamp_ended, "mm/dd/yyyy")#</span>
+                                                <span class="">#dateFormat(timestamp_ended, "mm/dd/yyyy")#</span>
                                                 <small class="text-muted">#timeFormat(timestamp_ended, "hh:mm tt")#</small>
                                             </div>
                                         </td>

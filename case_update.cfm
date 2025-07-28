@@ -60,85 +60,6 @@ ORDER BY o.court_name
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><cfoutput>Update Case - #getCase.case_number#</cfoutput></title>
   <cfinclude template="head.cfm">
-  <style>
-    /* Page-specific styling for case update */
-    .update-header {
-      background: linear-gradient(135deg, var(--tmz-black) 0%, var(--tmz-dark-gray) 100%);
-      color: var(--tmz-white);
-      padding: 2rem 0;
-      margin-bottom: 2rem;
-      border-radius: 0.5rem;
-    }
-    
-    .form-card {
-      background: var(--tmz-white);
-      border: none;
-      border-radius: 0.75rem;
-      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-    }
-    
-    .form-section {
-      background: var(--tmz-light-gray);
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      margin-bottom: 1.5rem;
-      border: 1px solid #e9ecef;
-    }
-    
-    .form-section h6 {
-      color: var(--tmz-black);
-      font-weight: 600;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .btn-actions {
-      background: var(--tmz-light-gray);
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      margin-top: 2rem;
-    }
-    
-    .spinner-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    
-    .spinner-content {
-      background: var(--tmz-white);
-      padding: 2rem;
-      border-radius: 0.75rem;
-      text-align: center;
-      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3);
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .update-header {
-        padding: 1.5rem 0;
-        margin-bottom: 1.5rem;
-      }
-      
-      .form-section {
-        padding: 1rem;
-        margin-bottom: 1rem;
-      }
-      
-      .btn-actions {
-        padding: 1rem;
-      }
-    }
-  </style>
 </head>
 <body>
 
@@ -178,10 +99,11 @@ ORDER BY o.court_name
   <div class="container">
     <div class="form-card shadow">
       <div class="card-body p-4">
-        <cfoutput>
         <form method="post" action="save_case_update.cfm" id="updateForm">
+          <cfoutput>
           <input type="hidden" name="id" value="#getCase.id#">
           <input type="hidden" name="case_mode" value="#case_mode#">
+          </cfoutput>
 
           <!-- Basic Case Information -->
           <div class="form-section">
@@ -196,12 +118,14 @@ ORDER BY o.court_name
                     <i class="fas fa-hashtag me-1" aria-hidden="true"></i>
                     Case Number
                   </label>
+                  <cfoutput>
                   <input type="text" 
                          class="form-control" 
                          id="case_number" 
                          name="case_number" 
                          value="#getCase.case_number#"
                          required>
+                  </cfoutput>
                 </div>
               </div>
               <div class="col-md-6">
@@ -210,12 +134,14 @@ ORDER BY o.court_name
                     <i class="fas fa-signature me-1" aria-hidden="true"></i>
                     Case Name
                   </label>
+                  <cfoutput>
                   <input type="text" 
                          class="form-control" 
                          id="case_name" 
                          name="case_name" 
                          value="#getCase.case_name#"
                          required>
+                  </cfoutput>
                 </div>
               </div>
             </div>
@@ -225,12 +151,14 @@ ORDER BY o.court_name
                 <i class="fas fa-link me-1" aria-hidden="true"></i>
                 Case URL
               </label>
+              <cfoutput>
               <input type="url" 
                      class="form-control" 
                      id="case_url" 
                      name="case_url" 
                      value="#getCase.case_url#"
                      placeholder="https://...">
+              </cfoutput>
             </div>
             
             <cfif case_mode NEQ "new">
@@ -239,15 +167,16 @@ ORDER BY o.court_name
                 <i class="fas fa-folder-open me-1" aria-hidden="true"></i>
                 Case Type
               </label>
+              <cfoutput>
               <input type="text" 
                      class="form-control" 
                      id="case_type" 
                      name="case_type" 
                      value="#getCase.case_type#">
+              </cfoutput>
             </div>
             </cfif>
           </div>
-        </cfoutput>
           <!-- Case Status & Settings -->
           <div class="form-section">
             <h6>
@@ -296,7 +225,6 @@ ORDER BY o.court_name
               </div>
             </div>
           </div>
-        </cfoutput>
 
         <cfif case_mode NEQ "new">
           <!-- Court Location -->

@@ -177,6 +177,33 @@
     border-color: var(--tmz-red) !important;
 }
 
+/* DataTables Header Styling - Remove Bold for Better Readability */
+.dataTables_wrapper table.dataTable thead th,
+.dataTables_wrapper table.dataTable thead td {
+    font-weight: normal !important;
+    font-size: 0.95rem !important;
+    color: var(--tmz-dark-gray) !important;
+    background-color: var(--tmz-light-gray) !important;
+    border-bottom: 2px solid var(--tmz-red) !important;
+    padding: 0.75rem !important;
+}
+
+/* DataTables Header Hover Effects */
+.dataTables_wrapper table.dataTable thead th:hover,
+.dataTables_wrapper table.dataTable thead td:hover {
+    background-color: #e9ecef !important;
+}
+
+/* DataTables Sorting Icons */
+.dataTables_wrapper table.dataTable thead .sorting:before,
+.dataTables_wrapper table.dataTable thead .sorting:after,
+.dataTables_wrapper table.dataTable thead .sorting_asc:before,
+.dataTables_wrapper table.dataTable thead .sorting_asc:after,
+.dataTables_wrapper table.dataTable thead .sorting_desc:before,
+.dataTables_wrapper table.dataTable thead .sorting_desc:after {
+    color: var(--tmz-gray) !important;
+}
+
 /* Navigation Styling */
 .navbar-dark .navbar-brand {
     color: var(--tmz-red) !important;
@@ -415,7 +442,6 @@ h1, h2, h3, h4, h5, h6, .navbar-brand, .sorting {
 }
 
 .highlighted-celeb {
-    font-weight: bold;
     color: var(--tmz-red);
 }
 
@@ -476,5 +502,91 @@ h1, h2, h3, h4, h5, h6, .navbar-brand, .sorting {
     .description-column {
         min-width: 300px !important;
         width: 300px !important;
+    }
+}
+
+/* ========================================
+   Case Update Page Specific Styling
+   ======================================== */
+
+/* Update page header with gradient */
+.update-header {
+    background: linear-gradient(135deg, var(--tmz-black) 0%, var(--tmz-dark-gray) 100%);
+    color: var(--tmz-white);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+}
+
+/* Form card styling */
+.form-card {
+    background: var(--tmz-white);
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+/* Form section containers */
+.form-section {
+    background: var(--tmz-light-gray);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.form-section h6 {
+    color: var(--tmz-black);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Action button section */
+.btn-actions {
+    background: var(--tmz-light-gray);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-top: 2rem;
+}
+
+/* Loading spinner overlay */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner-content {
+    background: var(--tmz-white);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3);
+}
+
+/* Responsive adjustments for case update */
+@media (max-width: 768px) {
+    .update-header {
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-actions {
+        padding: 1rem;
     }
 }
