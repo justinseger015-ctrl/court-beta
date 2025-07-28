@@ -403,13 +403,17 @@ ORDER BY r.created_at DESC
                             </div>
                         </dd>
 
+                        <cfoutput>
+                        <cfif len(trim(case_details.case_type)) AND case_details.case_type NEQ "Unknown">
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-folder-open me-1 text-muted" aria-hidden="true"></i>
                             Case Type
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            <cfoutput>#case_details.case_type#</cfoutput>
+                            #case_details.case_type#
                         </dd>
+                        </cfif>
+                        </cfoutput>
 
                         <cfoutput>
                         <cfif len(trim(case_details.tool_name))>
