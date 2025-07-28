@@ -16,8 +16,8 @@
     /* Functional Status Colors (keep existing for clarity) */
     --status-review-bg: #fff3cd;
     --status-review-text: #856404;
-    --status-tracked-bg: #3189d7;
-    --status-tracked-text:#65aef2;
+    --status-tracked-bg: #65aef2;
+    --status-tracked-text:#043868;
     --status-removed-bg: #f8d7da;
     --status-removed-text: #721c24;
     --bs-link-color-rgb: #3189d7;
