@@ -320,11 +320,10 @@ ORDER BY r.created_at DESC
                            title="View full case"
                            aria-label="View full case in new window">
                             <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                            View Case
                         </a>
                     </h5>
 
-                    
+
                     <dl class="row mb-0">
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-flag me-1 text-muted" aria-hidden="true"></i>
@@ -453,7 +452,6 @@ ORDER BY r.created_at DESC
                                title="View Courthouse"
                                aria-label="View courthouse information in new window">
                                 <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                                View Court
                             </a>
                         </cfif>
                         </cfoutput>
