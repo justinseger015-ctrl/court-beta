@@ -338,18 +338,7 @@ ORDER BY r.created_at DESC
                         <strong>Case Name:</strong> <cfoutput>#case_details.case_name#</cfoutput>
                     </div>
 
-                    <!-- Timestamp info -->
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
-                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
-                            &nbsp;&nbsp;
-                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
-                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
-                        </small>
-                    </div>
-
-                    <dl class="row mb-0">
+                    <dl class="row mb-3">
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-flag me-1 text-muted" aria-hidden="true"></i>
                             Status
@@ -453,6 +442,17 @@ ORDER BY r.created_at DESC
                         </cfif>
                         </cfoutput>
                     </dl>
+                    
+                    <!-- Timestamp footer -->
+                    <div class="border-top pt-3 mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
+                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                            &nbsp;&nbsp;
+                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
