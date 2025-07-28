@@ -204,73 +204,351 @@ ORDER BY r.created_at DESC
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><cfoutput>Case Details - #case_details.case_number#</cfoutput></title>
     <cfinclude template="head.cfm"> <!--- Includes Bootstrap & DataTables CSS --->
+    <style>
+        /* Professional styling for case details page */
+        .case-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+        
+        .case-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-review { background-color: #fff3cd; color: #856404; }
+        .status-tracked { background-color: #d1ecf1; color: #0c5460; }
+        .status-removed { background-color: #f8d7da; color: #721c24; }
+        
+        .info-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            transition: box-shadow 0.15s ease-in-out;
+        }
+        
+        .info-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        }
+        
+        .courthouse-image {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border: 2px solid #e9ecef;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 0 0 0.75rem 0.75rem;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            color: #6c757d;
+            background: #f8f9fa;
+            margin-right: 0.25rem;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            background: #e9ecef;
+            color: #495057;
+            border-color: transparent;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: white;
+            color: #495057;
+            border: 2px solid #dee2e6;
+            border-bottom: 2px solid white;
+            margin-bottom: -2px;
+        }
+        
+        .pdf-actions {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+        
+        .btn-pdf {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 0.5rem;
+        }
+        
+        .celebrity-search-container {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .subscriber-controls {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .data-table-wrapper {
+            position: relative;
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Accessibility improvements */
+        .btn:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .case-header {
+                padding: 1.5rem 0;
+                margin-bottom: 1.5rem;
+            }
+            
+            .case-actions {
+                margin-top: 1rem;
+            }
+            
+            .courthouse-image {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <cfinclude template="navbar.cfm"> <!--- Navigation Bar --->
 
-<div class="container mt-4">
-  <div class="d-flex align-items-center mb-3">
-    <h2 class="mb-0">Case Details</h2>
-    <div class="d-flex gap-2 ms-auto">
-      <a href="case_update.cfm?id=<cfoutput>#case_details.id#</cfoutput>" class="btn btn-primary" style="color:white;">
-        <i class="bi bi-pencil"></i> update
-      </a>
-      <a href="" class="btn btn-secondary" style="color:white;">
-        <i class="bi bi-arrow-left"></i> Back
-      </a>
+<div class="container-fluid mt-4">
+    <!-- Enhanced header section -->
+    <div class="case-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2 display-6">
+                        <i class="fas fa-gavel me-3" aria-hidden="true"></i>
+                        Case Details
+                    </h1>
+                    <p class="mb-0 lead opacity-90">
+                        <cfoutput>#case_details.case_number# - #case_details.case_name#</cfoutput>
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <div class="case-actions justify-content-md-end">
+                        <a href="case_update.cfm?id=<cfoutput>#case_details.id#</cfoutput>" 
+                           class="btn btn-light btn-lg" 
+                           role="button"
+                           aria-label="Update case details">
+                            <i class="fas fa-edit me-2" aria-hidden="true"></i>
+                            Update
+                        </a>
+                        <button onclick="history.back()" 
+                                class="btn btn-outline-light btn-lg"
+                                aria-label="Go back to previous page">
+                            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+                            Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-    <cfoutput>
-    <div class="row gx-4"> <!--- Bootstrap Row with horizontal gutter --->
+    <div class="container">
+        <div class="row gx-4"> <!--- Bootstrap Row with horizontal gutter --->
 
         <!--- Case Detail Section --->
         <div class="col-12 col-xl-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                           <h5 class="card-title mb-3">
-                        #case_details.case_number# - #case_details.case_name#
-                        <a href="#case_details.case_url#" target="_blank" class="ms-2 text-decoration-none" title="View full case">
-                            <i class="bi bi-search" style="font-size: 1.2rem;"></i>
+            <div class="info-card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3 d-flex align-items-center">
+                        <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
+                        <cfoutput>#case_details.case_number# - #case_details.case_name#</cfoutput>
+                        <a href="<cfoutput>#case_details.case_url#</cfoutput>" 
+                           target="_blank" 
+                           class="ms-auto text-decoration-none btn btn-outline-primary btn-sm" 
+                           title="View full case"
+                           aria-label="View full case in new window">
+                            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                            View Case
                         </a>
                     </h5>
 
                     <dl class="row mb-0">
-<dt class="col-sm-4">Status</dt>
-<dd class="col-sm-8">
-    <span id="currentStatus"><strong>#case_details.status#</strong></span>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-flag me-1 text-muted" aria-hidden="true"></i>
+                            Status
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>
+                            <span id="currentStatus" class="status-badge status-#lcase(case_details.status)#">
+                                <cfif case_details.status EQ "Review">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                <cfelseif case_details.status EQ "Tracked">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                <cfelseif case_details.status EQ "Removed">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </cfif>
+                                #case_details.status#
+                            </span>
+                            </cfoutput>
 
- 
-        <cfif case_details.status EQ "Review">
-            <button class="btn btn-sm btn-outline-danger ms-2" onclick="updateCaseStatus(#case_details.id#, 'Removed')">Remove</button>
-            <button class="btn btn-sm btn-outline-success ms-2" onclick="updateCaseStatus(#case_details.id#, 'Tracked')">Track</button>
-        <cfelseif case_details.status EQ "Tracked">
-            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="updateCaseStatus(#case_details.id#, 'Review')">Set to Review</button>
-            <button class="btn btn-sm btn-outline-danger ms-2" onclick="updateCaseStatus(#case_details.id#, 'Removed')">Remove</button>
-        <cfelseif case_details.status EQ "Removed">
-            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="updateCaseStatus(#case_details.id#, 'Review')">Set to Review</button>
-            <button class="btn btn-sm btn-outline-success ms-2" onclick="updateCaseStatus(#case_details.id#, 'Tracked')">Track</button>
-        </cfif>
+                            <div class="btn-group ms-2" role="group" aria-label="Status change actions">
+                                <cfoutput>
+                                <cfif case_details.status EQ "Review">
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Removed')"
+                                            aria-label="Remove case from tracking">
+                                        <i class="fas fa-trash me-1" aria-hidden="true"></i>
+                                        Remove
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Tracked')"
+                                            aria-label="Start tracking case">
+                                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                                        Track
+                                    </button>
+                                <cfelseif case_details.status EQ "Tracked">
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Review')"
+                                            aria-label="Set case to review status">
+                                        <i class="fas fa-search me-1" aria-hidden="true"></i>
+                                        Review
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Removed')"
+                                            aria-label="Remove case from tracking">
+                                        <i class="fas fa-trash me-1" aria-hidden="true"></i>
+                                        Remove
+                                    </button>
+                                <cfelseif case_details.status EQ "Removed">
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Review')"
+                                            aria-label="Set case to review status">
+                                        <i class="fas fa-search me-1" aria-hidden="true"></i>
+                                        Review
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Tracked')"
+                                            aria-label="Start tracking case">
+                                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                                        Track
+                                    </button>
+                                </cfif>
+                                </cfoutput>
+                            </div>
+                        </dd>
 
-</dd>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-folder-open me-1 text-muted" aria-hidden="true"></i>
+                            Case Type
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>#case_details.case_type#</cfoutput>
+                        </dd>
 
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-user me-1 text-muted" aria-hidden="true"></i>
+                            Owner
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>#case_details.owner#</cfoutput>
+                        </dd>
 
-                        <dt class="col-sm-4">Case Type</dt>
-                        <dd class="col-sm-8">#case_details.case_type#</dd>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-calendar-plus me-1 text-muted" aria-hidden="true"></i>
+                            Created
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                        </dd>
 
-                        <dt class="col-sm-4">Owner</dt>
-                        <dd class="col-sm-8">#case_details.owner#</dd>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-clock me-1 text-muted" aria-hidden="true"></i>
+                            Last Updated
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
+                        </dd>
 
-                        <dt class="col-sm-4">Created</dt>
-                        <dd class="col-sm-8">#dateFormat(case_details.created_at, "mm/dd/yyyy")#</dd>
-
-                        <dt class="col-sm-4">Last Updated</dt>
-                        <dd class="col-sm-8">#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</dd>
-
-                        <dt class="col-sm-4">Notes / Details</dt>
-                        <dd class="col-sm-8">
-                            <pre class="mb-0" style="white-space: pre-wrap;">#htmlEditFormat(case_details.details)#</pre>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-sticky-note me-1 text-muted" aria-hidden="true"></i>
+                            Notes / Details
+                        </dt>
+                        <dd class="col-sm-8 mb-0">
+                            <div class="bg-light p-3 rounded">
+                                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit; font-size: inherit;">
+                                    <cfoutput>#htmlEditFormat(case_details.details)#</cfoutput>
+                                </pre>
+                            </div>
                         </dd>
                     </dl>
                 </div>
@@ -279,39 +557,61 @@ ORDER BY r.created_at DESC
 
         <!--- Courthouse Info Section --->
         <div class="col-12 col-xl-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
+            <div class="info-card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3 d-flex align-items-center">
+                        <i class="fas fa-university me-2 text-primary" aria-hidden="true"></i>
                         Courthouse Info
+                        <cfoutput>
                         <cfif len(trim(courthouse.court_url))>
-                            <a href="#courthouse.court_url#" target="_blank" class="ms-2 text-decoration-none" title="View Courthouse">
-                                <i class="bi bi-search" style="font-size: 1rem;"></i>
+                            <a href="#courthouse.court_url#" 
+                               target="_blank" 
+                               class="ms-auto text-decoration-none btn btn-outline-primary btn-sm" 
+                               title="View Courthouse"
+                               aria-label="View courthouse information in new window">
+                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                View Court
                             </a>
                         </cfif>
+                        </cfoutput>
                     </h5>
 
-                    <Cfif case_details.court_name_pacer neq "">
- <strong>#case_details.court_name_pacer#</strong><br><CFelse>
-
-
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="#courthouse.image_url#" alt="Courthouse" class="rounded-circle me-3" width="50" height="50">
-                        <div>
-                            <strong>#courthouse.court_name#</strong><br>
-                            #courthouse.address#<br>
-                            #courthouse.city#, #courthouse.state# #courthouse.zip#
+                    <cfoutput>
+                    <cfif case_details.court_name_pacer neq "">
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
+                            <strong>#case_details.court_name_pacer#</strong>
                         </div>
-                    </div>
+                    <cfelse>
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="#courthouse.image_url#" 
+                                 alt="Courthouse" 
+                                 class="courthouse-image rounded-circle me-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold">#courthouse.court_name#</h6>
+                                <p class="mb-0 text-muted">
+                                    <i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>
+                                    #courthouse.address#<br>
+                                    #courthouse.city#, #courthouse.state# #courthouse.zip#
+                                </p>
+                            </div>
+                        </div>
 
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">County</dt>
-                        <dd class="col-sm-8">#courthouse.county_name#</dd>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4 mb-2">
+                                <i class="fas fa-map me-1 text-muted" aria-hidden="true"></i>
+                                County
+                            </dt>
+                            <dd class="col-sm-8 mb-2">#courthouse.county_name#</dd>
 
-                        <dt class="col-sm-4">Court ID</dt>
-                        <dd class="col-sm-8">#courthouse.court_code#</dd>
-
-                    </dl>
+                            <dt class="col-sm-4 mb-0">
+                                <i class="fas fa-id-card me-1 text-muted" aria-hidden="true"></i>
+                                Court ID
+                            </dt>
+                            <dd class="col-sm-8 mb-0">#courthouse.court_code#</dd>
+                        </dl>
                     </cfif>
+                    </cfoutput>
                 </div>
             </div>
         </div>
@@ -360,345 +660,785 @@ ORDER BY r.created_at DESC
 </cfif>
 
 
-<!--- Tabs Section for Dockets, Hearings, Log, Celebrities --->
-<div class="card shadow-sm mt-4">
-    <div class="card-body">
+<!--- Enhanced Tabs Section --->
+<div class="info-card shadow-sm mt-4">
+    <div class="card-body p-0">
 
- <!--- Tab headings --->
-<cfoutput>
-<ul class="nav nav-tabs" id="caseTabs" role="tablist">
-    <cfif len(trim(case_details.summarize_html))>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link #summary_tab_status#" id="summary-tab" data-bs-toggle="tab" href="##summary" role="tab">Summary</a>
-        </li>
-    </cfif>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link #links_tab_status#" id="links-tab" data-bs-toggle="tab" href="##links" role="tab">Links</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link #dockets_tab_status#" id="dockets-tab" data-bs-toggle="tab" href="##dockets" role="tab">Dockets</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link #hearings_tab_status#" id="hearings-tab" data-bs-toggle="tab" href="##hearings" role="tab">Hearings</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link #log_tab_status#" id="log-tab" data-bs-toggle="tab" href="##log" role="tab">Log</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link #celebrities_tab_status#" id="celebrities-tab" data-bs-toggle="tab" href="##celebrities" role="tab">Celebrities</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link #subscribers_tab_status#" id="alerts-tab" data-bs-toggle="tab" href="##alerts" role="tab">Subscribers</a>
-    </li>
-</ul>
-</cfoutput>
-
-<!--- Tab content panes --->
- 
-
-        <div class="tab-content mt-3" id="caseTabsContent">
-<cfif len(trim(case_details.summarize_html))>
-    <div class="tab-pane p-3 #summary_tab_status#" id="summary" role="tabpanel">
- 
+        <!--- Tab headings with enhanced styling --->
         <cfoutput>
-            #REReplace(
-                case_details.summarize_html,
-                "<h3(.*?)>(.*?)</h3>",
-                "<h5\1>\2</h5>",
-                "all"
-            )#
+        <ul class="nav nav-tabs" id="caseTabs" role="tablist">
+            <cfif len(trim(case_details.summarize_html))>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link #summary_tab_status#" 
+                       id="summary-tab" 
+                       data-bs-toggle="tab" 
+                       href="##summary" 
+                       role="tab"
+                       aria-controls="summary"
+                       aria-label="View case summary">
+                        <i class="fas fa-file-text me-2" aria-hidden="true"></i>
+                        Summary
+                    </a>
+                </li>
+            </cfif>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #links_tab_status#" 
+                   id="links-tab" 
+                   data-bs-toggle="tab" 
+                   href="##links" 
+                   role="tab"
+                   aria-controls="links"
+                   aria-label="View case links">
+                    <i class="fas fa-link me-2" aria-hidden="true"></i>
+                    Links
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #dockets_tab_status#" 
+                   id="dockets-tab" 
+                   data-bs-toggle="tab" 
+                   href="##dockets" 
+                   role="tab"
+                   aria-controls="dockets"
+                   aria-label="View case dockets">
+                    <i class="fas fa-file-alt me-2" aria-hidden="true"></i>
+                    Dockets
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #hearings_tab_status#" 
+                   id="hearings-tab" 
+                   data-bs-toggle="tab" 
+                   href="##hearings" 
+                   role="tab"
+                   aria-controls="hearings"
+                   aria-label="View case hearings">
+                    <i class="fas fa-gavel me-2" aria-hidden="true"></i>
+                    Hearings
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #log_tab_status#" 
+                   id="log-tab" 
+                   data-bs-toggle="tab" 
+                   href="##log" 
+                   role="tab"
+                   aria-controls="log"
+                   aria-label="View case activity log">
+                    <i class="fas fa-history me-2" aria-hidden="true"></i>
+                    Log
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #celebrities_tab_status#" 
+                   id="celebrities-tab" 
+                   data-bs-toggle="tab" 
+                   href="##celebrities" 
+                   role="tab"
+                   aria-controls="celebrities"
+                   aria-label="View celebrity matches">
+                    <i class="fas fa-star me-2" aria-hidden="true"></i>
+                    Celebrities
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #subscribers_tab_status#" 
+                   id="alerts-tab" 
+                   data-bs-toggle="tab" 
+                   href="##alerts" 
+                   role="tab"
+                   aria-controls="alerts"
+                   aria-label="View case subscribers">
+                    <i class="fas fa-users me-2" aria-hidden="true"></i>
+                    Subscribers
+                </a>
+            </li>
+        </ul>
         </cfoutput>
-    </div>
-</cfif>
+
+        <!--- Tab content panes with enhanced styling --->
+        <div class="tab-content mt-0" id="caseTabsContent">
+            <cfif len(trim(case_details.summarize_html))>
+                <div class="tab-pane p-4 #summary_tab_status#" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                    <div class="summary-content">
+                        <cfoutput>
+                            #REReplace(
+                                case_details.summarize_html,
+                                "<h3(.*?)>(.*?)</h3>",
+                                "<h5\1>\2</h5>",
+                                "all"
+                            )#
+                        </cfoutput>
+                    </div>
+                </div>
+            </cfif>
+
+            <div class="tab-pane p-4 #links_tab_status#" id="links" role="tabpanel" aria-labelledby="links-tab">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-link me-2 text-primary" aria-hidden="true"></i>
+                        Case Links
+                    </h6>
+                    <button class="btn btn-primary" onclick="showAddLinkModal()" aria-label="Add new case link">
+                        <i class="fas fa-plus me-2" aria-hidden="true"></i>
+                        Add Link
+                    </button>
+                </div>
+
+                <cfif links.recordcount GT 0>
+                    <div class="data-table-wrapper">
+                        <table id="linksTable" class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-heading me-1" aria-hidden="true"></i>
+                                        Title
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-tag me-1" aria-hidden="true"></i>
+                                        Category
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-user me-1" aria-hidden="true"></i>
+                                        Created By
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-1" aria-hidden="true"></i>
+                                        Date Added
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <i class="fas fa-cogs me-1" aria-hidden="true"></i>
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <cfloop query="links">
+                                <cfoutput>
+                                    <tr>
+                                        <td>
+                                            <a href="#case_url#" target="_blank" class="text-decoration-none d-flex align-items-center">
+                                                <i class="fas fa-external-link-alt me-2 text-muted" aria-hidden="true"></i>
+                                                #title#
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">#category#</span>
+                                        </td>
+                                        <td>#fk_user#</td>
+                                        <td>#dateFormat(created_at, "mm/dd/yyyy")#</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    title="Delete link" 
+                                                    onclick="deleteLink(#id#)"
+                                                    aria-label="Delete link">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
+                <cfelse>
+                    <div class="empty-state">
+                        <i class="fas fa-link" aria-hidden="true"></i>
+                        <h5>No Links Found</h5>
+                        <p>No links are associated with this case yet.</p>
+                    </div>
+                </cfif>
+            </div>
 
 
-<div class="tab-pane p-3  #links_tab_status#" id="links" role="tabpanel">
-       <button class="btn btn-primary mb-3" onclick="showAddLinkModal()">
-    <i class="bi bi-plus-circle me-1"></i> Add Link
-</button>
-
-       <cfif links.recordcount GT 0>
-        <table id="linksTable" class="table table-striped table-bordered mt-3">
-            <thead class="table-dark">
-    <tr>
-        <th>Title</th>
-        <th>Category</th>
-        <th>Created By</th>
-        <th>Date Added</th>
-        <th>Actions</th> <!--- New column --->
-    </tr>
-</thead>
-<tbody>
-    <cfloop query="links">
-    <tr>
-        <td>
-            <a href="#case_url#" target="_blank" class="text-decoration-none">
-                #title# <i class="fa-solid fa-up-right-from-square ms-1"></i>
-            </a>
-        </td>
-        <td>#category#</td>
-        <td>#fk_user#</td>
-        <td>#dateFormat(created_at, "mm/dd/yyyy")#</td>
-        <td>
-            <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteLink(#id#)">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-    </cfloop>
-</tbody>
-
-        </table>
-        <Cfelse>
-        <p>No links associated to this case.</p>
-        </cfif>
-    </div>
 
 
-
-
-          
             <!--- Dockets Tab --->
-    <div class="tab-pane p-3 #dockets_tab_status#" id="dockets" role="tabpanel">
-          <cfif dockets.recordcount GT 0>
-                <table id="docketTable" class="table table-striped table-bordered mt-3">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Event No</th>
-                            <th>Date</th>
-                            <th>Description</th>
-                
-                                 <th>Actions</th> <!--- New Column for the button --->
-                                 
-                                 
-                                 </tr>
-                    </thead>
-                    <tbody>
-                        <cfloop query="dockets">
-                            <tr>
-                                <td>#event_no#</td>
-                              <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">#dateFormat(event_date, 'mm/dd/yyyy')#</td>
- 
-                                <td>#event_description#</td>
-<td nowrap>
-    <!--- PDF action buttons container --->
-    <div id="button-container-#dockets.id#">
-        <!--- View Docket PDF if downloaded --->
-        <cfif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
-            <a href="/mediaroot/pacer_pdfs/#dockets.local_pdf_filename#"
-               target="_blank"
-               class="btn btn-sm btn-outline-success"
-               title="#dockets.pdf_title#">
-                <i class="fas fa-file-pdf"></i>
-            </a>
-        <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
-            <button
-                class="btn btn-sm btn-outline-primary get-pacer-pdf"
-                data-doc-id="#dockets.id#"
-                data-event-url="#dockets.event_url#"
-                data-case-id="#dockets.fk_cases#"
-                title="Download: #dockets.pdf_title#">
-                <i class="fas fa-download"></i>
-            </button>
-        </cfif>
+            <div class="tab-pane p-4 #dockets_tab_status#" id="dockets" role="tabpanel" aria-labelledby="dockets-tab">
+                <div class="d-flex align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
+                        Docket Entries
+                    </h6>
+                </div>
 
-        <!--- Attachment PDF icons (e.g., Exhibits) --->
-        <cfif len(dockets.attachment_links)>
-            #dockets.attachment_links#
-        </cfif>
-    </div>
-</td>
+                <cfif dockets.recordcount GT 0>
+                    <div class="data-table-wrapper">
+                        <table id="docketTable" class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-hashtag me-1" aria-hidden="true"></i>
+                                        Event No
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-1" aria-hidden="true"></i>
+                                        Date
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
+                                        Description
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <i class="fas fa-download me-1" aria-hidden="true"></i>
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <cfloop query="dockets">
+                                <cfoutput>
+                                    <tr>
+                                        <td class="fw-bold">#event_no#</td>
+                                        <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
+                                            #dateFormat(event_date, 'mm/dd/yyyy')#
+                                        </td>
+                                        <td>#event_description#</td>
+                                        <td class="text-center">
+                                            <div class="pdf-actions" id="button-container-#dockets.id#">
+                                                <!--- View Docket PDF if downloaded --->
+                                                <cfif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
+                                                    <a href="/mediaroot/pacer_pdfs/#dockets.local_pdf_filename#"
+                                                       target="_blank"
+                                                       class="btn btn-sm btn-success btn-pdf"
+                                                       title="#dockets.pdf_title#"
+                                                       aria-label="View PDF: #dockets.pdf_title#">
+                                                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                                    </a>
+                                                <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
+                                                    <button class="btn btn-sm btn-primary btn-pdf get-pacer-pdf"
+                                                            data-doc-id="#dockets.id#"
+                                                            data-event-url="#dockets.event_url#"
+                                                            data-case-id="#dockets.fk_cases#"
+                                                            title="Download: #dockets.pdf_title#"
+                                                            aria-label="Download PDF: #dockets.pdf_title#">
+                                                        <i class="fas fa-download" aria-hidden="true"></i>
+                                                    </button>
+                                                </cfif>
 
-
-                            </tr>
-                        </cfloop>
-                    </tbody>
-                </table>
-
-                <Cfelse>
-        <p>No dockets associated to this case.</p>
-        </cfif>
+                                                <!--- Attachment PDF icons (e.g., Exhibits) --->
+                                                <cfif len(dockets.attachment_links)>
+                                                    #dockets.attachment_links#
+                                                </cfif>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
+                <cfelse>
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt" aria-hidden="true"></i>
+                        <h5>No Dockets Found</h5>
+                        <p>No docket entries are associated with this case yet.</p>
+                    </div>
+                </cfif>
             </div>
            
 
-          
             <!--- Hearings Tab --->
-<div class="tab-pane p-3  #hearings_tab_status#" id="hearings" role="tabpanel">
-              <cfif hearings.recordcount GT 0>
-                <table id="hearingTable" class="table table-striped table-bordered mt-3">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Department</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <cfloop query="hearings">
-                            <tr>
-                                <td>#dateFormat(date, "mm/dd/yyyy")#</td>
-                                <td>#timeFormat(time, "h:mm tt")#</td>
-                                <td>#type#</td>
-                                <td>#description#</td>
-                                <td>#department#</td>
-                    
-                            </tr>
-                        </cfloop>
-                    </tbody>
-                </table>
-                  <Cfelse>
-        <p>No hearings associated to this case.</p>
-        </cfif>
+            <div class="tab-pane p-4 #hearings_tab_status#" id="hearings" role="tabpanel" aria-labelledby="hearings-tab">
+                <div class="d-flex align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-gavel me-2 text-primary" aria-hidden="true"></i>
+                        Scheduled Hearings
+                    </h6>
+                </div>
+
+                <cfif hearings.recordcount GT 0>
+                    <div class="data-table-wrapper">
+                        <table id="hearingTable" class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-1" aria-hidden="true"></i>
+                                        Date
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                                        Time
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-tag me-1" aria-hidden="true"></i>
+                                        Type
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
+                                        Description
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-building me-1" aria-hidden="true"></i>
+                                        Department
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <cfloop query="hearings">
+                                <cfoutput>
+                                    <tr>
+                                        <td>#dateFormat(date, "mm/dd/yyyy")#</td>
+                                        <td>#timeFormat(time, "h:mm tt")#</td>
+                                        <td>
+                                            <span class="badge bg-info text-dark">#type#</span>
+                                        </td>
+                                        <td>#description#</td>
+                                        <td>#department#</td>
+                                    </tr>
+                                </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
+                <cfelse>
+                    <div class="empty-state">
+                        <i class="fas fa-gavel" aria-hidden="true"></i>
+                        <h5>No Hearings Scheduled</h5>
+                        <p>No hearings are scheduled for this case.</p>
+                    </div>
+                </cfif>
             </div>
    
 
-  
             <!--- Log Tab --->
-  <div class="tab-pane p-3  #log_tab_status#" id="log" role="tabpanel">       
-                 <cfif logs.recordcount GT 0>
-                <table id="logTable" class="table table-striped table-bordered mt-3">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="white-space: nowrap;">Completed</th>
-                            <th style="white-space: nowrap;">Task</th>
-                            <th style="white-space: nowrap;">Status</th>
-                             <th style="white-space: nowrap;">Duration (MM:SS)</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <cfloop query="logs">
-                            <tr>
-                                <td>#dateFormat(timestamp_ended, "mm/dd/yyyy")# #timeFormat(timestamp_ended, "hh:mm tt")#</td>
-                                <td>#task_name#</td>
-                                <td>#status#</td>
-                                <td>#duration_mmss#</td>
-                                <td>#HTMLEditFormat(summary)#</td>
-                            </tr>
-                        </cfloop>
-                    </tbody>
-                </table>
-                <Cfelse>
-                     <p>No logs associated to this case.</p>
-        </cfif>
+            <div class="tab-pane p-4 #log_tab_status#" id="log" role="tabpanel" aria-labelledby="log-tab">
+                <div class="d-flex align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2 text-primary" aria-hidden="true"></i>
+                        Activity Log
+                    </h6>
+                </div>
+
+                <cfif logs.recordcount GT 0>
+                    <div class="data-table-wrapper">
+                        <table id="logTable" class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-check-circle me-1" aria-hidden="true"></i>
+                                        Completed
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-tasks me-1" aria-hidden="true"></i>
+                                        Task
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-info-circle me-1" aria-hidden="true"></i>
+                                        Status
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                                        Duration
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
+                                        Description
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <cfloop query="logs">
+                                <cfoutput>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-bold">#dateFormat(timestamp_ended, "mm/dd/yyyy")#</span>
+                                                <small class="text-muted">#timeFormat(timestamp_ended, "hh:mm tt")#</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">#task_name#</span>
+                                        </td>
+                                        <td>
+                                            <cfif status EQ "Success">
+                                                <span class="badge bg-success">#status#</span>
+                                            <cfelseif status EQ "Failed">
+                                                <span class="badge bg-danger">#status#</span>
+                                            <cfelse>
+                                                <span class="badge bg-secondary">#status#</span>
+                                            </cfif>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark">#duration_mmss#</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 300px;" title="#HTMLEditFormat(summary)#">
+                                                #HTMLEditFormat(summary)#
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
+                <cfelse>
+                    <div class="empty-state">
+                        <i class="fas fa-history" aria-hidden="true"></i>
+                        <h5>No Activity Log</h5>
+                        <p>No activity has been logged for this case yet.</p>
+                    </div>
+                </cfif>
             </div>
 
-        <div class="tab-pane p-3 #subscribers_tab_status#" id="alerts" role="tabpanel">
+            <!--- Subscribers Tab --->
+            <div class="tab-pane p-4 #subscribers_tab_status#" id="alerts" role="tabpanel" aria-labelledby="alerts-tab">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-users me-2 text-primary" aria-hidden="true"></i>
+                        Case Subscribers
+                    </h6>
+                </div>
 
-        <div class="mb-3 d-flex align-items-center">
-    <label for="addUserSelect" class="form-label me-2 mb-0"><strong>Add User:</strong></label>
-    <select id="addUserSelect" class="form-select me-2" style="width: auto;">
-    <option value=""></option>
-        <cfloop query="eligible_users">
-            <option value="#id#">#display#</option>
-        </cfloop>
-    </select>
+                <div class="subscriber-controls">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <label for="addUserSelect" class="form-label mb-2">
+                                <i class="fas fa-user-plus me-1" aria-hidden="true"></i>
+                                <strong>Add User:</strong>
+                            </label>
+                            <select id="addUserSelect" class="form-select" aria-label="Select user to add as subscriber">
+                                <option value="">Choose a user to add...</option>
+                                <cfloop query="eligible_users">
+                                <cfoutput>
+                                    <option value="#id#">#display#</option>
+                                </cfoutput>
+                                </cfloop>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100 mt-4" 
+                                    id="addSubscriberBtn"
+                                    aria-label="Add selected user as subscriber">
+                                <i class="fas fa-plus me-2" aria-hidden="true"></i>
+                                Add Subscriber
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-    <button class="btn btn-primary" id="addSubscriberBtn">Add</button>
-</div>
-
-    <cfif subscribers.recordcount GT 0>
-        <table id="alertsTable" class="table table-striped table-bordered mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>User Role</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <cfloop query="subscribers">
-                <tr id="subscriberRow_#subscribers.id#">
-                        <td>#fullname#</td>
-                        <td>#email#</td>
-                        <td>#userRole#</td>
-                        <td>
-    <button class="btn btn-sm btn-outline-danger" onclick="removeSubscriber(#id#)">
-        <i class="fa-solid fa-trash"></i>
-    </button>
-</td>
-                    </tr>
-                </cfloop>
-            </tbody>
-        </table>
-    <cfelse>
-        <p>No subscribers for this case.</p>
-    </cfif>
-</div>
-
-
-   <div class="tab-pane p-3  #celebrities_tab_status#" style="min-height: 300px;" id="celebrities" role="tabpanel"></cfoutput>
-
- 
-
-
-
-
-
-<select id="celebritySearch"></select>
-<input type="hidden" id="celebrityId">
-<button id="submitCelebrityBtn" class="btn btn-sm btn-primary mt-2" style="display: none;">Select Celebrity</button>
-
-<div id="celebrityWarnings" class="mt-2" style="display: none;">
-  <div id="primaryNotice" class="alert alert-info" style="display: none;"></div>
-  <div id="verifyWarning" class="alert alert-warning" style="display: none;"></div>
-</div>
-
-
-  <input type="hidden" id="celebrityId" name="celebrityId">
-  <span id="celebrityNameBadge" class="badge badge-info">No celebrity selected</span>
-
-
-  <!--- Always render the table but hide it if there are no records --->
-  <div id="celebrityTableWrapper" <cfif celebrities.recordcount EQ 0>style="display:none;"</cfif>>
-    <table id="celebTable" class="table table-striped table-bordered mt-3">
-      <thead class="table-dark">
-        <tr>
-          <th>Celebrity</th>
-          <th>Match Status</th>
-          <th>Probability</th>
-          <th>Priority</th>
-          <th>Ranking</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <cfloop query="celebrities">
-        <cfoutput>
-          <tr>
-            <td>
-              #celebrity_name#
-              <a href="celebrity_details.cfm?id=#celebrities.celebrity_id#" target="_blank" class="text-decoration-none">
-                <i class="fa-solid fa-up-right-from-square ms-1"></i>
-              </a>
-            </td>
-            <td>#Match_status#</td>
-            <td>#numberFormat(probability_score, "0.00")#</td>
-            <td>#numberFormat(priority_score, "0.00")#</td>
-            <td>#numberFormat(ranking_score, "0.00")#</td>
-            <td>
-              <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteCelebrityMatch('#celebrities.id#')">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          </cfoutput>
-        </cfloop>
-      </tbody>
-    </table>
-  </div>
+                <cfif subscribers.recordcount GT 0>
+                    <div class="data-table-wrapper">
+                        <table id="alertsTable" class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-user me-1" aria-hidden="true"></i>
+                                        Full Name
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-envelope me-1" aria-hidden="true"></i>
+                                        Email
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-shield-alt me-1" aria-hidden="true"></i>
+                                        User Role
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <i class="fas fa-cogs me-1" aria-hidden="true"></i>
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <cfloop query="subscribers">
+                                <cfoutput>
+                                    <tr id="subscriberRow_#subscribers.id#">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
+                                                #fullname#
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:#email#" class="text-decoration-none">
+                                                #email#
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">#userRole#</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeSubscriber(#id#)"
+                                                    title="Remove subscriber"
+                                                    aria-label="Remove #fullname# from subscribers">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
+                <cfelse>
+                    <div class="empty-state">
+                        <i class="fas fa-users" aria-hidden="true"></i>
+                        <h5>No Subscribers</h5>
+                        <p>No users are subscribed to receive notifications for this case.</p>
+                    </div>
+                </cfif>
+            </div>
 
 
-</div>
+            <!--- Celebrities Tab --->
+            <div class="tab-pane p-4 #celebrities_tab_status#" id="celebrities" role="tabpanel" aria-labelledby="celebrities-tab">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-star me-2 text-primary" aria-hidden="true"></i>
+                        Celebrity Matches
+                    </h6>
+                </div>
+
+                <div class="celebrity-search-container">
+                    <div class="row align-items-end">
+                        <div class="col-md-8">
+                            <label for="celebritySearch" class="form-label mb-2">
+                                <i class="fas fa-search me-1" aria-hidden="true"></i>
+                                <strong>Find Celebrity:</strong>
+                            </label>
+                            <select id="celebritySearch" class="form-select" aria-label="Search for celebrity to add">
+                                <option value="">Start typing to search celebrities...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="submitCelebrityBtn" 
+                                    class="btn btn-primary w-100" 
+                                    style="display: none;"
+                                    aria-label="Add selected celebrity to case">
+                                <i class="fas fa-star me-2" aria-hidden="true"></i>
+                                Add Celebrity
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="celebrityId">
+                    
+                    <div id="celebrityWarnings" class="mt-3" style="display: none;">
+                        <div id="primaryNotice" class="alert alert-info" style="display: none;"></div>
+                        <div id="verifyWarning" class="alert alert-warning" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!--- Celebrity matches table --->
+                <div id="celebrityTableWrapper" <cfif celebrities.recordcount EQ 0>style="display:none;"</cfif>>
+                    <div class="data-table-wrapper">
+                        <table id="celebTable" class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-star me-1" aria-hidden="true"></i>
+                                        Celebrity
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-check-circle me-1" aria-hidden="true"></i>
+                                        Status
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-percent me-1" aria-hidden="true"></i>
+                                        Probability
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-exclamation me-1" aria-hidden="true"></i>
+                                        Priority
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-sort-numeric-up me-1" aria-hidden="true"></i>
+                                        Ranking
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <i class="fas fa-cogs me-1" aria-hidden="true"></i>
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <cfloop query="celebrities">
+                                <cfoutput>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-star me-2 text-warning" aria-hidden="true"></i>
+                                                #celebrity_name#
+                                                <a href="celebrity_details.cfm?id=#celebrities.celebrity_id#" 
+                                                   target="_blank" 
+                                                   class="ms-2 text-decoration-none btn btn-sm btn-outline-primary"
+                                                   title="View celebrity details"
+                                                   aria-label="View details for #celebrity_name#">
+                                                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <cfif Match_status EQ "Verified">
+                                                <span class="badge bg-success">#Match_status#</span>
+                                            <cfelseif Match_status EQ "Pending">
+                                                <span class="badge bg-warning text-dark">#Match_status#</span>
+                                            <cfelse>
+                                                <span class="badge bg-secondary">#Match_status#</span>
+                                            </cfif>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" 
+                                                     role="progressbar" 
+                                                     style="width: #numberFormat(probability_score, '0.00')#%"
+                                                     aria-valuenow="#numberFormat(probability_score, '0.00')#" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    #numberFormat(probability_score, "0.00")#%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark">#numberFormat(priority_score, "0.00")#</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-dark">#numberFormat(ranking_score, "0.00")#</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    title="Remove celebrity match" 
+                                                    onclick="deleteCelebrityMatch('#celebrities.id#')"
+                                                    aria-label="Remove #celebrity_name# from matches">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </cfoutput>
+                                </cfloop>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <cfif celebrities.recordcount EQ 0>
+                    <div class="empty-state">
+                        <i class="fas fa-star" aria-hidden="true"></i>
+                        <h5>No Celebrity Matches</h5>
+                        <p>No celebrities have been matched to this case yet.</p>
+                    </div>
+                </cfif>
+            </div>
 
 </div>
 
 <script>
+// Enhanced DataTable initialization with loading states
 $(document).ready(function() {
-    // Attach a click handler to all buttons with the 'get-pacer-pdf' class
+    // Show loading overlay for tables
+    function showTableLoading(tableId) {
+        const wrapper = $(`#${tableId}`).closest('.data-table-wrapper');
+        if (wrapper.length && !wrapper.find('.loading-overlay').length) {
+            wrapper.css('position', 'relative').append(
+                '<div class="loading-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>'
+            );
+        }
+    }
+
+    function hideTableLoading(tableId) {
+        const wrapper = $(`#${tableId}`).closest('.data-table-wrapper');
+        wrapper.find('.loading-overlay').remove();
+    }
+
+    // Initialize DataTables with enhanced styling
+    if ($('#hearingTable').length) {
+        showTableLoading('hearingTable');
+        $('#hearingTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 10,
+            responsive: true,
+            language: {
+                emptyTable: "No hearings scheduled for this case"
+            },
+            initComplete: function() {
+                hideTableLoading('hearingTable');
+            }
+        });
+    }
+
+    if ($('#docketTable').length) {
+        showTableLoading('docketTable');
+        $('#docketTable').DataTable({
+            order: [[1, 'desc']],
+            paging: false,
+            info: false,
+            lengthChange: false,
+            searching: true,
+            ordering: true,
+            responsive: true,
+            language: {
+                emptyTable: "No docket entries found for this case"
+            },
+            initComplete: function() {
+                hideTableLoading('docketTable');
+            }
+        });
+    }
+
+    if ($('#logTable').length) {
+        showTableLoading('logTable');
+        $('#logTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 25,
+            responsive: true,
+            language: {
+                emptyTable: "No activity logged for this case"
+            },
+            initComplete: function() {
+                hideTableLoading('logTable');
+            }
+        });
+    }
+
+    if ($('#linksTable').length) {
+        showTableLoading('linksTable');
+        $('#linksTable').DataTable({
+            order: [[3, 'desc']],
+            pageLength: 10,
+            responsive: true,
+            language: {
+                emptyTable: "No links added to this case"
+            },
+            initComplete: function() {
+                hideTableLoading('linksTable');
+            }
+        });
+    }
+
+    if ($('#alertsTable').length) {
+        showTableLoading('alertsTable');
+        $('#alertsTable').DataTable({
+            order: [[0, 'asc']],
+            pageLength: 10,
+            responsive: true,
+            language: {
+                emptyTable: "No subscribers for this case"
+            },
+            initComplete: function() {
+                hideTableLoading('alertsTable');
+            }
+        });
+    }
+
+    if ($('#celebTable').length) {
+        showTableLoading('celebTable');
+        $('#celebTable').DataTable({
+            order: [[4, 'desc']],
+            pageLength: 10,
+            responsive: true,
+            language: {
+                emptyTable: "No celebrity matches found"
+            },
+            initComplete: function() {
+                hideTableLoading('celebTable');
+            }
+        });
+    }
+
+    // Enhanced PDF download functionality with better UX
     $('body').on('click', '.get-pacer-pdf', function() {
         var button = $(this);
         var docId = button.data('doc-id');
@@ -706,12 +1446,14 @@ $(document).ready(function() {
         var caseId = button.data('case-id');
         var buttonContainer = $('#button-container-' + docId);
 
-        // Disable button and show a loading state
-        button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Getting...');
+        // Enhanced loading state with better animation
+        button.prop('disabled', true).html(`
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>Downloading...</span>
+        `);
 
-        // Make the AJAX call to your ColdFusion handler
         $.ajax({
-            url: 'ajax_getPacerDoc.cfm', // The CF page that calls the Python script
+            url: 'ajax_getPacerDoc.cfm',
             method: 'POST',
             data: {
                 docID: docId,
@@ -719,26 +1461,127 @@ $(document).ready(function() {
                 caseID: caseId
             },
             dataType: 'json',
+            timeout: 60000, // 60 second timeout
             success: function(response) {
                 if (response.STATUS === 'SUCCESS') {
-                    // On success, replace the button with a "View PDF" link
-                    var newButton = '<a href="' + response.FILEPATH + '" target="_blank" class="btn btn-sm btn-success">View PDF</a>';
-                    buttonContainer.html(newButton);
+                    // Success state with icon
+                    var successButton = `
+                        <a href="${response.FILEPATH}" 
+                           target="_blank" 
+                           class="btn btn-sm btn-success btn-pdf"
+                           title="View downloaded PDF"
+                           aria-label="View PDF document">
+                            <i class="fas fa-file-pdf me-1" aria-hidden="true"></i>
+                            View PDF
+                        </a>
+                    `;
+                    buttonContainer.html(successButton);
+                    
+                    // Show success notification
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'PDF Downloaded',
+                            text: 'Document is ready to view',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
                 } else {
-                    // On failure, show an alert and reset the button
-                    alert('Error: ' + response.MESSAGE);
-                    button.prop('disabled', false).text('Get PDF');
+                    // Error state
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Download Failed',
+                            text: response.MESSAGE || 'Unable to download PDF'
+                        });
+                    } else {
+                        alert('Error: ' + (response.MESSAGE || 'Unable to download PDF'));
+                    }
+                    // Reset button
+                    button.prop('disabled', false).html('<i class="fas fa-download" aria-hidden="true"></i>');
                 }
             },
             error: function(xhr, status, error) {
-                // Handle server errors
-                alert('An unexpected server error occurred. Please try again.');
-                button.prop('disabled', false).text('Get PDF');
+                // Network error state
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Network Error',
+                        text: 'Please check your connection and try again'
+                    });
+                } else {
+                    alert('Network error occurred. Please try again.');
+                }
+                button.prop('disabled', false).html('<i class="fas fa-download" aria-hidden="true"></i>');
                 console.error("AJAX Error:", status, error);
             }
         });
     });
+
+    // Global function for modal handling
+    window.showAddLinkModal = function () {
+        $('#addLinkModal').modal('show');
+    };
+
+    // Enhanced form submission with better feedback
+    if (document.getElementById("addLinkForm")) {
+        document.getElementById("addLinkForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+
+            fetch("insert_case_link.cfm?bypass=1", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    fk_case: this.fk_case.value,
+                    fk_user: this.fk_user.value,
+                    case_url: this.case_url.value
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire("Success", "Link added successfully!", "success").then(() => {
+                            window.location.href = window.location.pathname + "?id=" + encodeURIComponent(getUrlParam("id")) + "&tab=links";
+                        });
+                    } else {
+                        alert("Link added successfully!");
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire("Error", data.message || "Unable to add link", "error");
+                    } else {
+                        alert("Error: " + (data.message || "Unable to add link"));
+                    }
+                }
+            })
+            .catch(err => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire("Error", "Network error occurred", "error");
+                } else {
+                    alert("Network error: " + err.message);
+                }
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
 });
+
+// Utility function for URL parameters
+function getUrlParam(key) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(key);
+}
 </script>
 
 <script>
@@ -788,156 +1631,199 @@ function deleteCelebrityMatch(matchId) {
 
 
         </div> <!--- /.tab-content --->
-
     </div>
 </div>
- 
+
+    </div> <!--- /.container --->
+</div> <!--- /.container-fluid --->
 
 <cfinclude template="footer_script.cfm"> <!--- Includes JS libraries --->
 
 
 <script>
+// Enhanced case status update with better UX
 function updateCaseStatus(caseId, newStatus) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: 'Set this case status to ' + newStatus + '?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#aaa',
-        confirmButtonText: 'Yes, set it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
+    const statusIcons = {
+        'Review': 'fas fa-search',
+        'Tracked': 'fas fa-eye', 
+        'Removed': 'fas fa-times'
+    };
+    
+    const statusColors = {
+        'Review': '#ffc107',
+        'Tracked': '#17a2b8',
+        'Removed': '#dc3545'
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Confirm Status Change',
+            html: `
+                <div class="text-center">
+                    <i class="${statusIcons[newStatus]} fa-3x mb-3" style="color: ${statusColors[newStatus]}"></i>
+                    <p>Set this case status to <strong>${newStatus}</strong>?</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: statusColors[newStatus],
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `<i class="${statusIcons[newStatus]} me-2"></i>Yes, set to ${newStatus}`,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading state
+                Swal.fire({
+                    title: 'Updating Status...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch('update_case_status.cfm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({id: caseId, status: newStatus})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Status Updated!',
+                            html: `Case status successfully changed to <strong>${newStatus}</strong>`,
+                            icon: 'success',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Update Failed',
+                            text: 'Error updating status: ' + (data.message || 'Unknown error'),
+                            icon: 'error',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Network Error',
+                        text: 'Unable to connect to server. Please try again.',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                    console.error('Status update error:', error);
+                });
+            }
+        });
+    } else {
+        // Fallback for no SweetAlert
+        if (confirm(`Set this case status to ${newStatus}?`)) {
             fetch('update_case_status.cfm', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({id: caseId, status: newStatus})
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire({
-                        title: 'Updated!',
-                        text: 'Status updated successfully.',
-                        icon: 'success'
-                    }).then(() => {
-                        location.reload();
-                    });
+                    alert('Status updated successfully!');
+                    location.reload();
                 } else {
-                    Swal.fire('Error', 'Error updating status: ' + data.message, 'error');
+                    alert('Error updating status: ' + (data.message || 'Unknown error'));
                 }
             })
-            .catch(error => Swal.fire('Error', 'An error occurred: ' + error, 'error'));
+            .catch(error => {
+                alert('Network error occurred. Please try again.');
+                console.error('Status update error:', error);
+            });
         }
-    });
+    }
 }
-
 </script>
 
-<script>
-function getUrlParam(key) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(key);
-}
 
-    $(document).ready(function () {
-        // Initialize Hearings DataTable
-        $('#hearingTable').DataTable({
-            order: [[0, 'desc']],
-            pageLength: 10
-        });
-
-
-        $('#docketTable').DataTable({
-                 order: [[1, 'desc']],
-            "paging": false,           // Disable pagination
-
-            "info": false,             // Hide "Showing X of Y entries"
-            "lengthChange": false,     // Hide "Show entries" dropdown
-            "searching": true,         // Optional: keep search bar
-            "ordering": true           // Optional: allow column sorting
-        });
- 
-
-
-
-
-
-        // Initialize Logs DataTable
-        $('#logTable').DataTable({
-            order: [[0, 'desc']],
-            pageLength: 25
-        });
-
-        // Make the showAddLinkModal function globally accessible
-        window.showAddLinkModal = function () {
-            $('#addLinkModal').modal('show');
-        };
-
-        // Handle form submission for adding a new link
-        document.getElementById("addLinkForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            fetch("insert_case_link.cfm?bypass=1", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    fk_case: this.fk_case.value,
-                    fk_user: this.fk_user.value,
-                    case_url: this.case_url.value
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                   Swal.fire("Success", "Link added!", "success").then(() => {
-    window.location.href = window.location.pathname + "?id=" + encodeURIComponent(getUrlParam("id")) + "&tab=links";
-});
-                } else {
-                    Swal.fire("Error", data.message || "Something went wrong", "error");
-                }
-            })
-            .catch(err => Swal.fire("Error", err.message, "error"));
-        });
-    });
-</script>
 
 <script>
+// Enhanced link deletion with better UX
 function deleteLink(linkId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: 'This will remove the link from view (soft delete).',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#aaa'
-    }).then((result) => {
-        if (result.isConfirmed) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Remove Link?',
+            text: 'This will permanently remove the link from this case.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-trash me-2"></i>Yes, remove it',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading
+                Swal.fire({
+                    title: 'Removing Link...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                fetch('delete_case_link.cfm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: linkId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Link Removed!',
+                            text: 'The link has been successfully removed.',
+                            icon: 'success',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            title: 'Removal Failed',
+                            text: data.message || 'Could not remove the link.',
+                            icon: 'error',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(err => {
+                    Swal.fire({
+                        title: 'Network Error',
+                        text: 'Unable to connect to server. Please try again.',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                    console.error('Delete link error:', err);
+                });
+            }
+        });
+    } else {
+        // Fallback for no SweetAlert
+        if (confirm('Are you sure you want to remove this link?')) {
             fetch('delete_case_link.cfm', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: linkId })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire('Deleted!', data.message || 'Link removed.', 'success')
-                        .then(() => location.reload());
+                    alert('Link removed successfully!');
+                    location.reload();
                 } else {
-                    Swal.fire('Error', data.message || 'Could not delete link.', 'error');
+                    alert('Error: ' + (data.message || 'Could not remove link'));
                 }
             })
-            .catch(err => Swal.fire('Error', err.message, 'error'));
+            .catch(err => {
+                alert('Network error occurred. Please try again.');
+                console.error('Delete link error:', err);
+            });
         }
-    });
+    }
 }
 </script>
 
