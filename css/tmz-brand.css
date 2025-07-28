@@ -7,7 +7,7 @@
 :root {
     /* Primary TMZ Colors */
     --tmz-black: #000000;
-    --tmz-red: #e31e24;
+    --tmz-red: #8e0000;
     --tmz-dark-gray: #2d2d2d;
     --tmz-gray: #666666;
     --tmz-light-gray: #f5f5f5;
@@ -38,8 +38,8 @@
 .btn-primary:focus, 
 .btn-primary:active,
 .btn-primary.active {
-    background-color: #c41e24;
-    border-color: #c41e24;
+    background-color: #750000;
+    border-color: #750000;
     color: var(--tmz-white);
 }
 
@@ -86,13 +86,13 @@
 .form-control:focus, 
 .form-select:focus {
     border-color: var(--tmz-red);
-    box-shadow: 0 0 0 0.2rem rgba(227, 30, 36, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(142, 0, 0, 0.25);
 }
 
 /* Button Focus States */
 .btn:focus,
 .btn.focus {
-    box-shadow: 0 0 0 0.2rem rgba(227, 30, 36, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(142, 0, 0, 0.25);
 }
 
 /* DataTable Styling */
@@ -116,12 +116,12 @@
     --bs-pagination-border-width: var(--bs-border-width) !important;
     --bs-pagination-border-color: var(--bs-border-color) !important;
     --bs-pagination-border-radius: var(--bs-border-radius) !important;
-    --bs-pagination-hover-color: #c41e24 !important;
+    --bs-pagination-hover-color: #750000 !important;
     --bs-pagination-hover-bg: var(--bs-tertiary-bg) !important;
     --bs-pagination-hover-border-color: var(--tmz-red) !important;
-    --bs-pagination-focus-color: #c41e24 !important;
+    --bs-pagination-focus-color: #750000 !important;
     --bs-pagination-focus-bg: var(--bs-secondary-bg) !important;
-    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(227, 30, 36, 0.25) !important;
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(142, 0, 0, 0.25) !important;
     --bs-pagination-active-color: var(--tmz-white) !important;
     --bs-pagination-active-bg: var(--tmz-red) !important;
     --bs-pagination-active-border-color: var(--tmz-red) !important;
@@ -136,16 +136,16 @@
 }
 
 .page-link:hover {
-    color: #c41e24 !important;
+    color: #750000 !important;
     background-color: var(--bs-tertiary-bg) !important;
     border-color: var(--tmz-red) !important;
 }
 
 .page-link:focus {
-    color: #c41e24 !important;
+    color: #750000 !important;
     background-color: var(--bs-secondary-bg) !important;
     outline: 0 !important;
-    box-shadow: 0 0 0 0.25rem rgba(227, 30, 36, 0.25) !important;
+    box-shadow: 0 0 0 0.25rem rgba(142, 0, 0, 0.25) !important;
 }
 
 .page-item.active .page-link {
@@ -377,7 +377,7 @@
 /* Alert Styling */
 .alert-info {
     border-color: var(--tmz-red);
-    background-color: rgba(227, 30, 36, 0.1);
+    background-color: rgba(142, 0, 0, 0.1);
     color: var(--tmz-black);
 }
 
@@ -393,8 +393,8 @@
 
 .swal2-confirm:hover,
 .swal2-confirm:focus {
-    background-color: #c41e24 !important;
-    border-color: #c41e24 !important;
+    background-color: #750000 !important;
+    border-color: #750000 !important;
 }
 
 /* Typography and Fonts */
