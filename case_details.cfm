@@ -312,13 +312,17 @@ ORDER BY r.created_at DESC
                 <div class="card-header">
                     <h6 class="mb-0 d-flex align-items-center">
                         <i class="fas fa-file-alt me-2"></i>Case Information
-                        <a href="<cfoutput>#case_details.case_url#</cfoutput>" 
+                        <cfoutput>
+                        <cfif len(trim(case_details.case_url))>
+                        <a href="#case_details.case_url#" 
                            target="_blank" 
                            class="ms-auto text-decoration-none btn btn-primary btn-sm" 
                            title="View full case"
                            aria-label="View full case in new window">
                             <i class="fas fa-external-link-alt" aria-hidden="true"></i>
                         </a>
+                        </cfif>
+                        </cfoutput>
                     </h6>
                 </div>
                 <div class="card-body">
