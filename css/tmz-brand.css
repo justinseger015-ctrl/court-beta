@@ -386,15 +386,53 @@
 }
 
 /* Typography and Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&family=Roboto:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&family=Roboto:wght@400;700&display=swap');
 
 body {
     font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-weight: 400;
+    line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6, .navbar-brand, .sorting {
-    font-family: "ProximaNovaExCn_Black", Impact, "Roboto Condensed", "Arial Narrow", sans-serif;
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* Specific heading weights for better hierarchy */
+h1, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-weight: 700;
+}
+
+h2 {
+    font-weight: 600;
+}
+
+h3, h4 {
+    font-weight: 600;
+}
+
+h5, h6 {
+    font-weight: 600;
+}
+
+/* Improve button typography */
+.btn {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Improve form control typography */
+.form-control, .form-select {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* DataTables typography improvements */
+.dataTables_wrapper {
+    font-family: "Source Sans Pro", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Navigation Styling (Enhanced) */
