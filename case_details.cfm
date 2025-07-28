@@ -280,7 +280,7 @@ ORDER BY r.created_at DESC
                         Case Details
                     </h1>
                     <p class="mb-0 lead opacity-90">
-                        <cfoutput>#case_details.case_number# - #case_details.case_name#</cfoutput>
+                        <cfoutput>#case_details.case_name#</cfoutput>
                     </p>
                 </div>
                 <div class="col-md-4">
@@ -313,7 +313,7 @@ ORDER BY r.created_at DESC
                 <div class="card-body p-4">
                     <h5 class="card-title mb-3 d-flex align-items-center">
                         <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
-                        <cfoutput>#case_details.case_number# - #case_details.case_name#</cfoutput>
+                        <cfoutput>Case Number: #case_details.case_number#</cfoutput>
                         <a href="<cfoutput>#case_details.case_url#</cfoutput>" 
                            target="_blank" 
                            class="ms-auto text-decoration-none btn btn-primary btn-sm" 
