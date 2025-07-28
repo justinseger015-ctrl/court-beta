@@ -2,7 +2,7 @@
 <cfset subscribers_tab_status = "">
 
 <cfquery name="case_details" datasource="Reach">
-    SELECT 
+    SELECT c.fk_tool,
         c.[id],
         c.[case_number],
         c.[case_name],
@@ -20,8 +20,7 @@
         t.[tool_name] AS tool_name,
         t.[search_url] as tool_url
     FROM [docketwatch].[dbo].[cases] c
-    LEFT JOIN [docketwatch].[dbo].[tool_cases] tc ON tc.fk_case = c.id
-    LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = tc.fk_tool
+    LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = c.fk_tool
     WHERE c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
 </cfquery>
 
