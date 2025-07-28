@@ -526,23 +526,11 @@ ORDER BY r.created_at DESC
     <cfif listFind("summary,links,dockets,hearings,log,celebrities,alerts", tabName)>
         <cfset "#tabName#_tab_status" = "show active">
     <cfelse>
-        <cfset links_tab_status = "show active"> <!--- fallback for invalid tab param --->
+        <cfset summary_tab_status = "show active"> <!--- fallback for invalid tab param --->
     </cfif>
 <cfelse>
-    <!--- Default priority logic when no tab param --->
-    <cfif len(trim(case_details.summarize_html))>
-        <cfset summary_tab_status = "show active">
-    <cfelseif dockets.recordcount GT 0>
-        <cfset dockets_tab_status = "show active">
-    <cfelseif hearings.recordcount GT 0>
-        <cfset hearings_tab_status = "show active">
-    <cfelseif logs.recordcount GT 0>
-        <cfset log_tab_status = "show active">
-    <cfelseif celebrities.recordcount GT 0>
-        <cfset celebrities_tab_status = "show active">
-    <cfelse>
-        <cfset links_tab_status = "show active">
-    </cfif>
+    <!--- Default to Summary tab for consistent behavior --->
+    <cfset summary_tab_status = "show active">
 </cfif>
 
 
@@ -553,20 +541,18 @@ ORDER BY r.created_at DESC
         <!--- Tab headings with enhanced styling --->
         <cfoutput>
         <ul class="nav nav-tabs" id="caseTabs" role="tablist">
-            <cfif len(trim(case_details.summarize_html))>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link #summary_tab_status#" 
-                       id="summary-tab" 
-                       data-bs-toggle="tab" 
-                       href="##summary" 
-                       role="tab"
-                       aria-controls="summary"
-                       aria-label="View case summary">
-                        <i class="fas fa-file-text me-2" aria-hidden="true"></i>
-                        Summary
-                    </a>
-                </li>
-            </cfif>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link #summary_tab_status#" 
+                   id="summary-tab" 
+                   data-bs-toggle="tab" 
+                   href="##summary" 
+                   role="tab"
+                   aria-controls="summary"
+                   aria-label="View case summary">
+                    <i class="fas fa-file-text me-2" aria-hidden="true"></i>
+                    Summary
+                </a>
+            </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link #links_tab_status#" 
                    id="links-tab" 
@@ -644,8 +630,8 @@ ORDER BY r.created_at DESC
 
         <!--- Tab content panes with enhanced styling --->
         <div class="tab-content mt-0" id="caseTabsContent">
-            <cfif len(trim(case_details.summarize_html))>
-                <div class="tab-pane p-4 #summary_tab_status#" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+            <div class="tab-pane p-4 #summary_tab_status#" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                <cfif len(trim(case_details.summarize_html))>
                     <div class="summary-content">
                         <cfoutput>
                             #REReplace(
@@ -656,8 +642,14 @@ ORDER BY r.created_at DESC
                             )#
                         </cfoutput>
                     </div>
-                </div>
-            </cfif>
+                <cfelse>
+                    <div class="empty-state">
+                        <i class="fas fa-file-text" aria-hidden="true"></i>
+                        <h5>No Summary Available</h5>
+                        <p>No summary has been generated for this case yet.</p>
+                    </div>
+                </cfif>
+            </div>
 
             <div class="tab-pane p-4 #links_tab_status#" id="links" role="tabpanel" aria-labelledby="links-tab">
                 <div class="d-flex justify-content-between align-items-center mb-3">
