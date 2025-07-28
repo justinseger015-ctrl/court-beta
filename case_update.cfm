@@ -58,137 +58,353 @@ ORDER BY o.court_name
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DocketWatch - Case Update Form</title>
+  <title><cfoutput>Update Case - #getCase.case_number#</cfoutput></title>
   <cfinclude template="head.cfm">
+  <style>
+    /* Page-specific styling for case update */
+    .update-header {
+      background: linear-gradient(135deg, var(--tmz-black) 0%, var(--tmz-dark-gray) 100%);
+      color: var(--tmz-white);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+      border-radius: 0.5rem;
+    }
+    
+    .form-card {
+      background: var(--tmz-white);
+      border: none;
+      border-radius: 0.75rem;
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+    
+    .form-section {
+      background: var(--tmz-light-gray);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #e9ecef;
+    }
+    
+    .form-section h6 {
+      color: var(--tmz-black);
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-actions {
+      background: var(--tmz-light-gray);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-top: 2rem;
+    }
+    
+    .spinner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .spinner-content {
+      background: var(--tmz-white);
+      padding: 2rem;
+      border-radius: 0.75rem;
+      text-align: center;
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .update-header {
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+      }
+      
+      .form-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .btn-actions {
+        padding: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <cfinclude template="navbar.cfm">
-<div class="container mt-5">
-  <div class="card shadow">
-    <div class="card-header bg-dark text-white">
-      <h4 class="mb-0">Update Case Details</h4>
+
+<div class="container-fluid mt-4">
+  <!-- Enhanced header section -->
+  <div class="update-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="mb-2 display-6">
+            <i class="fas fa-edit me-3" aria-hidden="true"></i>
+            Update Case
+          </h1>
+          <p class="mb-0 lead opacity-90">
+            <cfoutput>#getCase.case_number# - #getCase.case_name#</cfoutput>
+          </p>
+        </div>
+        <div class="col-md-4">
+          <div class="d-flex justify-content-md-end">
+            <cfoutput>
+            <a href="case_details.cfm?id=#getCase.id#" 
+               class="btn btn-outline-light btn-lg" 
+               role="button"
+               aria-label="Cancel and return to case details">
+              <i class="fas fa-times me-2" aria-hidden="true"></i>
+              Cancel
+            </a>
+            </cfoutput>
+          </div>
+        </div>
+      </div>
     </div>
-    <cfoutput>
-    <div class="card-body">
-      <form method="post" action="save_case_update.cfm">
-        <input type="hidden" name="id" value="#getCase.id#">
-<input type="hidden" name="case_mode" value="#case_mode#">
+  </div>
 
+  <div class="container">
+    <div class="form-card shadow">
+      <div class="card-body p-4">
+        <cfoutput>
+        <form method="post" action="save_case_update.cfm" id="updateForm">
+          <input type="hidden" name="id" value="#getCase.id#">
+          <input type="hidden" name="case_mode" value="#case_mode#">
 
-
-        <div class="mb-3">
-          <label for="case_number" class="form-label">Case Number</label>
-          <input type="text" class="form-control" id="case_number" name="case_number" value="#getCase.case_number#" >
-        </div>
-        <div class="mb-3">
-          <label for="case_name" class="form-label">Case Name</label>
-          <input type="text" class="form-control" id="case_name" name="case_name" value="#getCase.case_name#" >
-        </div>
-
+          <!-- Basic Case Information -->
+          <div class="form-section">
+            <h6>
+              <i class="fas fa-file-alt text-primary" aria-hidden="true"></i>
+              Basic Case Information
+            </h6>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="case_number" class="form-label">
+                    <i class="fas fa-hashtag me-1" aria-hidden="true"></i>
+                    Case Number
+                  </label>
+                  <input type="text" 
+                         class="form-control" 
+                         id="case_number" 
+                         name="case_number" 
+                         value="#getCase.case_number#"
+                         required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="case_name" class="form-label">
+                    <i class="fas fa-signature me-1" aria-hidden="true"></i>
+                    Case Name
+                  </label>
+                  <input type="text" 
+                         class="form-control" 
+                         id="case_name" 
+                         name="case_name" 
+                         value="#getCase.case_name#"
+                         required>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="case_url" class="form-label">
+                <i class="fas fa-link me-1" aria-hidden="true"></i>
+                Case URL
+              </label>
+              <input type="url" 
+                     class="form-control" 
+                     id="case_url" 
+                     name="case_url" 
+                     value="#getCase.case_url#"
+                     placeholder="https://...">
+            </div>
+            
+            <cfif case_mode NEQ "new">
+            <div class="mb-0">
+              <label for="case_type" class="form-label">
+                <i class="fas fa-folder-open me-1" aria-hidden="true"></i>
+                Case Type
+              </label>
+              <input type="text" 
+                     class="form-control" 
+                     id="case_type" 
+                     name="case_type" 
+                     value="#getCase.case_type#">
+            </div>
+            </cfif>
+          </div>
         </cfoutput>
-        <div class="mb-3">
-          <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" name="status" >
-            <cfoutput query="getStatus">
-              <option value="#id#" <cfif getCase.status EQ id>selected</cfif>>#display#</option>
-            </cfoutput>
-          </select>
+          <!-- Case Status & Settings -->
+          <div class="form-section">
+            <h6>
+              <i class="fas fa-cogs text-primary" aria-hidden="true"></i>
+              Case Status & Settings
+            </h6>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="status" class="form-label">
+                    <i class="fas fa-flag me-1" aria-hidden="true"></i>
+                    Status
+                  </label>
+                  <select class="form-select" id="status" name="status" required>
+                    <cfoutput query="getStatus">
+                      <option value="#id#" <cfif getCase.status EQ id>selected</cfif>>#display#</option>
+                    </cfoutput>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="fk_priority" class="form-label">
+                    <i class="fas fa-exclamation-triangle me-1" aria-hidden="true"></i>
+                    Priority
+                  </label>
+                  <select class="form-select" id="fk_priority" name="fk_priority">
+                    <cfoutput query="getPriorities">
+                      <option value="#id#" <cfif getCase.fk_priority EQ id>selected</cfif>>#display#</option>
+                    </cfoutput>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-0">
+                  <label for="fk_tool" class="form-label">
+                    <i class="fas fa-tools me-1" aria-hidden="true"></i>
+                    Tool
+                  </label>
+                  <select class="form-select" id="fk_tool" name="fk_tool">
+                    <cfoutput query="getTools">
+                      <option value="#id#" <cfif getCase.fk_tool EQ id>selected</cfif>>#display#</option>
+                    </cfoutput>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </cfoutput>
+
+        <cfif case_mode NEQ "new">
+          <!-- Court Location -->
+          <div class="form-section">
+            <h6>
+              <i class="fas fa-map-marker-alt text-primary" aria-hidden="true"></i>
+              Court Location
+            </h6>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="stateSelect" class="form-label">
+                    <i class="fas fa-flag-usa me-1" aria-hidden="true"></i>
+                    State
+                  </label>
+                  <select id="stateSelect" class="form-select">
+                    <option value="">Select State</option>
+                    <cfoutput query="getStates">
+                      <option value="#state_code#"
+                        <cfif getCase.fk_court neq "" and getCase.fk_court eq getCourts.id and getCourts.state_code eq state_code>
+                          selected
+                        </cfif>
+                      >#state_name#</option>
+                    </cfoutput>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="countySelect" class="form-label">
+                    <i class="fas fa-city me-1" aria-hidden="true"></i>
+                    County
+                  </label>
+                  <select id="countySelect" class="form-select">
+                    <option value="">Select County</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-0">
+                  <label for="fk_court" class="form-label">
+                    <i class="fas fa-university me-1" aria-hidden="true"></i>
+                    Court
+                  </label>
+                  <select id="fk_court" name="fk_court" class="form-select">
+                    <option value="">Select Court</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </cfif>
+
+
+        <!-- Update Options -->
+        <div class="form-section">
+          <h6>
+            <i class="fas fa-cog text-primary" aria-hidden="true"></i>
+            Update Options
+          </h6>
+          <div class="form-check">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="update_external" 
+                   name="update_external"
+                   <cfif case_mode EQ "new">checked</cfif>>
+            <label class="form-check-label" for="update_external">
+              <i class="fas fa-sync me-1" aria-hidden="true"></i>
+              Update externally
+            </label>
+          </div>
         </div>
-        <div class="mb-3">
-          <label for="fk_priority" class="form-label">Priority</label>
-          <select class="form-select" id="fk_priority" name="fk_priority">
-            <cfoutput query="getPriorities">
-              <option value="#id#" <cfif getCase.fk_priority EQ id>selected</cfif>>#display#</option>
+
+          <!-- Action Buttons -->
+          <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="fas fa-save me-1" aria-hidden="true"></i>
+              Update Case
+            </button>
+            <cfoutput>
+              <a href="case_details.cfm?id=#getCase.id#" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-1" aria-hidden="true"></i>
+                Cancel
+              </a>
             </cfoutput>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="fk_tool" class="form-label">Tool</label>
-          <select class="form-select" id="fk_tool" name="fk_tool">
-            <cfoutput query="getTools">
-              <option value="#id#" <cfif getCase.fk_tool EQ id>selected</cfif>>#display#</option>
-            </cfoutput>
-          </select>
-        </div>
-       <cfoutput>
-  <div class="mb-3">
-    <label for="case_url" class="form-label">Case URL</label>
-    <input type="text" class="form-control" id="case_url" name="case_url" value="#getCase.case_url#">
-  </div>
-</cfoutput>
-
-<cfif case_mode NEQ "new">
-  <cfoutput>
-    <div class="mb-3">
-      <label for="case_type" class="form-label">Case Type</label>
-      <input type="text" class="form-control" id="case_type" name="case_type" value="#getCase.case_type#">
-    </div>
-  </cfoutput>
-
-  <!--- Court picker section --->
-  <div class="mb-3">
-    <label for="stateSelect" class="form-label">State</label>
-    <select id="stateSelect" class="form-select">
-      <option value="">Select State</option>
-      <cfoutput query="getStates">
-        <option value="#state_code#"
-          <cfif getCase.fk_court neq "" and getCase.fk_court eq getCourts.id and getCourts.state_code eq state_code>
-            selected
-          </cfif>
-        >#state_name#</option>
-      </cfoutput>
-    </select>
-  </div>
-
-  <div class="mb-3">
-    <label for="countySelect" class="form-label">County</label>
-    <select id="countySelect" class="form-select">
-      <option value="">Select County</option>
-    </select>
-  </div>
-
-  <div class="mb-3">
-    <label for="fk_court" class="form-label">Court</label>
-    <select id="fk_court" name="fk_court" class="form-select" >
-      <option value="">Select Court</option>
-    </select>
-  </div>
-</cfif>
-
-
-  <div class="form-check mb-3">
-    <input class="form-check-input" type="checkbox" id="update_external" name="update_external"
-      <cfif case_mode EQ "new">checked</cfif>>
-    <label class="form-check-label" for="update_external">
-      Update externally
-    </label>
-  </div>
-
-<div class="d-flex justify-content-between align-items-center mt-4">
-  <!--- Left: Update Case --->
-  <button type="submit" class="btn btn-primary">Update Case</button>
-  
-<cfoutput>
-  <a style="color:white;" href="case_details.cfm?id=#getCase.id#" class="btn btn-danger">
-    Cancel
-  </a>
-  </cfoutput>
-</div>
-      </form>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
 
 
  
+<!-- Loading Modal -->
 <div class="modal fade" id="updateSpinnerModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content p-4 text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="sr-only">Loading...</span>
+    <div class="modal-content">
+      <div class="modal-body text-center p-5">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="mb-2">
+          <i class="fas fa-sync-alt me-2" aria-hidden="true"></i>
+          Synchronizing Case Data
+        </h5>
+        <p class="text-muted mb-0">Please wait while we update the case information...</p>
       </div>
-      <div class="mt-3">Synchronizing case data... please wait.</div>
     </div>
   </div>
 </div>

@@ -205,44 +205,11 @@ ORDER BY r.created_at DESC
     <title><cfoutput>Case Details - #case_details.case_number#</cfoutput></title>
     <cfinclude template="head.cfm"> <!--- Includes Bootstrap & DataTables CSS --->
     <style>
-        /* Professional styling for case details page */
-        .case-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 0.5rem;
-        }
-        
+        /* Page-specific styling for case details */
         .case-actions {
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
-        }
-        
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .status-review { background-color: #fff3cd; color: #856404; }
-        .status-tracked { background-color: #d1ecf1; color: #0c5460; }
-        .status-removed { background-color: #f8d7da; color: #721c24; }
-        
-        .info-card {
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 0.75rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-            transition: box-shadow 0.15s ease-in-out;
-        }
-        
-        .info-card:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
         }
         
         .courthouse-image {
@@ -250,42 +217,6 @@ ORDER BY r.created_at DESC
             height: 64px;
             object-fit: cover;
             border: 2px solid #e9ecef;
-        }
-        
-        .tab-content {
-            background: white;
-            border-radius: 0 0 0.75rem 0.75rem;
-            border: 1px solid #dee2e6;
-            border-top: none;
-        }
-        
-        .nav-tabs {
-            border-bottom: 2px solid #dee2e6;
-        }
-        
-        .nav-tabs .nav-link {
-            border: none;
-            border-radius: 0.5rem 0.5rem 0 0;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            color: #6c757d;
-            background: #f8f9fa;
-            margin-right: 0.25rem;
-            transition: all 0.2s ease;
-        }
-        
-        .nav-tabs .nav-link:hover {
-            background: #e9ecef;
-            color: #495057;
-            border-color: transparent;
-        }
-        
-        .nav-tabs .nav-link.active {
-            background: white;
-            color: #495057;
-            border: 2px solid #dee2e6;
-            border-bottom: 2px solid white;
-            margin-bottom: -2px;
         }
         
         .pdf-actions {
@@ -298,66 +229,6 @@ ORDER BY r.created_at DESC
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
             border-radius: 0.375rem;
-        }
-        
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            border-radius: 0.5rem;
-        }
-        
-        .celebrity-search-container {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #e9ecef;
-        }
-        
-        .subscriber-controls {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #e9ecef;
-        }
-        
-        .data-table-wrapper {
-            position: relative;
-            background: white;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-        
-        /* Accessibility improvements */
-        .btn:focus {
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
         }
         
         /* Responsive improvements */
@@ -376,9 +247,20 @@ ORDER BY r.created_at DESC
                 height: 48px;
             }
             
-            .nav-tabs .nav-link {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
+            .pdf-actions {
+                flex-direction: column;
+                gap: 0.125rem;
+            }
+        }
+        
+        /* DataTable responsive improvements */
+        @media (max-width: 992px) {
+            .dataTables_wrapper .row {
+                margin: 0;
+            }
+            
+            .dataTables_wrapper .col-md-6 {
+                padding: 0.5rem 0;
             }
         }
     </style>
@@ -1856,6 +1738,63 @@ function getUrlParam(key) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(key);
 }
+
+// Modal functions for link management
+function showAddLinkModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addLinkModal'));
+    modal.show();
+}
+
+// Handle add link form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const addLinkForm = document.getElementById('addLinkForm');
+    if (addLinkForm) {
+        addLinkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(addLinkForm);
+            const data = {
+                fk_case: formData.get('fk_case'),
+                fk_user: formData.get('fk_user'),
+                case_url: formData.get('case_url'),
+                title: formData.get('case_url'), // Use URL as title if no title field
+                category: 'General'
+            };
+            
+            fetch('insert_case_link.cfm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Success!', 'Link added successfully', 'success')
+                            .then(() => location.reload());
+                    } else {
+                        alert('Link added successfully!');
+                        location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', data.message || 'Failed to add link', 'error');
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to add link'));
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'Network error occurred', 'error');
+                } else {
+                    alert('Network error occurred');
+                }
+            });
+        });
+    }
+});
 </script>
 
 <script>
