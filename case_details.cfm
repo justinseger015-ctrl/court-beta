@@ -496,6 +496,17 @@ ORDER BY r.created_at DESC
                         </cfif>
                         </cfoutput>
                     </dl>
+                    
+                    <!--- Timestamp info --->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
+                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                            &nbsp;&nbsp;&nbsp;
+                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeFormat(case_details.last_updated, "h:mm tt")#</cfoutput>
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2101,14 +2112,6 @@ function deleteLink(linkId) {
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     if (element) {
-        // Store original type for password fields
-        const originalType = element.type;
-        
-        // Temporarily change password fields to text for better copying
-        if (originalType === 'password') {
-            element.type = 'text';
-        }
-        
         element.select();
         element.setSelectionRange(0, 99999); // For mobile devices
         
@@ -2131,26 +2134,6 @@ function copyToClipboard(elementId) {
             // Fallback - select the text for manual copying
             element.focus();
             element.select();
-        } finally {
-            // Restore original type for password fields
-            if (originalType === 'password') {
-                element.type = 'password';
-            }
-        }
-    }
-}
-
-function togglePasswordVisibility(elementId) {
-    const element = document.getElementById(elementId);
-    const icon = document.getElementById('passwordToggleIcon');
-    
-    if (element && icon) {
-        if (element.type === 'password') {
-            element.type = 'text';
-            icon.className = 'fas fa-eye-slash';
-        } else {
-            element.type = 'password';
-            icon.className = 'fas fa-eye';
         }
     }
 }
@@ -2231,17 +2214,11 @@ function togglePasswordVisibility(elementId) {
               Password:
             </label>
             <div class="input-group">
-              <input type="password" 
+              <input type="text" 
                      class="form-control" 
                      id="toolPassword" 
                      value="#htmlEditFormat(case_details.pass)#" 
                      readonly>
-              <button class="btn btn-outline-secondary" 
-                      type="button" 
-                      onclick="togglePasswordVisibility('toolPassword')"
-                      title="Show/hide password">
-                <i class="fas fa-eye" id="passwordToggleIcon"></i>
-              </button>
               <button class="btn btn-outline-secondary" 
                       type="button" 
                       onclick="copyToClipboard('toolPassword')"
