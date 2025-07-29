@@ -82,10 +82,7 @@
             <!--- Right-aligned Logout link --->
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <form method="post" action="./index.cfm" style="margin: 0;">
-                        <input type="hidden" name="logout" value="true">
-                        <button type="submit" class="nav-link text-danger btn btn-link" style="border: none; background: none; padding: 0.5rem 1rem;">Logout</button>
-                    </form>
+                    <a href="./logout.cfm" class="nav-link text-danger" style="padding: 0.5rem 1rem;">Logout</a>
                 </li>
             </ul>
 
