@@ -66,39 +66,36 @@ ORDER BY o.court_name
 <cfinclude template="navbar.cfm">
 
 <div class="container-fluid mt-4">
-  <!-- Enhanced header section -->
-  <div class="update-header">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <h1 class="mb-2 display-6">
-            <i class="fas fa-edit me-3" aria-hidden="true"></i>
-            Update Case
-          </h1>
-          <p class="mb-0 lead opacity-90">
-            <cfoutput>#getCase.case_number# - #getCase.case_name#</cfoutput>
-          </p>
-        </div>
-        <div class="col-md-4">
-          <div class="d-flex justify-content-md-end">
+  <!-- Minimal header section matching search form style -->
+  <div class="container">
+    <div class="card shadow-sm mb-4 filter-card">
+      <div class="card-header">
+        <h6 class="mb-0 d-flex align-items-center">
+          <i class="fas fa-edit me-2"></i>Update Case - <cfoutput>#getCase.case_number#</cfoutput>
+          <div class="ms-auto d-flex gap-2">
             <cfoutput>
             <a href="case_details.cfm?id=#getCase.id#" 
-               class="btn btn-outline-light btn-lg" 
-               role="button"
+               class="btn btn-outline-secondary btn-sm"
                aria-label="Cancel and return to case details">
-              <i class="fas fa-times me-2" aria-hidden="true"></i>
+              <i class="fas fa-times me-1" aria-hidden="true"></i>
               Cancel
             </a>
             </cfoutput>
           </div>
-        </div>
+        </h6>
       </div>
     </div>
   </div>
 
   <div class="container">
-    <div class="form-card shadow">
-      <div class="card-body p-4">
+    <div class="card shadow-sm mb-4 filter-card">
+      <div class="card-header">
+        <h6 class="mb-0">
+          <i class="fas fa-file-alt me-2"></i>
+          Case Update Form
+        </h6>
+      </div>
+      <div class="card-body">
         <form method="post" action="save_case_update.cfm" id="updateForm">
           <cfoutput>
           <input type="hidden" name="id" value="#getCase.id#">
@@ -106,9 +103,9 @@ ORDER BY o.court_name
           </cfoutput>
 
           <!-- Basic Case Information -->
-          <div class="form-section">
-            <h6>
-              <i class="fas fa-file-alt text-primary" aria-hidden="true"></i>
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="fas fa-file-alt me-2" aria-hidden="true"></i>
               Basic Case Information
             </h6>
             <div class="row">
@@ -178,9 +175,9 @@ ORDER BY o.court_name
             </cfif>
           </div>
           <!-- Case Status & Settings -->
-          <div class="form-section">
-            <h6>
-              <i class="fas fa-cogs text-primary" aria-hidden="true"></i>
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="fas fa-cogs me-2" aria-hidden="true"></i>
               Case Status & Settings
             </h6>
             <div class="row">
@@ -228,9 +225,9 @@ ORDER BY o.court_name
 
         <cfif case_mode NEQ "new">
           <!-- Court Location -->
-          <div class="form-section">
-            <h6>
-              <i class="fas fa-map-marker-alt text-primary" aria-hidden="true"></i>
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="fas fa-map-marker-alt me-2" aria-hidden="true"></i>
               Court Location
             </h6>
             <div class="row">
@@ -280,9 +277,9 @@ ORDER BY o.court_name
 
 
         <!-- Update Options -->
-        <div class="form-section">
-          <h6>
-            <i class="fas fa-cog text-primary" aria-hidden="true"></i>
+        <div class="mb-4">
+          <h6 class="text-muted mb-3">
+            <i class="fas fa-cog me-2" aria-hidden="true"></i>
             Update Options
           </h6>
           <div class="form-check">
@@ -299,17 +296,19 @@ ORDER BY o.court_name
         </div>
 
           <!-- Action Buttons -->
-          <div class="text-end mt-4">
-            <button type="submit" class="btn btn-primary me-2">
-              <i class="fas fa-save me-1" aria-hidden="true"></i>
-              Update Case
-            </button>
-            <cfoutput>
-              <a href="case_details.cfm?id=#getCase.id#" class="btn btn-outline-secondary">
-                <i class="fas fa-times me-1" aria-hidden="true"></i>
-                Cancel
-              </a>
-            </cfoutput>
+          <div class="border-top pt-3 mt-4">
+            <div class="d-flex justify-content-end gap-2">
+              <cfoutput>
+                <a href="case_details.cfm?id=#getCase.id#" class="btn btn-outline-secondary">
+                  <i class="fas fa-times me-1" aria-hidden="true"></i>
+                  Cancel
+                </a>
+              </cfoutput>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1" aria-hidden="true"></i>
+                Update Case
+              </button>
+            </div>
           </div>
         </form>
       </div>
