@@ -403,17 +403,13 @@ ORDER BY r.created_at DESC
                             </div>
                         </dd>
 
-                        <cfoutput>
-                        <cfif len(trim(case_details.case_type)) AND case_details.case_type NEQ "Unknown">
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-folder-open me-1 text-muted" aria-hidden="true"></i>
                             Case Type
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            #case_details.case_type#
+                            <cfoutput>#case_details.case_type#</cfoutput>
                         </dd>
-                        </cfif>
-                        </cfoutput>
 
                         <cfoutput>
                         <cfif len(trim(case_details.tool_name))>
@@ -446,17 +442,6 @@ ORDER BY r.created_at DESC
                         </cfif>
                         </cfoutput>
                     </dl>
-                    
-                    <!-- Timestamp footer -->
-                    <div class="border-top pt-3 mt-3">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
-                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
-                            &nbsp;&nbsp;
-                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
-                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
-                        </small>
-                    </div>
                 </div>
             </div>
         </div>
