@@ -460,8 +460,8 @@ ORDER BY r.created_at DESC
                         <dd class="col-sm-8 mb-2">
                             <div class="d-flex align-items-center">
                                 <div class="flex-grow-1">
-                                    <cfif len(trim(case_details.tool_url))>
-                                        <a href="#case_details.tool_url#" target="_blank" class="text-decoration-none">
+                                    <cfif len(trim(case_details.case_url))>
+                                        <a href="#case_details.case_url#" target="_blank" class="text-decoration-none">
                                             #case_details.tool_name#
                                             <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
                                         </a>
