@@ -11,8 +11,18 @@
 </cfif>
 <cfset requestData = deserializeJson(rawData)>
 <cfset currentUser = getAuthUser()>
+
+<!--- Debug: Check what getAuthUser() returns --->
+<cfif NOT isDefined("currentUser") OR len(trim(currentUser)) EQ 0>
+    <cfset currentUser = "UNKNOWN_USER">
+    <cflog file="column_visibility" text="Warning: getAuthUser() returned empty or undefined value">
+</cfif>
+
 <cfset status = trim(requestData.status)>
 <cfset updates = requestData.updates>
+
+<!--- Debug: Log the current user to see what we're getting --->
+<cflog file="column_visibility" text="Processing column visibility for user: '#currentUser#', status: '#status#'">
 
 <!--- Validate input --->
 <cfif NOT structKeyExists(requestData, "status") OR NOT isArray(updates)>
@@ -81,6 +91,16 @@
 </cfloop>
 
 <!--- Step 4: Return success --->
+<cfquery name="debugRecords" datasource="Reach">
+    SELECT username, status, column_key, is_visible 
+    FROM docketwatch.dbo.column_visibility_defaults
+    WHERE username = <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar">
+    ORDER BY status, column_key
+</cfquery>
+
+<!--- Log what records we have for this user after processing --->
+<cflog file="column_visibility" text="User '#currentUser#' now has #debugRecords.recordCount# records">
+
 <cfoutput>{"success": true}</cfoutput>
 
 <cfcatch type="any">
