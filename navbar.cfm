@@ -72,12 +72,12 @@
                 </li>
             </ul>
 
-            <!--- Environment indicator 
+            <!--- User indicator --->
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
-                    <span class="nav-link text-warning"><cfoutput>#UCase(application.appType)#</cfoutput></span>
+                    <span class="nav-link text-warning"><cfoutput>#UCase(session.user_login)#</cfoutput></span>
                 </li>
-            </ul>--->
+            </ul>
             
             <!--- Right-aligned Logout link --->
             <ul class="navbar-nav ms-auto">
