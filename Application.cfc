@@ -1,7 +1,7 @@
 <cfcomponent>
 
     <!--- Application settings --->
-    <cfset this.name = "court-beta">
+    <cfset this.name = "court_beta">
     <cfset this.sessionManagement = true>
     <cfset this.loginStorage = "session">
 
