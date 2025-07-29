@@ -2101,6 +2101,14 @@ function deleteLink(linkId) {
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     if (element) {
+        // Store original type for password fields
+        const originalType = element.type;
+        
+        // Temporarily change password fields to text for better copying
+        if (originalType === 'password') {
+            element.type = 'text';
+        }
+        
         element.select();
         element.setSelectionRange(0, 99999); // For mobile devices
         
@@ -2123,6 +2131,11 @@ function copyToClipboard(elementId) {
             // Fallback - select the text for manual copying
             element.focus();
             element.select();
+        } finally {
+            // Restore original type for password fields
+            if (originalType === 'password') {
+                element.type = 'password';
+            }
         }
     }
 }
