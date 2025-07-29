@@ -18,7 +18,10 @@
         c.[summarize_html],
         t.[id] AS tool_id,
         t.[tool_name] AS tool_name,
-        t.[search_url] as tool_url
+        t.[username],
+        t.[pass],
+        t.[search_url] as tool_url,
+        t.[login_url] as tool_login_url
     FROM [docketwatch].[dbo].[cases] c
     LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = c.fk_tool
     WHERE c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
@@ -244,6 +247,43 @@ ORDER BY r.created_at DESC
             border-radius: 0.375rem;
         }
         
+        /* Credentials modal styling */
+        #toolCredentialsModal .modal-content {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        #toolCredentialsModal .modal-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid #cbd5e1;
+            padding: 1rem 1.25rem;
+        }
+        
+        #toolCredentialsModal .modal-title {
+            color: #475569;
+            font-weight: 500;
+        }
+        
+        #toolCredentialsModal .input-group .form-control {
+            font-family: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        #toolCredentialsModal .input-group .btn {
+            border-color: #dee2e6;
+        }
+        
+        #toolCredentialsModal .input-group .btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* Copy success animation */
+        #toolCredentialsModal .btn.btn-success {
+            transition: all 0.3s ease;
+        }
+        
         /* Responsive improvements */
         @media (max-width: 768px) {
             .case-header {
@@ -418,14 +458,28 @@ ORDER BY r.created_at DESC
                             Tool
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            <cfif len(trim(case_details.tool_url))>
-                                <a href="#case_details.tool_url#" target="_blank" class="text-decoration-none">
-                                    #case_details.tool_name#
-                                    <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
-                                </a>
-                            <cfelse>
-                                #case_details.tool_name#
-                            </cfif>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <cfif len(trim(case_details.tool_url))>
+                                        <a href="#case_details.tool_url#" target="_blank" class="text-decoration-none">
+                                            #case_details.tool_name#
+                                            <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
+                                        </a>
+                                    <cfelse>
+                                        #case_details.tool_name#
+                                    </cfif>
+                                </div>
+                                <cfif len(trim(case_details.username)) OR len(trim(case_details.pass))>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-secondary ms-2" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="##toolCredentialsModal"
+                                            title="View login credentials"
+                                            aria-label="View tool login credentials">
+                                        <i class="fas fa-key" aria-hidden="true"></i>
+                                    </button>
+                                </cfif>
+                            </div>
                         </dd>
                         </cfif>
                         </cfoutput>
@@ -2042,6 +2096,51 @@ function deleteLink(linkId) {
         }
     }
 }
+
+// Credentials modal utility functions
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.select();
+        element.setSelectionRange(0, 99999); // For mobile devices
+        
+        try {
+            document.execCommand('copy');
+            // Show success feedback
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check text-success"></i>';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 1500);
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+            // Fallback - select the text for manual copying
+            element.focus();
+            element.select();
+        }
+    }
+}
+
+function togglePasswordVisibility(elementId) {
+    const element = document.getElementById(elementId);
+    const icon = document.getElementById('passwordToggleIcon');
+    
+    if (element && icon) {
+        if (element.type === 'password') {
+            element.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            element.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+}
 </script>
 
 <!--- Add Link Modal --->
@@ -2069,6 +2168,99 @@ function deleteLink(linkId) {
     </form>
   </div>
 </div>
+
+<!--- Tool Credentials Modal --->
+<cfoutput>
+<div class="modal fade" id="toolCredentialsModal" tabindex="-1" aria-labelledby="toolCredentialsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="toolCredentialsModalLabel">
+          <i class="fas fa-key me-2"></i>
+          Tool Login Credentials
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <cfif len(trim(case_details.tool_name))>
+          <div class="mb-3">
+            <strong class="text-muted d-block mb-1">Tool:</strong>
+            <span class="fw-bold">#case_details.tool_name#</span>
+          </div>
+        </cfif>
+        
+        <cfif len(trim(case_details.username))>
+          <div class="mb-3">
+            <label class="form-label text-muted mb-1">
+              <i class="fas fa-user me-1"></i>
+              Username:
+            </label>
+            <div class="input-group">
+              <input type="text" 
+                     class="form-control" 
+                     id="toolUsername" 
+                     value="#htmlEditFormat(case_details.username)#" 
+                     readonly>
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      onclick="copyToClipboard('toolUsername')"
+                      title="Copy username">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+        </cfif>
+        
+        <cfif len(trim(case_details.pass))>
+          <div class="mb-3">
+            <label class="form-label text-muted mb-1">
+              <i class="fas fa-lock me-1"></i>
+              Password:
+            </label>
+            <div class="input-group">
+              <input type="password" 
+                     class="form-control" 
+                     id="toolPassword" 
+                     value="#htmlEditFormat(case_details.pass)#" 
+                     readonly>
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      onclick="togglePasswordVisibility('toolPassword')"
+                      title="Show/hide password">
+                <i class="fas fa-eye" id="passwordToggleIcon"></i>
+              </button>
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      onclick="copyToClipboard('toolPassword')"
+                      title="Copy password">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+        </cfif>
+        
+        <cfif NOT len(trim(case_details.username)) AND NOT len(trim(case_details.pass))>
+          <div class="text-center text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            No credentials available for this tool.
+          </div>
+        </cfif>
+        
+        <cfif len(trim(case_details.tool_login_url))>
+          <div class="mt-3 pt-3 border-top">
+            <a href="#case_details.tool_login_url#" 
+               target="_blank" 
+               class="btn btn-primary btn-sm w-100">
+              <i class="fas fa-sign-in-alt me-1"></i>
+              Open Login Page
+            </a>
+          </div>
+        </cfif>
+      </div>
+    </div>
+  </div>
+</div>
+</cfoutput>
 
 </body>
 </html>
