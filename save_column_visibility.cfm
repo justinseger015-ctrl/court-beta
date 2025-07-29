@@ -2,7 +2,13 @@
 <cftry>
 
 <!--- Step 1: Parse JSON input --->
-<cfset rawData = fileRead("php://input")>
+<cfset httpData = getHttpRequestData()>
+<cfif structKeyExists(httpData, "content") AND len(httpData.content)>
+    <cfset rawData = toString(httpData.content)>
+<cfelse>
+    <!--- Fallback for form data --->
+    <cfset rawData = form.data>
+</cfif>
 <cfset requestData = deserializeJson(rawData)>
 <cfset currentUser = getAuthUser()>
 <cfset status = trim(requestData.status)>
@@ -14,7 +20,46 @@
     <cfexit>
 </cfif>
 
-<!--- Step 2: Loop over updates and apply them --->
+<!--- Step 2: Ensure user has all default records for both Review and Tracked statuses --->
+<!--- First, check what records exist for this user --->
+<cfquery name="userRecords" datasource="Reach">
+    SELECT status, column_key, is_visible
+    FROM docketwatch.dbo.column_visibility_defaults
+    WHERE username = <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar">
+</cfquery>
+
+<!--- Get all default records to copy from --->
+<cfquery name="defaultRecords" datasource="Reach">
+    SELECT status, column_key, is_visible
+    FROM docketwatch.dbo.column_visibility_defaults
+    WHERE username = 'DEFAULT'
+    ORDER BY status, column_key
+</cfquery>
+
+<!--- Create a lookup of existing user records --->
+<cfset existingRecords = {}>
+<cfloop query="userRecords">
+    <cfset existingRecords["#status#_#column_key#"] = true>
+</cfloop>
+
+<!--- Insert missing records for this user from DEFAULT --->
+<cfloop query="defaultRecords">
+    <cfset recordKey = "#status#_#column_key#">
+    <cfif NOT structKeyExists(existingRecords, recordKey)>
+        <cfquery datasource="Reach">
+            INSERT INTO docketwatch.dbo.column_visibility_defaults 
+            (username, status, column_key, is_visible)
+            VALUES (
+                <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#status#" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#column_key#" cfsqltype="cf_sql_varchar">,
+                <cfqueryparam value="#is_visible#" cfsqltype="cf_sql_bit">
+            )
+        </cfquery>
+    </cfif>
+</cfloop>
+
+<!--- Step 3: Loop over updates and apply them --->
 <cfloop array="#updates#" index="item">
     <cfquery datasource="Reach">
         MERGE docketwatch.dbo.column_visibility_defaults AS target
@@ -35,7 +80,7 @@
     </cfquery>
 </cfloop>
 
-<!--- Step 3: Return success --->
+<!--- Step 4: Return success --->
 <cfoutput>{"success": true}</cfoutput>
 
 <cfcatch type="any">
