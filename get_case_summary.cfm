@@ -181,7 +181,7 @@
                         <i class="fas fa-robot me-2" style="color: var(--tmz-red);"></i>
                         AI Generated Summary
                     </h6>
-                    <div class="summary-content p-3" style="background: ##1e1e1e; border-radius: 8px; border-left: 4px solid #555;">
+                    <div class="summary-content p-3" style="background: #1e1e1e; border-radius: 8px; border-left: 4px solid #555;">
                         <p class="text-muted mb-0">
                             <i class="fas fa-info-circle me-2"></i>
                             No AI summary has been generated for this case yet.
