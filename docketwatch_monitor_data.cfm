@@ -62,6 +62,8 @@
             </cfif>
             -- Only include cases that are being tracked or reviewed
             AND c.[status] IN ('Tracked', 'Review')
+            -- Filter out unfiled cases
+            AND c.[court_number] != 'unfiled'
             
         ORDER BY e.[created_at] DESC, e.[id] DESC
     </cfquery>
@@ -231,4 +233,6 @@
 </cftry>
 
 <!--- Output JSON response --->
+<cfcontent reset="true" type="application/json">
 <cfoutput>#serializeJSON(response)#</cfoutput>
+<cfabort>
