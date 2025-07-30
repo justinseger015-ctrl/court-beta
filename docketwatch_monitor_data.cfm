@@ -63,7 +63,7 @@
             -- Only include cases that are being tracked or reviewed
             AND c.[status] IN ('Tracked', 'Review')
             -- Filter out unfiled cases
-            AND c.[court_number] != 'unfiled'
+            AND c.[case_number] != 'unfiled'
             
         ORDER BY e.[created_at] DESC, e.[id] DESC
     </cfquery>
@@ -162,11 +162,13 @@
         <cfset celebInfo = "">
         <cfloop query="celebrity_matches">
             <cfif celebrity_matches.fk_case EQ updates.case_id>
+                <!--- For tracked cases, show 100% confidence since they're manually verified --->
+                <cfset confidencePercent = updates.case_status EQ "Tracked" ? "100" : numberFormat(celebrity_matches.probability_score * 100, "0")>
                 <cfset celebInfo = {
                     name = celebrity_matches.celebrity_name,
                     id = celebrity_matches.celebrity_id,
                     avatar = celebrity_matches.avatar_url,
-                    role = "Celebrity Match (" & numberFormat(celebrity_matches.probability_score * 100, "0") & "% confidence)"
+                    role = "Celebrity Match (" & confidencePercent & "% confidence)"
                 }>
                 <cfbreak>
             </cfif>
