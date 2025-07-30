@@ -1,4 +1,5 @@
 <cfheader name="Content-Type" value="application/json">
+<cfcontent reset="true">
 <cfset response = {}>
 
 <cftry>
