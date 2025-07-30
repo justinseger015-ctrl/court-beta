@@ -74,18 +74,15 @@
         /* Control Panel */
         .control-panel {
             background: var(--card-dark);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            position: sticky;
-            top: 0;
-            z-index: 999;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .filter-controls {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -93,11 +90,11 @@
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.25rem;
         }
 
         .filter-group label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: #cccccc;
             font-weight: 500;
         }
@@ -106,7 +103,9 @@
             background: #3a3a3a;
             border: 1px solid #555;
             color: #ffffff;
-            border-radius: 8px;
+            border-radius: 6px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
         }
 
         .form-select:focus, .form-control:focus {
@@ -119,28 +118,6 @@
         /* Update Cards */
         .updates-container {
             margin-top: 2rem;
-            max-height: calc(100vh - 400px);
-            overflow-y: auto;
-            padding-right: 0.5rem;
-        }
-
-        /* Custom scrollbar for updates container */
-        .updates-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .updates-container::-webkit-scrollbar-track {
-            background: #1a1a1a;
-            border-radius: 4px;
-        }
-
-        .updates-container::-webkit-scrollbar-thumb {
-            background: var(--tmz-red);
-            border-radius: 4px;
-        }
-
-        .updates-container::-webkit-scrollbar-thumb:hover {
-            background: var(--tmz-dark-red);
         }
 
         .update-card {
@@ -429,8 +406,8 @@
         /* Stats Bar */
         .stats-bar {
             display: flex;
-            gap: 2rem;
-            margin-bottom: 1rem;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .stat-item {
@@ -438,13 +415,13 @@
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--tmz-red);
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             color: #888;
             text-transform: uppercase;
         }
@@ -452,12 +429,13 @@
         /* Responsive Design */
         @media (max-width: 768px) {
             .monitor-title {
-                font-size: 2rem;
+                font-size: 1.75rem;
             }
             
             .filter-controls {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 0.5rem;
             }
             
             .action-buttons {
@@ -466,17 +444,26 @@
             
             .stats-bar {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 0.5rem;
             }
             
-            .updates-container {
-                max-height: calc(100vh - 500px);
+            .control-panel {
+                padding: 0.75rem;
+                margin: 0.5rem 0;
             }
         }
 
         @media (max-width: 480px) {
-            .updates-container {
-                max-height: calc(100vh - 550px);
+            .monitor-title {
+                font-size: 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 1.25rem;
+            }
+            
+            .stat-label {
+                font-size: 0.7rem;
             }
         }
     </style>
