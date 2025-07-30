@@ -1,5 +1,8 @@
 <cfparam name="url.case_id" default="">
-<cfset caseId = val(url.case_id)>
+<cfparam name="form.case_id" default="">
+
+<!--- Get case_id from either URL or form (POST) --->
+<cfset caseId = val(len(trim(url.case_id)) ? url.case_id : form.case_id)>
 
 <cftry>
     <!--- Validate input --->
@@ -181,7 +184,7 @@
                         <i class="fas fa-robot me-2" style="color: var(--tmz-red);"></i>
                         AI Generated Summary
                     </h6>
-                    <div class="summary-content p-3" style="background: #1e1e1e; border-radius: 8px; border-left: 4px solid #555;">
+                    <div class="summary-content p-3" style="background: ##1e1e1e; border-radius: 8px; border-left: 4px solid ##555;">
                         <p class="text-muted mb-0">
                             <i class="fas fa-info-circle me-2"></i>
                             No AI summary has been generated for this case yet.
@@ -199,7 +202,7 @@
                     </h6>
                     <div class="activity-timeline">
                         <cfloop query="recent_events">
-                            <div class="activity-item d-flex mb-3 p-2" style="background: #1e1e1e; border-radius: 8px;">
+                            <div class="activity-item d-flex mb-3 p-2" style="background: ##1e1e1e; border-radius: 8px;">
                                 <div class="activity-date me-3 text-center" style="min-width: 80px;">
                                     <div class="date-day" style="color: var(--tmz-red); font-weight: bold;">
                                         #dateFormat(recent_events.event_date, "dd")#
@@ -246,7 +249,7 @@
                         <div class="detail-item mb-2">
                             <strong class="text-muted">Status:</strong>
                             <span class="ms-2 badge" style="background: 
-                                <cfif case_info.status EQ 'Tracked'>var(--priority-normal)<cfelseif case_info.status EQ 'Review'>var(--priority-urgent)<cfelse>#666</cfif>;">
+                                <cfif case_info.status EQ 'Tracked'>var(--priority-normal)<cfelseif case_info.status EQ 'Review'>var(--priority-urgent)<cfelse>##666</cfif>;">
                                 #case_info.status#
                             </span>
                         </div>
@@ -282,7 +285,7 @@
             </div>
             
         </div>
-        
+            </cfoutput>
         <style>
             .section-title {
                 color: #ffffff;
@@ -331,7 +334,7 @@
                 margin-bottom: 0.5rem;
             }
         </style>
-    </cfoutput>
+
 
 <cfcatch type="any">
     <cfoutput>
