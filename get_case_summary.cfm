@@ -171,7 +171,7 @@
                         <i class="fas fa-robot me-2" style="color: var(--tmz-red);"></i>
                         AI Generated Summary
                     </h6>
-                    <div class="summary-content p-3" style="background: #1e1e1e; border-radius: 8px; border-left: 4px solid var(--tmz-red);">
+                    <div class="summary-content p-3" style="background: ##1e1e1e; border-radius: 8px; border-left: 4px solid var(--tmz-red);">
                         #case_info.summarize_html#
                     </div>
                 </div>

@@ -78,6 +78,9 @@
             padding: 1.5rem;
             margin: 2rem 0;
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 999;
         }
 
         .filter-controls {
@@ -116,13 +119,35 @@
         /* Update Cards */
         .updates-container {
             margin-top: 2rem;
+            max-height: calc(100vh - 400px);
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Custom scrollbar for updates container */
+        .updates-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .updates-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .updates-container::-webkit-scrollbar-thumb {
+            background: var(--tmz-red);
+            border-radius: 4px;
+        }
+
+        .updates-container::-webkit-scrollbar-thumb:hover {
+            background: var(--tmz-dark-red);
         }
 
         .update-card {
             background: var(--card-dark);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
             border-left: 4px solid transparent;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -239,36 +264,45 @@
 
         .summary-preview {
             margin: 1rem 0;
-            font-size: 1rem;
+            font-size: 0.95rem;
             line-height: 1.5;
-            color: #e0e0e0;
+            color: #ddd;
         }
 
         .parties-info {
             margin: 0.75rem 0;
             font-size: 0.9rem;
-            color: #ccc;
+            color: #bbb;
+        }
+
+        .parties-info i {
+            color: #888;
         }
 
         /* Action Buttons */
         .action-buttons {
             display: flex;
             gap: 0.75rem;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #444;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn-monitor {
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
             font-weight: 500;
+            font-size: 0.9rem;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: none;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         .btn-acknowledge {
@@ -317,10 +351,13 @@
             align-items: center;
             gap: 1rem;
             margin: 1rem 0;
-            padding: 1rem;
-            background: rgba(214, 0, 0, 0.1);
+            padding: 0.75rem 1rem;
+            background: rgba(214, 0, 0, 0.08);
             border-radius: 8px;
-            border: 1px solid rgba(214, 0, 0, 0.3);
+            border-left: 3px solid var(--tmz-red);
+            border-top: 1px solid rgba(214, 0, 0, 0.2);
+            border-right: 1px solid rgba(214, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(214, 0, 0, 0.1);
         }
 
         .celeb-avatar {
@@ -329,6 +366,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--tmz-red);
+            box-shadow: 0 2px 8px rgba(214, 0, 0, 0.3);
         }
 
         .celeb-details {
@@ -339,11 +377,12 @@
             font-weight: 600;
             color: var(--tmz-red);
             margin-bottom: 0.25rem;
+            font-size: 0.95rem;
         }
 
         .celeb-role {
-            font-size: 0.9rem;
-            color: #ccc;
+            font-size: 0.85rem;
+            color: #bbb;
         }
 
         /* Empty State */
@@ -428,6 +467,16 @@
             .stats-bar {
                 flex-direction: column;
                 gap: 1rem;
+            }
+            
+            .updates-container {
+                max-height: calc(100vh - 500px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .updates-container {
+                max-height: calc(100vh - 550px);
             }
         }
     </style>
@@ -569,7 +618,7 @@
 <script>
 $(document).ready(function() {
     // Monitor Configuration
-    const POLLING_INTERVAL = 15000; // 15 seconds
+    const POLLING_INTERVAL = 300000; // 5 minutes (300,000 milliseconds)
     const SOUND_ENABLED = true;
     
     let currentFilters = {
@@ -719,6 +768,9 @@ $(document).ready(function() {
         
         container.html(html);
         
+        // Fetch Wikidata images for celebrities
+        fetchWikidataImages();
+        
         // Animate new cards
         $('.update-card').each(function(index) {
             const $card = $(this);
@@ -738,12 +790,13 @@ $(document).ready(function() {
         if (update.celebrity_info) {
             celebHtml = `
                 <div class="celeb-info">
-                    <img src="${update.celebrity_info.avatar || '/images/default-avatar.png'}" 
+                    <img src="../services/avatar_placeholder.png" 
+                         data-wikiid="${update.celebrity_info.wiki_id || ''}"
                          alt="${update.celebrity_info.name}" 
                          class="celeb-avatar">
                     <div class="celeb-details">
                         <div class="celeb-name">${update.celebrity_info.name}</div>
-                        <div class="celeb-role">${update.celebrity_info.role || 'Celebrity Match'}</div>
+                        <div class="celeb-role">${update.celebrity_info.role || 'Celebrity'}</div>
                     </div>
                 </div>
             `;
@@ -981,6 +1034,30 @@ $(document).ready(function() {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+    
+    function fetchWikidataImages() {
+        document.querySelectorAll('.celeb-avatar').forEach(img => {
+            var wikiId = img.getAttribute('data-wikiid');
+            if (wikiId) {
+                fetch('https://www.wikidata.org/wiki/Special:EntityData/' + wikiId + '.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        try {
+                            var entities = data.entities;
+                            var entity = entities[wikiId];
+                            var claims = entity.claims;
+                            var p18 = claims.P18[0].mainsnak.datavalue.value;
+                            var fileName = encodeURIComponent(p18);
+                            var imageUrl = 'https://commons.wikimedia.org/wiki/Special:FilePath/' + fileName;
+                            img.setAttribute('src', imageUrl);
+                        } catch (error) {
+                            console.log('No image found for celebrity wiki ID:', wikiId);
+                        }
+                    })
+                    .catch(error => console.error('Error loading celebrity image for', wikiId, error));
+            }
+        });
     }
 });
 </script>

@@ -1,4 +1,5 @@
 <cfheader name="Content-Type" value="application/json">
+<cfcontent reset="true">
 <cfset response = {}>
  
 <cftry>
@@ -25,31 +26,11 @@
                 WHERE id = <cfqueryparam value="#updateId#" cfsqltype="cf_sql_varchar">
             </cfquery>
             
-            <!--- Check if any rows were affected --->
-            <cfif acknowledge_update.recordCount EQ 0>
-                <!--- The update might not exist, let's check --->
-                <cfquery name="check_exists" datasource="Reach">
-                    SELECT id FROM [docketwatch].[dbo].[case_events]
-                    WHERE id = <cfqueryparam value="#updateId#" cfsqltype="cf_sql_varchar">
-                </cfquery>
-                
-                <cfif check_exists.recordCount EQ 0>
-                    <cfset response = {
-                        success = false,
-                        message = "Update not found"
-                    }>
-                <cfelse>
-                    <cfset response = {
-                        success = true,
-                        message = "Update acknowledged successfully"
-                    }>
-                </cfif>
-            <cfelse>
-                <cfset response = {
-                    success = true,
-                    message = "Update acknowledged successfully"
-                }>
-            </cfif>
+            <!--- Success response --->
+            <cfset response = {
+                success = true,
+                message = "Update acknowledged successfully"
+            }>
             
         <cfcatch type="database">
             <!--- If we get a database error, it might be because the acknowledged column doesn't exist --->
@@ -106,4 +87,6 @@
 </cftry>
 
 <!--- Output JSON response --->
+<cfcontent reset="true" type="application/json">
 <cfoutput>#serializeJSON(response)#</cfoutput>
+<cfabort>

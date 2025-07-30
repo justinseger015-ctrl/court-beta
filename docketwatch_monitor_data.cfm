@@ -40,8 +40,8 @@
                 ELSE 3  -- Low
             END as priority_level,
             
-            -- Acknowledgment status (check if column exists, default to 0 if not)
-            0 as acknowledged,
+            -- Acknowledgment status
+            ISNULL(e.[acknowledged], 0) as acknowledged,
             
             -- Story worthiness indicator
             CASE 
@@ -61,25 +61,28 @@
                 AND e.[id] > <cfqueryparam value="#lastUpdateId#" cfsqltype="cf_sql_varchar">
             </cfif>
             -- Only include cases that are being tracked or reviewed
-            AND c.[status] IN ('Tracked', 'Review')
+            AND c.[status] IN ('Tracked')
             -- Filter out unfiled cases
             AND c.[case_number] != 'unfiled'
             
         ORDER BY e.[created_at] DESC, e.[id] DESC
     </cfquery>
     
-    <!--- Query for celebrity matches if any exist --->
+    <!--- Query for celebrity associations if any exist --->
     <cfif updates.recordCount GT 0>
         <cfquery name="celebrity_matches" datasource="Reach">
             SELECT 
                 ccm.fk_case,
                 c.name as celebrity_name,
                 c.id as celebrity_id,
-                ccm.match_status,
+                e.external_id as wiki_id
+                <!--- ,ccm.match_status,
                 ccm.probability_score,
-                '' as avatar_url
+                '' as avatar_url --->
             FROM [docketwatch].[dbo].[case_celebrity_matches] ccm
             INNER JOIN [docketwatch].[dbo].[celebrities] c ON c.id = ccm.fk_celebrity
+            LEFT JOIN [docketwatch].[dbo].[celebrity_external_links] e 
+                ON e.fk_celebrity = c.id AND e.source = 'Wikidata'
             WHERE ccm.fk_case IN (
                 <cfloop query="updates">
                     <cfqueryparam value="#updates.case_id#" cfsqltype="cf_sql_varchar">
@@ -87,7 +90,7 @@
                 </cfloop>
             )
             AND ccm.match_status <> 'Removed'
-            AND ccm.probability_score > 0.7  -- Only high-confidence matches
+            <!--- AND ccm.probability_score > 0.7  -- Only high-confidence matches --->
         </cfquery>
         
         <!--- Query for PDFs/documents associated with these events --->
@@ -110,7 +113,8 @@
         </cfquery>
     <cfelse>
         <!--- Create empty query objects if no updates found --->
-        <cfset celebrity_matches = queryNew("fk_case,celebrity_name,celebrity_id,match_status,probability_score,avatar_url")>
+        <cfset celebrity_matches = queryNew("fk_case,celebrity_name,celebrity_id,wiki_id")>
+        <!--- <cfset celebrity_matches = queryNew("fk_case,celebrity_name,celebrity_id,match_status,probability_score,avatar_url")> --->
         <cfset event_pdfs = queryNew("fk_case_event,pdf_title,local_pdf_filename,isDownloaded,pdf_type")>
     </cfif>
     
@@ -162,14 +166,20 @@
         <cfset celebInfo = "">
         <cfloop query="celebrity_matches">
             <cfif celebrity_matches.fk_case EQ updates.case_id>
-                <!--- For tracked cases, show 100% confidence since they're manually verified --->
-                <cfset confidencePercent = updates.case_status EQ "Tracked" ? "100" : numberFormat(celebrity_matches.probability_score * 100, "0")>
+                <!--- Simple celebrity display without match percentages --->
+                <cfset celebInfo = {
+                    name = celebrity_matches.celebrity_name,
+                    id = celebrity_matches.celebrity_id,
+                    wiki_id = celebrity_matches.wiki_id ?: "",
+                    role = "Celebrity"
+                }>
+                <!--- <cfset confidencePercent = updates.case_status EQ "Tracked" ? "100" : numberFormat(celebrity_matches.probability_score * 100, "0")>
                 <cfset celebInfo = {
                     name = celebrity_matches.celebrity_name,
                     id = celebrity_matches.celebrity_id,
                     avatar = celebrity_matches.avatar_url,
                     role = "Celebrity Match (" & confidencePercent & "% confidence)"
-                }>
+                }> --->
                 <cfbreak>
             </cfif>
         </cfloop>
