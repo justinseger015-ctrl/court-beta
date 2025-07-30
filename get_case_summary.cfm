@@ -1,8 +1,22 @@
-<cfparam name="url.case_id" default="">
-<cfparam name="form.case_id" default="">
+<!--- Clear any previous output to ensure clean response --->
+<cfcontent reset="true">
 
-<!--- Get case_id from either URL or form (POST) --->
-<cfset caseId = val(len(trim(url.case_id)) ? url.case_id : form.case_id)>
+<cfparam name="url.case_id" default="">
+
+<!--- Get case_id from URL parameter --->
+<cfset caseId = val(url.case_id)>
+
+<!--- Debug: Let's see what we're getting --->
+<cfif isDefined("url.debug")>
+    <cfoutput>
+        <div class="alert alert-info">
+            <strong>Debug Info:</strong><br>
+            URL case_id: "#url.case_id#"<br>
+            Final caseId: #caseId#<br>
+            URL Scope Dump: #structKeyList(url)#
+        </div>
+    </cfoutput>
+</cfif>
 
 <cftry>
     <!--- Validate input --->

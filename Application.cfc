@@ -6,8 +6,8 @@
     <cfset this.loginStorage = "session">
 
     <!--- Optional settings you can tune --->
-    <cfset this.sessionTimeout = CreateTimeSpan(0, 4, 0, 0)> <!-- 4 hours -->
-    <cfset this.applicationTimeout = CreateTimeSpan(2, 0, 0, 0)> <!-- 2 days -->
+    <cfset this.sessionTimeout = CreateTimeSpan(0, 4, 0, 0)> 
+    <cfset this.applicationTimeout = CreateTimeSpan(2, 0, 0, 0)> 
 
     <!--- Application start logic --->
     <cffunction name="onApplicationStart" returnType="boolean">
