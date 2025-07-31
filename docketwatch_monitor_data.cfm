@@ -50,7 +50,7 @@
         FROM [docketwatch].[dbo].[case_events] e
         INNER JOIN [docketwatch].[dbo].[cases] c ON c.id = e.fk_cases
         LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = c.fk_tool
-        LEFT JOIN [docketwatch].[dbo].[case_priority] p ON p.id = e.fk_priority
+        LEFT JOIN [docketwatch].[dbo].[case_priority] p ON p.id = c.fk_priority
         
         WHERE 
             -- Only get updates from last 24 hours (or all if no last_update_id provided)
