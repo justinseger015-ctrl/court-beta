@@ -37,24 +37,10 @@ This allows for cleanup of PDFs that are no longer needed.
 
 <!--- Query to get associated documents for these cases --->
 <cfquery name="getAssociatedDocuments" datasource="Reach">
-    SELECT 
-        d.doc_id,
-        d.doc_uid,
-        d.fk_case,
-        d.rel_path,
-        d.pdf_title,
-        d.file_size,
-        d.total_pages,
-        d.date_downloaded as doc_created_at,
-        c.case_number,
-        c.case_name,
-        -- Construct file system path using rel_path
-        '#application.fileSharePath#' + d.rel_path AS local_file_path
-    FROM docketwatch.dbo.documents d
-    INNER JOIN docketwatch.dbo.cases c ON d.fk_case = c.id
-    WHERE c.case_number = 'Unfiled'
-    AND c.status = 'Removed'
-    ORDER BY d.date_downloaded DESC
+    SELECT  * 
+    FROM [docketwatch].[dbo].[documents] d
+    INNER JOIN docketwatch.dbo.cases c ON c.id = d.fk_case
+    WHERE c.[status] = 'Removed' AND c.case_number = 'Unfiled'
 </cfquery>
 
 <!--- Query to get case_events_pdf records for these cases --->
