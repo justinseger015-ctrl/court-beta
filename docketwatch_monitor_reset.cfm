@@ -16,7 +16,7 @@
 
 <cftry>
     <!--- Reset all acknowledged fields to NULL --->
-    <cfquery name="resetAcknowledgments" datasource="cmtemp">
+    <cfquery name="resetAcknowledgments" datasource="reach">
         UPDATE case_events 
         SET 
             acknowledged = NULL,
