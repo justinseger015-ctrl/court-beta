@@ -615,7 +615,7 @@ $(document).ready(function() {
         search: ''
     };
     
-    let lastUpdateId = 0;
+    let lastUpdateId = 0; // Always start from 0 to get all records
     let updatesList = [];
     
     // Initialize Monitor
@@ -678,6 +678,9 @@ $(document).ready(function() {
     function loadUpdates(forceRefresh = false) {
         if (forceRefresh) {
             showLoading();
+            // Reset lastUpdateId to get all records on force refresh
+            lastUpdateId = 0;
+            updatesList = []; // Clear existing updates
         }
         
         // Make AJAX call to get updates
@@ -685,7 +688,7 @@ $(document).ready(function() {
             url: 'docketwatch_monitor_data.cfm?bypass=1',
             method: 'GET',
             data: {
-                last_update_id: lastUpdateId
+                last_update_id: forceRefresh ? 0 : lastUpdateId
             },
             dataType: 'json',
             success: function(response) {
@@ -921,19 +924,41 @@ $(document).ready(function() {
     }
     
     function showSummaryModal(caseId) {
+        console.log('🔍 Opening summary modal for case ID:', caseId);
+        
         const modal = new bootstrap.Modal($('#summaryModal')[0]);
         $('#summaryContent').html('<div class="text-center"><div class="loading-spinner"></div></div>');
         modal.show();
         
         $.ajax({
-            url: 'get_case_summary.cfm?bypass=1',
+            url: 'get_case_summary.cfm',
             method: 'GET',
             data: { case_id: caseId },
             success: function(response) {
+                console.log('Summary loaded successfully for case:', caseId);
                 $('#summaryContent').html(response);
             },
-            error: function() {
-                $('#summaryContent').html('<p class="text-danger">Error loading summary.</p>');
+            error: function(xhr, status, error) {
+                console.error(' Summary error:', {
+                    caseId: caseId,
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    statusCode: xhr.status
+                });
+                
+                let errorDetail = `
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Error Loading Summary</h6>
+                        <p><strong>Case ID:</strong> ${caseId}</p>
+                        <p><strong>Status:</strong> ${status}</p>
+                        <p><strong>Error:</strong> ${error}</p>
+                        <p><strong>HTTP Status:</strong> ${xhr.status}</p>
+                        ${xhr.responseText ? `<p><strong>Response:</strong><br><pre style="font-size: 0.8rem; max-height: 200px; overflow-y: auto;">${xhr.responseText}</pre></p>` : ''}
+                    </div>
+                `;
+                
+                $('#summaryContent').html(errorDetail);
             }
         });
     }
