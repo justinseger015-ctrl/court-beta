@@ -973,9 +973,6 @@ $(document).ready(function() {
             }
         });
     }
-            }
-        });
-    }
     
     function updateStats(stats) {
         $('#totalUpdates').text(stats.total || 0);
