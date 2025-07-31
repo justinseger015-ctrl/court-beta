@@ -931,7 +931,7 @@ $(document).ready(function() {
         modal.show();
         
         $.ajax({
-            url: 'get_case_summary.cfm',
+            url: 'get_case_summary.cfm?bypass=1',
             method: 'GET',
             data: { case_id: caseId },
             success: function(response) {
