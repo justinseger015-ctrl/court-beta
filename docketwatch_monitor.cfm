@@ -483,9 +483,17 @@
                 </h1>
                 <p class="monitor-subtitle">Real-Time Legal Activity Dashboard</p>
             </div>
-            <div class="live-indicator">
-                <div class="live-dot"></div>
-                <span>LIVE</span>
+            <div class="d-flex align-items-center gap-3">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+                <cfif isDefined("session.user_login") AND session.user_login EQ "xkking">
+                    <button id="headerRefreshBtn" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Force Refresh
+                    </button>
+                </cfif>
             </div>
         </div>
     </div>
@@ -554,13 +562,6 @@
                 <label for="searchFilter">Search</label>
                 <input type="text" id="searchFilter" class="form-control" placeholder="Case name, number, or description...">
             </div>
-            
-            <div class="filter-group" style="margin-top: 1.5rem;">
-                <button id="refreshBtn" class="btn btn-monitor btn-case">
-                    <i class="fas fa-sync-alt"></i>
-                    Refresh Now
-                </button>
-            </div>
         </div>
     </div>
 
@@ -622,7 +623,7 @@ $(document).ready(function() {
     initializeMonitor();
     
     function initializeMonitor() {
-        console.log('🚀 DocketWatch Monitor Starting...');
+        console.log('[DocketWatch] Monitor Starting...');
         
         // Set up event listeners
         setupEventListeners();
@@ -633,7 +634,7 @@ $(document).ready(function() {
         // Start polling
         setInterval(loadUpdates, POLLING_INTERVAL);
         
-        console.log('✅ Monitor initialized successfully');
+        console.log('[DocketWatch] Monitor initialized successfully');
     }
     
     function setupEventListeners() {
@@ -648,8 +649,8 @@ $(document).ready(function() {
             applyFilters();
         }, 300));
         
-        // Manual refresh
-        $('#refreshBtn').on('click', function() {
+        // Header refresh button (for xkking only)
+        $('#headerRefreshBtn').on('click', function() {
             loadUpdates(true);
         });
         
@@ -929,8 +930,8 @@ $(document).ready(function() {
     }
     
     function showSummaryModal(caseId) {
-        console.log('🔍 Opening summary modal for case ID:', caseId);
-        console.log('🔍 Case ID type:', typeof caseId);
+        console.log('[DocketWatch] Opening summary modal for case ID:', caseId);
+        console.log('[DocketWatch] Case ID type:', typeof caseId);
         
         const modal = new bootstrap.Modal($('#summaryModal')[0]);
         $('#summaryContent').html('<div class="text-center"><div class="loading-spinner"></div></div>');
@@ -938,19 +939,19 @@ $(document).ready(function() {
         
         // Let's also test the URL directly
         const testUrl = `get_case_summary.cfm?bypass=1&case_id=${caseId}`;
-        console.log('🔍 Test URL:', testUrl);
+        console.log('[DocketWatch] Test URL:', testUrl);
         
         $.ajax({
             url: 'get_case_summary.cfm?bypass=1',
             method: 'GET',
             data: { case_id: caseId },
             success: function(response) {
-                console.log('✅ Summary response received for case:', caseId);
-                console.log('📄 Response preview:', response.substring(0, 200) + '...');
+                console.log('[DocketWatch] Summary response received for case:', caseId);
+                console.log('[DocketWatch] Response preview:', response.substring(0, 200) + '...');
                 $('#summaryContent').html(response);
             },
             error: function(xhr, status, error) {
-                console.error('❌ Summary error:', {
+                console.error('[DocketWatch] Summary error:', {
                     caseId: caseId,
                     status: status,
                     error: error,
