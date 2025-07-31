@@ -45,7 +45,7 @@ This allows for cleanup of PDFs that are no longer needed.
 
 <!--- Query to get case_events_pdf records for these cases --->
 <cfquery name="getAssociatedPDFs" datasource="Reach">
-    SELECT top 10 
+    SELECT 
         p.id as pdf_id,
         p.fk_case_event,
         p.pdf_title,
@@ -221,7 +221,7 @@ This allows for cleanup of PDFs that are no longer needed.
                                 <small class="text-muted">Downloaded: #dateFormat(date_downloaded, "mm/dd/yyyy")#</small>
                             </div>
                             <div class="col-md-4">
-                                <cfset fullFilePath = "#application.fileSharePath##rel_path#">
+                                <cfset fullFilePath = "\\10.146.176.84\general\DOCKETWATCH\docs\#rel_path#">
                                 <div class="file-path">#fullFilePath#</div>
                                 <cfset fileExists = fileExists(fullFilePath)>
                                 <cfif fileExists>
@@ -273,7 +273,7 @@ This allows for cleanup of PDFs that are no longer needed.
                             <div class="col-md-4">
                                 <!--- Construct PDF path based on local_pdf_filename --->
                                 <cfif local_pdf_filename NEQ "">
-                                    <cfset pdfPath = "#application.fileSharePath#docs\cases\#case_id#\#local_pdf_filename#">
+                                    <cfset pdfPath = "\\10.146.176.84\general\DOCKETWATCH\docs\cases\#case_id#\#local_pdf_filename#">
                                     <div class="file-path">#pdfPath#</div>
                                     <cfset pdfExists = fileExists(pdfPath)>
                                     <cfif pdfExists>
