@@ -17,13 +17,15 @@
 <cftry>
     <!--- Reset all acknowledged fields to NULL --->
     <cfquery name="resetAcknowledgments" datasource="reach">
-        UPDATE case_events 
+        UPDATE docketwatch.dbo.case_events 
         SET 
             acknowledged = NULL,
             acknowledged_at = NULL,
             acknowledged_by = NULL
         WHERE acknowledged IS NOT NULL
-    </cfquery>
+    </cfquery>s
+    
+
     
     <!--- Success response --->
     <cfset response = {
