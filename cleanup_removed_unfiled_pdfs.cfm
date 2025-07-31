@@ -41,19 +41,20 @@ This allows for cleanup of PDFs that are no longer needed.
         d.doc_id,
         d.doc_uid,
         d.fk_case,
-        d.local_pdf_filename,
-        d.created_at as doc_created_at,
+        d.rel_path,
+        d.pdf_title,
+        d.file_size,
+        d.total_pages,
+        d.date_downloaded as doc_created_at,
         c.case_number,
         c.case_name,
-        -- Construct file system path
-        '#application.fileSharePath#docs\cases\' + 
-            CAST(d.fk_case AS VARCHAR) + '\' + 
-            CAST(d.doc_id AS VARCHAR) + '.pdf' AS local_file_path
+        -- Construct file system path using rel_path
+        '#application.fileSharePath#' + d.rel_path AS local_file_path
     FROM docketwatch.dbo.documents d
     INNER JOIN docketwatch.dbo.cases c ON d.fk_case = c.id
     WHERE c.case_number = 'Unfiled'
     AND c.status = 'Removed'
-    ORDER BY d.created_at DESC
+    ORDER BY d.date_downloaded DESC
 </cfquery>
 
 <!--- Query to get case_events_pdf records for these cases --->
@@ -223,10 +224,15 @@ This allows for cleanup of PDFs that are no longer needed.
                                 <h6 class="mb-1">Document ID: #doc_id#</h6>
                                 <p class="mb-1"><strong>UID:</strong> #doc_uid#</p>
                                 <p class="mb-1"><strong>Case:</strong> #case_name# (ID: #fk_case#)</p>
-                                <cfif local_pdf_filename NEQ "">
-                                    <p class="mb-1"><strong>Filename:</strong> #local_pdf_filename#</p>
+                                <p class="mb-1"><strong>Title:</strong> #pdf_title#</p>
+                                <p class="mb-1"><strong>Relative Path:</strong> #rel_path#</p>
+                                <cfif file_size GT 0>
+                                    <p class="mb-1"><strong>Size:</strong> #numberFormat(file_size/1024, "999,999")# KB</p>
                                 </cfif>
-                                <small class="text-muted">Created: #dateFormat(doc_created_at, "mm/dd/yyyy")#</small>
+                                <cfif total_pages GT 0>
+                                    <p class="mb-1"><strong>Pages:</strong> #total_pages#</p>
+                                </cfif>
+                                <small class="text-muted">Downloaded: #dateFormat(doc_created_at, "mm/dd/yyyy")#</small>
                             </div>
                             <div class="col-md-4">
                                 <div class="file-path">#local_file_path#</div>
