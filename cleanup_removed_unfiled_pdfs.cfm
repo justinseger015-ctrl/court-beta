@@ -218,7 +218,7 @@ This allows for cleanup of PDFs that are no longer needed.
                                 <cfif total_pages GT 0>
                                     <p class="mb-1"><strong>Pages:</strong> #total_pages#</p>
                                 </cfif>
-                                <small class="text-muted">Downloaded: #dateFormat(doc_created_at, "mm/dd/yyyy")#</small>
+                                <small class="text-muted">Downloaded: #dateFormat(date_downloaded, "mm/dd/yyyy")#</small>
                             </div>
                             <div class="col-md-4">
                                 <div class="file-path">#local_file_path#</div>
