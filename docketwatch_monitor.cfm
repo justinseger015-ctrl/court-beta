@@ -186,6 +186,54 @@
         }
 
         /* Card Content */
+        .case-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #444;
+        }
+
+        .case-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0;
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .case-name.priority-critical {
+            color: #dc2626;
+        }
+
+        .case-name.priority-high {
+            color: #ea580c;
+        }
+
+        .case-name.priority-medium {
+            color: #d97706;
+        }
+
+        .case-name.priority-low {
+            color: #16a34a;
+        }
+
+        .case-name.priority-unknown {
+            color: #6b7280;
+        }
+
+        .update-tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .update-header {
             display: flex;
             justify-content: between;
@@ -203,12 +251,6 @@
             font-size: 0.9rem;
             color: #888;
             font-weight: 500;
-        }
-
-        .case-info {
-            color: var(--tmz-red);
-            font-weight: 600;
-            font-size: 1.1rem;
         }
 
         .tool-badge {
@@ -822,13 +864,15 @@ $(document).ready(function() {
             <div class="update-card ${priorityClass} ${acknowledgedClass}" data-update-id="${update.id}">
                 <div class="priority-badge ${priorityClass}">${priorityText}</div>
                 
+                <div class="case-title">
+                    <h4 class="case-name ${priorityClass}">${update.case_name}</h4>
+                    <span class="update-tag">Update</span>
+                </div>
+                
                 <div class="update-header">
                     <div class="update-meta">
                         <div class="timestamp">
                             <i class="fas fa-clock me-1"></i>${timeAgo}
-                        </div>
-                        <div class="case-info">
-                            ${update.case_number} - ${update.case_name}
                         </div>
                         <div class="tool-badge">${update.tool_name || 'Unknown'}</div>
                     </div>
