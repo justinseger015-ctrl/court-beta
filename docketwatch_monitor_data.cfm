@@ -208,6 +208,7 @@
             acknowledged = updates.acknowledged,
             created_at = dateFormat(updates.created_at, "yyyy-mm-dd") & "T" & timeFormat(updates.created_at, "HH:mm:ss"),
             event_date = updates.event_date,
+            event_description = updates.event_description ?: "",
             summary_preview = summaryPreview,
             parties = parties,
             celebrity_info = celebInfo,

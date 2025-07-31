@@ -248,10 +248,37 @@
         }
 
         .update-header {
-            display: flex;
-            justify-content: between;
-            align-items: flex-start;
             margin-bottom: 1rem;
+        }
+
+        .event-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .event-description {
+            font-size: 1rem;
+            line-height: 1.4;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .event-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .event-date {
+            font-size: 0.9rem;
+            color: #ddd;
+            font-weight: 500;
+        }
+
+        .event-date i {
+            color: #888;
         }
 
         .update-meta {
@@ -886,11 +913,20 @@ $(document).ready(function() {
                 </div>
                 
                 <div class="update-header">
-                    <div class="update-meta">
-                        <div class="timestamp">
-                            <i class="fas fa-clock me-1"></i>${timeAgo}
+                    <div class="event-details">
+                        <div class="event-description">
+                            ${update.event_description || 'No event description available'}
                         </div>
-                        <div class="tool-badge">${update.tool_name || 'Unknown'}</div>
+                        <div class="event-meta">
+                            <span class="event-date">
+                                <i class="fas fa-calendar me-1"></i>
+                                ${update.event_date ? new Date(update.event_date).toLocaleDateString() : 'No date'}
+                            </span>
+                            <span class="timestamp">
+                                <i class="fas fa-clock me-1"></i>${timeAgo}
+                            </span>
+                            <span class="tool-badge">${update.tool_name || 'Unknown'}</span>
+                        </div>
                     </div>
                 </div>
                 
