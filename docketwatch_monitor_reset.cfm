@@ -15,6 +15,13 @@
 </cfif>
 
 <cftry>
+    <!--- First, count how many records will be affected --->
+    <cfquery name="countAcknowledged" datasource="reach">
+        SELECT COUNT(*) as recordCount
+        FROM docketwatch.dbo.case_events 
+        WHERE acknowledged IS NOT NULL
+    </cfquery>
+    
     <!--- Reset all acknowledged fields to NULL --->
     <cfquery name="resetAcknowledgments" datasource="reach">
         UPDATE docketwatch.dbo.case_events 
@@ -23,15 +30,13 @@
             acknowledged_at = NULL,
             acknowledged_by = NULL
         WHERE acknowledged IS NOT NULL
-    </cfquery>s
-    
+    </cfquery>
 
-    
     <!--- Success response --->
     <cfset response = {
         "success" = true,
         "message" = "All acknowledgments have been reset",
-        "recordsReset" = resetAcknowledgments.recordCount
+        "recordsReset" = countAcknowledged.recordCount
     }>
     
     <cfcatch>
