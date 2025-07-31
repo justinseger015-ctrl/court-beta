@@ -26,13 +26,13 @@ This allows for cleanup of PDFs that are no longer needed.
         c.case_name,
         c.status,
         c.created_at,
-        c.updated_at,
+        c.last_updated,
         t.tool_name
     FROM docketwatch.dbo.cases c
     LEFT JOIN docketwatch.dbo.tools t ON c.fk_tool = t.id
     WHERE c.case_number = 'Unfiled'
     AND c.status = 'Removed'
-    ORDER BY c.updated_at DESC
+    ORDER BY c.last_updated DESC
 </cfquery>
 
 <!--- Query to get associated documents for these cases --->
@@ -188,7 +188,7 @@ This allows for cleanup of PDFs that are no longer needed.
                                 <p class="mb-1"><strong>Status:</strong> <span class="text-danger">#status#</span></p>
                                 <small class="text-muted">
                                     Created: #dateFormat(created_at, "mm/dd/yyyy")# | 
-                                    Updated: #dateFormat(updated_at, "mm/dd/yyyy")#
+                                    Updated: #dateFormat(last_updated, "mm/dd/yyyy")#
                                 </small>
                             </div>
                             <a href="case_details.cfm?id=#id#" class="btn btn-sm btn-outline-primary" target="_blank">
