@@ -683,7 +683,7 @@ columns: [
     {
         data: "case_number",
         className: "nowrap",
-        visible: columnVisibilityDefaults["case_number"] === 1,
+        visible: true,
         render: ColumnRenderers.caseNumber
     },
     {
