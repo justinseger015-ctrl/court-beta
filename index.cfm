@@ -690,7 +690,12 @@ columns: [
         data: "case_name",
         visible: columnVisibilityDefaults["case_name"] === 1,
         defaultContent: "(None)",
-        render: function(data) { return ColumnRenderers.defaultOrFallback(data); }
+        render: function(data, type, row) { 
+            if (!data || data === "(None)") {
+                return ColumnRenderers.defaultOrFallback(data);
+            }
+            return '<a href="case_details.cfm?id=' + row.id + '" class="text-decoration-none fw-medium text-primary">' + data + '</a>';
+        }
     },
     { data: "court_name", visible: columnVisibilityDefaults["court_name"] === 1, defaultContent: "(Unknown)" },
     { 
