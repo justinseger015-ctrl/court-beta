@@ -68,15 +68,15 @@
                 <cflocation url="./index.cfm" addtoken="false">
             </cfif>
 
-            <!-- Login prompt and validation --->
+            <!--- Login prompt and validation --->
             <cflogin idleTimeout="86400">
                 <cfif not isDefined("cflogin")>
-                    <cfinclude template="/dwloginform.cfm">
+                    <cfinclude template="dwloginform.cfm">
                     <cfabort>
                 <cfelse>
                     <cfif trim(cflogin.name) EQ "">
                         <cfset Login_Message = "You must enter your FOX Username and Password.">
-                        <cfinclude template="/dwloginform.cfm">
+                        <cfinclude template="dwloginform.cfm">
                         <cfabort>
                     <cfelse>
                         <cfnTAuthenticate 

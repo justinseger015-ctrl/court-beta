@@ -302,6 +302,21 @@
             font-size: 0.8rem;
             font-weight: 500;
             text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .tool-link {
+            background: #17a2b8;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .tool-link:hover {
+            background: #138496;
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(23, 162, 184, 0.4);
         }
 
         .priority-badge {
@@ -925,7 +940,13 @@ $(document).ready(function() {
                             <span class="timestamp">
                                 <i class="fas fa-clock me-1"></i>${timeAgo}
                             </span>
-                            <span class="tool-badge">${update.tool_name || 'Unknown'}</span>
+                            ${update.case_url ? `
+                                <a href="${update.case_url}" target="_blank" class="tool-badge tool-link">
+                                    <i class="fas fa-external-link-alt me-1"></i>${update.tool_name || 'Unknown'}
+                                </a>
+                            ` : `
+                                <span class="tool-badge">${update.tool_name || 'Unknown'}</span>
+                            `}
                         </div>
                     </div>
                 </div>
