@@ -188,19 +188,32 @@
         /* Card Content */
         .case-title {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 1rem;
             margin-bottom: 1rem;
             padding-bottom: 0.75rem;
             border-bottom: 1px solid #444;
         }
 
+        .case-title-content {
+            flex: 1;
+        }
+
         .case-name {
             font-size: 1.4rem;
             font-weight: 700;
-            margin: 0;
-            flex: 1;
+            margin: 0 0 0.5rem 0;
             line-height: 1.3;
+        }
+
+        .case-number {
+            font-size: 0.9rem;
+            color: #bbb;
+            font-weight: 500;
+        }
+
+        .case-number i {
+            color: #888;
         }
 
         .case-name.priority-critical {
@@ -865,7 +878,10 @@ $(document).ready(function() {
                 <div class="priority-badge ${priorityClass}">${priorityText}</div>
                 
                 <div class="case-title">
-                    <h4 class="case-name ${priorityClass}">${update.case_name}</h4>
+                    <div class="case-title-content">
+                        <h4 class="case-name ${priorityClass}">${update.case_name}</h4>
+                        <div class="case-number"><i class="fas fa-hashtag me-1"></i>${update.case_number}</div>
+                    </div>
                     <span class="update-tag">Update</span>
                 </div>
                 
@@ -877,8 +893,6 @@ $(document).ready(function() {
                         <div class="tool-badge">${update.tool_name || 'Unknown'}</div>
                     </div>
                 </div>
-                
-                <div class="parties-info"><i class="fas fa-hashtag me-1"></i>Case number: ${update.case_number}</div>
                 
                 <div class="summary-preview">
                     ${update.summary_preview || 'No summary available for this update.'}
