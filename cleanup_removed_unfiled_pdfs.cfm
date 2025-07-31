@@ -221,8 +221,9 @@ This allows for cleanup of PDFs that are no longer needed.
                                 <small class="text-muted">Downloaded: #dateFormat(date_downloaded, "mm/dd/yyyy")#</small>
                             </div>
                             <div class="col-md-4">
-                                <div class="file-path">#local_file_path#</div>
-                                <cfset fileExists = fileExists(local_file_path)>
+                                <cfset fullFilePath = "#application.fileSharePath##rel_path#">
+                                <div class="file-path">#fullFilePath#</div>
+                                <cfset fileExists = fileExists(fullFilePath)>
                                 <cfif fileExists>
                                     <span class="file-exists">
                                         <i class="fas fa-exclamation-triangle me-1"></i>File Exists
