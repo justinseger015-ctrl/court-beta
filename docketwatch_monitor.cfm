@@ -834,7 +834,7 @@ $(document).ready(function() {
                     </div>
                 </div>
                 
-                ${update.parties ? `<div class="parties-info"><i class="fas fa-users me-1"></i>${update.parties}</div>` : ''}
+                <div class="parties-info"><i class="fas fa-hashtag me-1"></i>Case number: ${update.case_number}</div>
                 
                 <div class="summary-preview">
                     ${update.summary_preview || 'No summary available for this update.'}
