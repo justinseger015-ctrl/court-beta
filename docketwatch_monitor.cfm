@@ -556,7 +556,7 @@
             </div>
             
             <div class="filter-group" style="margin-top: 1.5rem;">
-                <button id="refreshBtn" class="btn btn-monitor btn-summary">
+                <button id="refreshBtn" class="btn btn-monitor btn-case">
                     <i class="fas fa-sync-alt"></i>
                     Refresh Now
                 </button>
@@ -660,7 +660,12 @@ $(document).ready(function() {
         });
         
         // Summary buttons (delegated)
-        $(document).on('click', '.btn-summary', function() {
+        $(document).on('click', '.btn-summary', function(e) {
+            // Don't trigger if this is the refresh button
+            if ($(this).attr('id') === 'refreshBtn') {
+                return;
+            }
+            
             const caseId = $(this).data('case-id');
             showSummaryModal(caseId);
         });
@@ -925,21 +930,27 @@ $(document).ready(function() {
     
     function showSummaryModal(caseId) {
         console.log('🔍 Opening summary modal for case ID:', caseId);
+        console.log('🔍 Case ID type:', typeof caseId);
         
         const modal = new bootstrap.Modal($('#summaryModal')[0]);
         $('#summaryContent').html('<div class="text-center"><div class="loading-spinner"></div></div>');
         modal.show();
+        
+        // Let's also test the URL directly
+        const testUrl = `get_case_summary.cfm?bypass=1&case_id=${caseId}`;
+        console.log('🔍 Test URL:', testUrl);
         
         $.ajax({
             url: 'get_case_summary.cfm?bypass=1',
             method: 'GET',
             data: { case_id: caseId },
             success: function(response) {
-                console.log('Summary loaded successfully for case:', caseId);
+                console.log('✅ Summary response received for case:', caseId);
+                console.log('📄 Response preview:', response.substring(0, 200) + '...');
                 $('#summaryContent').html(response);
             },
             error: function(xhr, status, error) {
-                console.error(' Summary error:', {
+                console.error('❌ Summary error:', {
                     caseId: caseId,
                     status: status,
                     error: error,
@@ -959,6 +970,9 @@ $(document).ready(function() {
                 `;
                 
                 $('#summaryContent').html(errorDetail);
+            }
+        });
+    }
             }
         });
     }
