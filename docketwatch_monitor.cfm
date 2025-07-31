@@ -137,17 +137,26 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
 
-        .update-card.priority-1 {
-            border-left-color: var(--priority-urgent);
+        .update-card.priority-critical {
+            border-left-color: #dc2626;
             animation: urgentGlow 3s infinite;
         }
 
-        .update-card.priority-2 {
-            border-left-color: var(--priority-normal);
+        .update-card.priority-high {
+            border-left-color: #ea580c;
         }
 
-        .update-card.priority-3 {
-            border-left-color: var(--priority-low);
+        .update-card.priority-medium {
+            border-left-color: #d97706;
+        }
+
+        .update-card.priority-low {
+            border-left-color: #16a34a;
+            opacity: 0.8;
+        }
+        
+        .update-card.priority-unknown {
+            border-left-color: #6b7280;
             opacity: 0.8;
         }
 
@@ -224,18 +233,28 @@
             text-transform: uppercase;
         }
 
-        .priority-badge.priority-1 {
-            background: var(--priority-urgent);
+        .priority-badge.priority-critical {
+            background: #dc2626;
             color: white;
         }
 
-        .priority-badge.priority-2 {
-            background: var(--priority-normal);
+        .priority-badge.priority-high {
+            background: #ea580c;
             color: white;
         }
 
-        .priority-badge.priority-3 {
-            background: var(--priority-low);
+        .priority-badge.priority-medium {
+            background: #d97706;
+            color: white;
+        }
+
+        .priority-badge.priority-low {
+            background: #16a34a;
+            color: white;
+        }
+        
+        .priority-badge.priority-unknown {
+            background: #6b7280;
             color: white;
         }
 
@@ -533,9 +552,10 @@
                 <label for="priorityFilter">Priority Filter</label>
                 <select id="priorityFilter" class="form-select">
                     <option value="">All Priorities</option>
-                    <option value="1">Urgent Only</option>
-                    <option value="2">Normal Only</option>
-                    <option value="3">Low Only</option>
+                    <option value="Critical">Critical Only</option>
+                    <option value="High">High Only</option>
+                    <option value="Medium">Medium Only</option>
+                    <option value="Low">Low Only</option>
                 </select>
             </div>
             
@@ -778,9 +798,9 @@ $(document).ready(function() {
     
     function buildUpdateCard(update) {
         const timeAgo = getTimeAgo(update.created_at);
-        const priorityClass = `priority-${update.priority_level}`;
+        const priorityClass = `priority-${(update.priority_name || 'unknown').toLowerCase()}`;
         const acknowledgedClass = update.acknowledged ? 'acknowledged' : '';
-        const priorityText = getPriorityText(update.priority_level);
+        const priorityText = update.priority_name || 'Unknown';
         
         let celebHtml = '';
         if (update.celebrity_info) {
@@ -857,8 +877,8 @@ $(document).ready(function() {
     
     function applyFiltersToList(list) {
         return list.filter(update => {
-            // Priority filter
-            if (currentFilters.priority && update.priority_level != currentFilters.priority) {
+            // Priority filter - now uses priority name instead of level
+            if (currentFilters.priority && update.priority_name !== currentFilters.priority) {
                 return false;
             }
             
@@ -1069,15 +1089,6 @@ $(document).ready(function() {
         
         const diffDays = Math.floor(diffHours / 24);
         return `${diffDays}d ago`;
-    }
-    
-    function getPriorityText(level) {
-        switch(level) {
-            case 1: return 'URGENT';
-            case 2: return 'NORMAL';
-            case 3: return 'LOW';
-            default: return 'UNKNOWN';
-        }
     }
     
     function debounce(func, wait) {

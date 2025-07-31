@@ -33,12 +33,9 @@
             ISNULL(t.[tool_name], 'Unknown') as tool_name,
             ISNULL(t.[id], 0) as tool_id,
             
-            -- Priority logic (you can adjust this based on your business rules)
-            CASE 
-                WHEN ISNULL(e.[tmz_summarize], 0) = 1 OR c.[status] = 'Tracked' THEN 1  -- Urgent
-                WHEN ISNULL(e.[summarize], 0) = 1 THEN 2  -- Normal
-                ELSE 3  -- Low
-            END as priority_level,
+            -- Priority information from case_priority table
+            ISNULL(p.[id], 0) as priority_level,
+            ISNULL(p.[name], 'Unknown') as priority_name,
             
             -- Acknowledgment status
             ISNULL(e.[acknowledged], 0) as acknowledged,
@@ -53,6 +50,7 @@
         FROM [docketwatch].[dbo].[case_events] e
         INNER JOIN [docketwatch].[dbo].[cases] c ON c.id = e.fk_cases
         LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = c.fk_tool
+        LEFT JOIN [docketwatch].[dbo].[case_priority] p ON p.id = e.fk_priority
         
         WHERE 
             -- Only get updates from last 24 hours (or all if no last_update_id provided)
@@ -128,8 +126,8 @@
     }>
     
     <cfloop query="updates">
-        <!--- Count stats --->
-        <cfif updates.priority_level EQ 1>
+        <!--- Count stats - check for urgent priority names --->
+        <cfif updates.priority_name EQ "Critical" OR updates.priority_name EQ "High">
             <cfset stats.urgent++>
         </cfif>
         <cfif updates.acknowledged EQ 1>
@@ -206,6 +204,7 @@
             case_name = updates.case_name,
             tool_name = updates.tool_name ?: "Unknown",
             priority_level = updates.priority_level,
+            priority_name = updates.priority_name ?: "Unknown",
             acknowledged = updates.acknowledged,
             created_at = dateFormat(updates.created_at, "yyyy-mm-dd") & "T" & timeFormat(updates.created_at, "HH:mm:ss"),
             event_date = updates.event_date,

@@ -157,10 +157,11 @@ const allColumnKeys = [
             border-radius: 0.375rem;
             font-weight: 500;
         }
-        
-        .priority-high { color: #dc2626; font-weight: 600; }
-        .priority-medium { color: #d97706; font-weight: 500; }
-        .priority-low { color: #16a34a; }
+        .priority-critical { color: #dc2626; font-weight: 700; }  /* Red - Critical */
+        .priority-high { color: #ea580c; font-weight: 600; }      /* Orange - High */
+        .priority-medium { color: #d97706; font-weight: 500; }    /* Amber/Yellow - Medium */
+        .priority-low { color: #16a34a; font-weight: 400; }       /* Green - Low */
+        .priority-unknown { color: #6b7280; font-weight: 400; }   /* Gray - Unknown */
         
         @media (max-width: 768px) {
             .filter-row > div {
