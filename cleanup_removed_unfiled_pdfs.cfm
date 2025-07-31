@@ -59,7 +59,7 @@ This allows for cleanup of PDFs that are no longer needed.
 
 <!--- Query to get case_events_pdf records for these cases --->
 <cfquery name="getAssociatedPDFs" datasource="Reach">
-    SELECT 
+    SELECT top 10 
         p.id as pdf_id,
         p.fk_case_event,
         p.pdf_title,
