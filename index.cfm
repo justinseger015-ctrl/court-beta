@@ -341,7 +341,7 @@ const allColumnKeys = [
                     <th>Source</th>
                     <th style="display:none;" class="noVis">ID</th> <!--- Hidden ID column for internal use --->
                     <th>Case Number</th>
-                    <th>Case Naame</th>
+                    <th>Case Name</th>
                     <th>Courthouse</th>
                     <th>Priority</th>
                     <th>Details</th>
