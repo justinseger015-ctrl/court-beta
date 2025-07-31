@@ -651,7 +651,7 @@ $(document).ready(function() {
         
         // Header refresh button (for xkking only)
         $('#headerRefreshBtn').on('click', function() {
-            loadUpdates(true);
+            forceRefreshWithReset();
         });
         
         // Acknowledge buttons (delegated)
@@ -896,6 +896,38 @@ $(document).ready(function() {
     
     function applyFilters() {
         renderUpdates();
+    }
+    
+    function forceRefreshWithReset() {
+        showLoading();
+        
+        // First, reset all acknowledgments in the database
+        $.ajax({
+            url: 'docketwatch_monitor_reset.cfm?bypass=1',
+            method: 'POST',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    console.log('[DocketWatch] Reset acknowledgments - Records affected:', response.recordsReset);
+                    
+                    // Now do a full refresh
+                    lastUpdateId = 0;
+                    updatesList = [];
+                    loadUpdates(true);
+                    
+                    showNotification(`Force refresh complete - ${response.recordsReset || 0} records reset`, 'success');
+                } else {
+                    hideLoading();
+                    console.error('[DocketWatch] Reset failed:', response.message);
+                    showNotification('Failed to reset acknowledgments: ' + response.message, 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoading();
+                console.error('[DocketWatch] Reset error:', error);
+                showNotification('Error resetting acknowledgments', 'error');
+            }
+        });
     }
     
     function acknowledgeUpdate(updateId) {
