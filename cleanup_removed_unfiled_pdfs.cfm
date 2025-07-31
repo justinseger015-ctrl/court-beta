@@ -54,14 +54,34 @@ This allows for cleanup of PDFs that are no longer needed.
         p.created_at as pdf_created_at,
         c.id as case_id,
         c.case_number,
-        c.case_name,
-        e.event_date
+        c.case_name
     FROM docketwatch.dbo.case_events_pdf p
     INNER JOIN docketwatch.dbo.case_events e ON p.fk_case_event = e.id
     INNER JOIN docketwatch.dbo.cases c ON e.fk_cases = c.id
     WHERE c.case_number = 'Unfiled'
     AND c.status = 'Removed'
-    AND p.local_pdf_filename IS NOT NULL
+    ORDER BY p.created_at DESC
+</cfquery>
+
+<!--- Alternative query: Direct lookup by case IDs from unfiled removed cases --->
+<cfquery name="getDirectPDFs" datasource="Reach">
+    SELECT 
+        p.id as pdf_id,
+        p.fk_case_event,
+        p.pdf_title,
+        p.local_pdf_filename,
+        p.isDownloaded,
+        p.created_at as pdf_created_at,
+        c.id as case_id,
+        c.case_number,
+        c.case_name
+    FROM docketwatch.dbo.case_events_pdf p
+    INNER JOIN docketwatch.dbo.case_events e ON p.fk_case_event = e.id
+    INNER JOIN docketwatch.dbo.cases c ON e.fk_cases = c.id
+    WHERE c.id IN (
+        SELECT id FROM docketwatch.dbo.cases 
+        WHERE case_number = 'Unfiled' AND status = 'Removed'
+    )
     ORDER BY p.created_at DESC
 </cfquery>
 
@@ -146,8 +166,8 @@ This allows for cleanup of PDFs that are no longer needed.
         <div class="col-md-4">
             <div class="card summary-card">
                 <div class="card-body text-center">
-                    <h3 class="text-info mb-2"><cfoutput>#getAssociatedPDFs.recordCount#</cfoutput></h3>
-                    <p class="mb-0">PDF Files</p>
+                    <h3 class="text-info mb-2"><cfoutput>#getAssociatedPDFs.recordCount# / #getDirectPDFs.recordCount#</cfoutput></h3>
+                    <p class="mb-0">PDF Files (Method 1 / Method 2)</p>
                 </div>
             </div>
         </div>
@@ -263,7 +283,6 @@ This allows for cleanup of PDFs that are no longer needed.
                                 <h6 class="mb-1">PDF ID: #pdf_id#</h6>
                                 <p class="mb-1"><strong>Title:</strong> #pdf_title#</p>
                                 <p class="mb-1"><strong>Case:</strong> #case_name# (ID: #case_id#)</p>
-                                <p class="mb-1"><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</p>
                                 <p class="mb-1"><strong>Filename:</strong> #local_pdf_filename#</p>
                                 <span class="badge bg-<cfif isDownloaded>success<cfelse>warning</cfif>">
                                     <cfif isDownloaded>Downloaded<cfelse>Not Downloaded</cfif>
@@ -293,7 +312,59 @@ This allows for cleanup of PDFs that are no longer needed.
             <cfelse>
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    No PDF files found for these cases.
+                    No PDF files found for these cases (Method 1).
+                </div>
+            </cfif>
+        </div>
+    </div>
+    
+    <!--- Alternative PDFs Section --->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-file-pdf me-2"></i>
+                Alternative PDF Search (Direct Case ID lookup)
+            </h5>
+        </div>
+        <div class="card-body">
+            <cfif getDirectPDFs.recordCount GT 0>
+                <cfoutput query="getDirectPDFs">
+                    <div class="doc-item">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="mb-1">PDF ID: #pdf_id#</h6>
+                                <p class="mb-1"><strong>Title:</strong> #pdf_title#</p>
+                                <p class="mb-1"><strong>Case:</strong> #case_name# (ID: #case_id#)</p>
+                                <p class="mb-1"><strong>Filename:</strong> #local_pdf_filename#</p>
+                                <span class="badge bg-<cfif isDownloaded>success<cfelse>warning</cfif>">
+                                    <cfif isDownloaded>Downloaded<cfelse>Not Downloaded</cfif>
+                                </span>
+                                <br><small class="text-muted">Created: #dateFormat(pdf_created_at, "mm/dd/yyyy")#</small>
+                            </div>
+                            <div class="col-md-4">
+                                <!--- Construct PDF path based on local_pdf_filename --->
+                                <cfif local_pdf_filename NEQ "">
+                                    <cfset pdfPath = "\\10.146.176.84\general\DOCKETWATCH\docs\cases\#case_id#\#local_pdf_filename#">
+                                    <div class="file-path">#pdfPath#</div>
+                                    <cfset pdfExists = fileExists(pdfPath)>
+                                    <cfif pdfExists>
+                                        <span class="file-exists">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>File Exists
+                                        </span>
+                                    <cfelse>
+                                        <span class="file-missing">
+                                            <i class="fas fa-times-circle me-1"></i>File Not Found
+                                        </span>
+                                    </cfif>
+                                </cfif>
+                            </div>
+                        </div>
+                    </div>
+                </cfoutput>
+            <cfelse>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No PDF files found for these cases (Method 2).
                 </div>
             </cfif>
         </div>
