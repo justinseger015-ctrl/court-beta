@@ -204,7 +204,7 @@ $(document).ready(function() {
                     if (!data) return '<em class="text-muted">None</em>';
                     
                     if (type === 'display') {
-                        return `<button class="btn btn-sm btn-outline-secondary" onclick="showContext(${row.id}, '${data.replace(/'/g, "\\'")}')">
+                        return `<button class="btn btn-sm btn-outline-secondary context-btn" data-error-id="${row.id}" data-context="${data.replace(/"/g, '&quot;')}">
                                     <i class="fa-solid fa-info-circle"></i> View
                                 </button>`;
                     }
@@ -301,13 +301,6 @@ $(document).ready(function() {
         }
     });
 
-    // Show Context Modal
-    function showContext(errorId, contextText) {
-        $('#contextModalTitle').text('Error Context #' + errorId);
-        $('#contextModalBody').text(contextText || 'No context available');
-        $('#contextModal').modal('show');
-    }
-
     // Handle Read More clicks
     $('#errorLogTable tbody').on('click', 'a.read-more', function(e) {
         e.preventDefault();
@@ -316,6 +309,14 @@ $(document).ready(function() {
         wrapper.find('.short-desc').hide();
         $(this).hide();
         wrapper.find('.full-desc').show();
+    });
+
+    // Handle Context View clicks
+    $('#errorLogTable tbody').on('click', 'button.context-btn', function(e) {
+        e.preventDefault();
+        var errorId = $(this).data('error-id');
+        var contextText = $(this).data('context');
+        showContext(errorId, contextText);
     });
 
     // Filter handlers
@@ -371,12 +372,19 @@ $(document).ready(function() {
     }, 120000);
 });
 
+// Show Context Modal
+function showContext(errorId, contextText) {
+    $('#contextModalTitle').text('Error Context #' + errorId);
+    $('#contextModalBody').text(contextText || 'No context available');
+    $('#contextModal').modal('show');
+}
+
 function loadScriptFilterOptions() {
     $.ajax({
         url: 'error_log_data.cfm?action=getScripts',
         method: 'GET',
         success: function(data) {
-            var scripts = JSON.parse(data);
+            var scripts = (typeof data === 'string') ? JSON.parse(data) : data;
             var select = $('#scriptFilter');
             select.find('option:not(:first)').remove();
             
@@ -395,7 +403,8 @@ function showStackTrace(errorId) {
         url: 'error_log_data.cfm?action=getStackTrace&id=' + errorId,
         method: 'GET',
         success: function(data) {
-            var result = JSON.parse(data);
+            // jQuery automatically parses JSON when Content-Type is application/json
+            var result = (typeof data === 'string') ? JSON.parse(data) : data;
             if (result.stack_trace) {
                 var modal = `
                     <div class="modal fade" id="stackTraceModal" tabindex="-1">
@@ -452,7 +461,7 @@ function updateErrorStatus(errorId, resolved) {
             resolved: resolved
         },
         success: function(data) {
-            var result = JSON.parse(data);
+            var result = (typeof data === 'string') ? JSON.parse(data) : data;
             if (result.success) {
                 $('#errorLogTable').DataTable().ajax.reload(null, false);
             } else {
