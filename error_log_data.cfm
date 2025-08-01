@@ -53,9 +53,13 @@
         <cfif IsDate(created_at)>
             <cfset errorData.formatted_created_at = DateFormat(created_at, "mm/dd/yyyy") & " " & TimeFormat(created_at, "hh:mm:ss tt")>
             <cfset errorData.sortable_created_at = DateFormat(created_at, "yyyy-mm-dd") & " " & TimeFormat(created_at, "HH:mm:ss")>
+            <cfset errorData.formatted_date = DateFormat(created_at, "mm/dd/yy")>
+            <cfset errorData.formatted_time = TimeFormat(created_at, "hh:mm tt")>
         <cfelse>
             <cfset errorData.formatted_created_at = "No Date">
             <cfset errorData.sortable_created_at = "">
+            <cfset errorData.formatted_date = "No Date">
+            <cfset errorData.formatted_time = "No Time">
         </cfif>
 
         <cfif IsDate(email_sent_timestamp)>

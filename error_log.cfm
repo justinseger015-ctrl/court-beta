@@ -15,32 +15,35 @@
         .error-row.resolved { opacity: 0.7; }
         
         /* Column width constraints */
-        .date-column { max-width: 85px; width: 85px; }
-        .time-column { max-width: 85px; width: 85px; }
+        .date-column { max-width: 75px; width: 75px; font-size: 13px; }
+        .time-column { max-width: 75px; width: 75px; font-size: 13px; }
         .script-column { 
             min-width: 180px;
             max-width: 200px; 
             width: 180px; 
             word-break: break-word;
+            font-size: 13px;
         }
-        .severity-column { max-width: 80px; width: 80px; }
+        .severity-column { max-width: 80px; width: 80px; font-size: 13px; }
         .error-type-column { 
             min-width: 150px;
             max-width: 180px; 
             width: 150px; 
             word-break: break-word;
+            font-size: 13px;
         }
         .error-message-column { 
             min-width: 350px; 
             max-width: 450px; 
             width: 40%; 
             word-break: break-word;
+            font-size: 13px;
         }
-        .context-column { max-width: 80px; width: 80px; }
-        .stack-trace-column { max-width: 80px; width: 80px; }
-        .email-column { max-width: 60px; width: 60px; }
-        .resolved-column { max-width: 100px; width: 100px; }
-        .actions-column { max-width: 80px; width: 80px; }
+        .context-column { max-width: 80px; width: 80px; font-size: 13px; }
+        .stack-trace-column { max-width: 80px; width: 80px; font-size: 13px; }
+        .email-column { max-width: 60px; width: 60px; font-size: 13px; }
+        .resolved-column { max-width: 100px; width: 100px; font-size: 13px; }
+        .actions-column { max-width: 80px; width: 80px; font-size: 13px; }
         
         .nowrap {
             white-space: nowrap;
