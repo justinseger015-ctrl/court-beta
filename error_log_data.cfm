@@ -1,4 +1,6 @@
 <cfparam name="url.action" default="getData">
+<cfprocessingdirective pageEncoding="UTF-8">
+<cfcontent type="application/json; charset=utf-8">
 
 <cfif url.action EQ "getData">
     <!--- Main data query for DataTable --->
@@ -77,7 +79,6 @@
         <cfset ArrayAppend(errorArray, errorData)>
     </cfloop>
 
-    <cfcontent type="application/json">
     <cfoutput>#SerializeJSON(errorArray)#</cfoutput>
 
 <cfelseif url.action EQ "getScripts">
@@ -94,7 +95,6 @@
         <cfset ArrayAppend(scriptArray, script_name)>
     </cfloop>
 
-    <cfcontent type="application/json">
     <cfoutput>#SerializeJSON(scriptArray)#</cfoutput>
 
 <cfelseif url.action EQ "getStackTrace">
@@ -114,7 +114,6 @@
         <cfset result.stack_trace = "">
     </cfif>
 
-    <cfcontent type="application/json">
     <cfoutput>#SerializeJSON(result)#</cfoutput>
 
 <cfelseif url.action EQ "updateStatus">
@@ -144,7 +143,6 @@
         </cfcatch>
     </cftry>
 
-    <cfcontent type="application/json">
     <cfoutput>#SerializeJSON(result)#</cfoutput>
 
 <cfelse>
@@ -153,6 +151,5 @@
     <cfset result.success = false>
     <cfset result.message = "Invalid action">
 
-    <cfcontent type="application/json">
     <cfoutput>#SerializeJSON(result)#</cfoutput>
 </cfif>
