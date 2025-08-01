@@ -15,30 +15,28 @@
         .error-row.resolved { opacity: 0.7; }
         
         /* Column width constraints */
-        .timestamp-column { max-width: 120px; width: 120px; }
+        .date-column { max-width: 85px; width: 85px; }
+        .time-column { max-width: 85px; width: 85px; }
         .script-column { 
-            max-width: 150px; 
-            width: 150px; 
+            min-width: 180px;
+            max-width: 200px; 
+            width: 180px; 
             word-break: break-word;
         }
         .severity-column { max-width: 80px; width: 80px; }
         .error-type-column { 
-            max-width: 120px; 
-            width: 120px; 
+            min-width: 150px;
+            max-width: 180px; 
+            width: 150px; 
             word-break: break-word;
         }
         .error-message-column { 
-            min-width: 300px; 
-            max-width: 400px; 
-            width: 35%; 
+            min-width: 350px; 
+            max-width: 450px; 
+            width: 40%; 
             word-break: break-word;
         }
-        .context-column { 
-            min-width: 250px; 
-            max-width: 350px; 
-            width: 25%; 
-            word-break: break-word;
-        }
+        .context-column { max-width: 80px; width: 80px; }
         .stack-trace-column { max-width: 80px; width: 80px; }
         .email-column { max-width: 60px; width: 60px; }
         .resolved-column { max-width: 100px; width: 100px; }
@@ -108,7 +106,8 @@
             <table id="errorLogTable" class="table table-striped table-bordered w-100">
                 <thead class="table-dark">
                     <tr>
-                        <th class="timestamp-column">Timestamp</th>
+                        <th class="date-column">Date</th>
+                        <th class="time-column">Time</th>
                         <th class="script-column">Script</th>
                         <th class="severity-column">Severity</th>
                         <th class="error-type-column">Error Type</th>
@@ -140,10 +139,20 @@ $(document).ready(function() {
         columns: [
             {
                 data: "sortable_created_at",
-                className: "timestamp-column nowrap",
+                className: "date-column nowrap",
                 render: function (data, type, row) {
                     if (type === 'display') {
-                        return row.formatted_created_at || "(No Date)";
+                        return row.formatted_date || "(No Date)";
+                    }
+                    return data;
+                }
+            },
+            {
+                data: "sortable_created_at",
+                className: "time-column nowrap",
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        return row.formatted_time || "(No Time)";
                     }
                     return data;
                 }
@@ -171,8 +180,8 @@ $(document).ready(function() {
                 data: 'error_message',
                 className: "error-message-column",
                 render: function (data, type, row) {
-                    if (type === 'display' && data && data.length > 150) {
-                        var shortText = data.substr(0, 150);
+                    if (type === 'display' && data && data.length > 200) {
+                        var shortText = data.substr(0, 200);
                         shortText = shortText.substr(0, Math.min(shortText.length, shortText.lastIndexOf(" ")));
 
                         return `
@@ -187,20 +196,14 @@ $(document).ready(function() {
             },
             {
                 data: 'additional_context',
-                className: "context-column",
+                className: "context-column text-center",
                 render: function (data, type, row) {
                     if (!data) return '<em class="text-muted">None</em>';
                     
-                    if (type === 'display' && data.length > 120) {
-                        var shortText = data.substr(0, 120);
-                        shortText = shortText.substr(0, Math.min(shortText.length, shortText.lastIndexOf(" ")));
-
-                        return `
-                            <div class="context-wrapper">
-                                <span class="short-desc">${shortText}...</span>
-                                <span class="full-desc" style="display: none;">${data}</span>
-                                <a href="#" class="read-more ms-1">Read More</a>
-                            </div>`;
+                    if (type === 'display') {
+                        return `<button class="btn btn-sm btn-outline-secondary" onclick="showContext(${row.id}, '${data.replace(/'/g, "\\'")}')">
+                                    <i class="fa-solid fa-info-circle"></i> View
+                                </button>`;
                     }
                     return data;
                 }
@@ -276,12 +279,12 @@ $(document).ready(function() {
 
         columnDefs: [
             {
-                targets: [4, 5], // Error message and context columns
+                targets: [5], // Error message column only
                 className: 'text-break'
             }
         ],
 
-        order: [[0, 'desc']],
+        order: [[0, 'desc'], [1, 'desc']], // Order by date, then time
         paging: true,
         searching: true,
         ordering: true,
@@ -295,11 +298,18 @@ $(document).ready(function() {
         }
     });
 
+    // Show Context Modal
+    function showContext(errorId, contextText) {
+        $('#contextModalTitle').text('Error Context #' + errorId);
+        $('#contextModalBody').text(contextText || 'No context available');
+        $('#contextModal').modal('show');
+    }
+
     // Handle Read More clicks
     $('#errorLogTable tbody').on('click', 'a.read-more', function(e) {
         e.preventDefault();
 
-        var wrapper = $(this).closest('.error-message-wrapper, .context-wrapper');
+        var wrapper = $(this).closest('.error-message-wrapper');
         wrapper.find('.short-desc').hide();
         $(this).hide();
         wrapper.find('.full-desc').show();
@@ -329,8 +339,8 @@ $(document).ready(function() {
         var scriptFilter = $('#scriptFilter').val();
         var resolvedFilter = $('#resolvedFilter').val();
 
-        var severity = data[2] || '';
-        var script = data[1] || '';
+        var severity = data[3] || '';
+        var script = data[2] || '';
         var resolved = table.row(dataIndex).data().resolved;
 
         if (severityFilter && !severity.includes(severityFilter)) {
@@ -451,6 +461,25 @@ function updateErrorStatus(errorId, resolved) {
         }
     });
 }
+
+<!-- Context Modal -->
+<div class="modal fade" id="contextModal" tabindex="-1" aria-labelledby="contextModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contextModalTitle">Error Context</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="contextModalBody" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </script>
 
 </body>
