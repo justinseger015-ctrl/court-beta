@@ -16,9 +16,17 @@
         
         /* Column width constraints */
         .timestamp-column { max-width: 120px; width: 120px; }
-        .script-column { max-width: 150px; width: 150px; }
+        .script-column { 
+            max-width: 150px; 
+            width: 150px; 
+            word-break: break-word;
+        }
         .severity-column { max-width: 80px; width: 80px; }
-        .error-type-column { max-width: 120px; width: 120px; }
+        .error-type-column { 
+            max-width: 120px; 
+            width: 120px; 
+            word-break: break-word;
+        }
         .error-message-column { 
             min-width: 300px; 
             max-width: 400px; 
@@ -142,7 +150,7 @@ $(document).ready(function() {
             },
             {
                 data: 'script_name',
-                className: "script-column nowrap"
+                className: "script-column"
             },
             {
                 data: 'severity',
@@ -157,7 +165,7 @@ $(document).ready(function() {
             },
             {
                 data: 'error_type',
-                className: "error-type-column nowrap"
+                className: "error-type-column"
             },
             {
                 data: 'error_message',
