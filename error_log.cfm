@@ -461,6 +461,7 @@ function updateErrorStatus(errorId, resolved) {
         }
     });
 }
+</script>
 
 <!-- Context Modal -->
 <div class="modal fade" id="contextModal" tabindex="-1" aria-labelledby="contextModalLabel" aria-hidden="true">
@@ -479,8 +480,6 @@ function updateErrorStatus(errorId, resolved) {
         </div>
     </div>
 </div>
-
-</script>
 
 </body>
 </html>
