@@ -106,7 +106,7 @@ SELECT
                 ' <a href="/mediaroot/pacer_pdfs/' + ap.local_pdf_filename + '" target="_blank" class="btn btn-sm btn-outline-secondary" title="' + 
                 ISNULL(REPLACE(ap.pdf_title, '"', ''), 'Exhibit') + 
                 '"><i class=''fas fa-paperclip''></i></a>'
-            FROM docketwatch.dbo.case_events_pdf ap
+            FROM docketwatch.dbo.documents ap
             WHERE ap.fk_case_event = e.id
               AND ap.pdf_type = 'Attachment'
               AND ap.isDownloaded = 1
