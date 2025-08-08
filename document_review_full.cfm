@@ -24,7 +24,7 @@
 
         -- Constructed virtual HTTP link
         'http://#application.serverDomain#/docs/cases/' + 
-            CAST(d.fk_case AS VARCHAR) + '/' + 
+            CAST(d.fk_case AS VARCHAR) + '/E' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS http_url,
 
         -- Constructed file system path
