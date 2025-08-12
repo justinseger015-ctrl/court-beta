@@ -129,6 +129,7 @@
             COUNT(*) as total_records,
             COUNT(CASE WHEN headline_optimized IS NOT NULL AND headline_type IS NOT NULL THEN 1 END) as ai_v1_processed,
             COUNT(CASE WHEN headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_processed,
+            COUNT(CASE WHEN headline_v3 IS NOT NULL AND headline_type_v3 IS NOT NULL THEN 1 END) as ai_v3_processed,
             COUNT(CASE WHEN headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as user_reviewed,
             
             -- AI v1 Success: Both headline_optimized and headline_type match final versions
@@ -143,9 +144,15 @@
                           AND headline_final IS NOT NULL 
                           AND headline_type_final IS NOT NULL THEN 1 END) as ai_v2_perfect,
             
+            -- AI v3 Success: Both headline_v3 and headline_type_v3 match final versions  
+            COUNT(CASE WHEN headline_v3 = headline_final 
+                          AND headline_type_v3 = headline_type_final 
+                          AND headline_final IS NOT NULL 
+                          AND headline_type_final IS NOT NULL THEN 1 END) as ai_v3_perfect,
+            
             COUNT(CASE WHEN flagged = 1 THEN 1 END) as flagged_for_processing
         FROM docketwatch.dbo.damz_test
-        WHERE headline IS NOT NULL
+        WHERE headline_v2 IS NOT NULL 
     </cfquery>
 
     <!-- Key Metrics Cards -->
@@ -158,6 +165,11 @@
         <div class="metric-card info">
             <h3>AI v2 Processed</h3>
             <div class="number"><cfoutput>#getOverallStats.ai_v2_processed#</cfoutput></div>
+        </div>
+
+        <div class="metric-card info">
+            <h3>AI v3 Processed</h3>
+            <div class="number"><cfoutput>#getOverallStats.ai_v3_processed#</cfoutput></div>
         </div>
 
         <div class="metric-card success">
@@ -195,6 +207,24 @@
                 </cfoutput>
             </div>
         </div>
+
+        <div class="metric-card success">
+            <h3>AI v3 Success Rate</h3>
+            <div class="number">
+                <cfoutput>
+                    <cfif getOverallStats.user_reviewed GT 0>
+                        #round((getOverallStats.ai_v3_perfect / getOverallStats.user_reviewed) * 100)#%
+                    <cfelse>
+                        N/A
+                    </cfif>
+                </cfoutput>
+            </div>
+            <div class="percentage">
+                <cfoutput>
+                    #getOverallStats.ai_v3_perfect# of #getOverallStats.user_reviewed# perfect
+                </cfoutput>
+            </div>
+        </div>
     </div>
 
     <!-- Success Rate Calculation Breakdown -->
@@ -227,7 +257,19 @@
                            AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v2_type_only,
                 COUNT(CASE WHEN headline_v2 != headline_final AND headline_type_v2 != headline_type_final 
                            AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL 
-                           AND headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_both_wrong
+                           AND headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_both_wrong,
+                
+                -- AI v3 breakdown  
+                COUNT(CASE WHEN headline_v3 IS NOT NULL AND headline_type_v3 IS NOT NULL THEN 1 END) as ai_v3_attempted,
+                COUNT(CASE WHEN headline_v3 = headline_final AND headline_type_v3 = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v3_perfect_match,
+                COUNT(CASE WHEN headline_v3 = headline_final AND headline_type_v3 != headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v3_headline_only,
+                COUNT(CASE WHEN headline_v3 != headline_final AND headline_type_v3 = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v3_type_only,
+                COUNT(CASE WHEN headline_v3 != headline_final AND headline_type_v3 != headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL 
+                           AND headline_v3 IS NOT NULL AND headline_type_v3 IS NOT NULL THEN 1 END) as ai_v3_both_wrong
             FROM docketwatch.dbo.damz_test
             WHERE headline IS NOT NULL
         </cfquery>
@@ -242,6 +284,7 @@
                         <th>Metric</th>
                         <th>AI v1</th>
                         <th>AI v2</th>
+                        <th>AI v3</th>
                         <th>Notes</th>
                     </tr>
                 </thead>
@@ -250,38 +293,43 @@
                         <td><strong>Records Attempted</strong></td>
                         <td>#ai_v1_attempted#</td>
                         <td>#ai_v2_attempted#</td>
+                        <td>#ai_v3_attempted#</td>
                         <td>Records where AI generated both headline and type</td>
                     </tr>
                     <tr>
                         <td><strong>Total User Reviewed</strong></td>
-                        <td colspan="2" style="text-align: center;">#total_reviewed#</td>
+                        <td colspan="3" style="text-align: center;">#total_reviewed#</td>
                         <td>Records with both headline_final and headline_type_final (DENOMINATOR)</td>
                     </tr>
                     <tr class="status-good">
                         <td><strong>Perfect Matches</strong></td>
                         <td>#ai_v1_perfect_match#</td>
                         <td>#ai_v2_perfect_match#</td>
+                        <td>#ai_v3_perfect_match#</td>
                         <td>Both headline AND type match user final (NUMERATOR)</td>
                     </tr>
                     <tr class="status-warning">
                         <td><strong>Headline Match, Type Wrong</strong></td>
                         <td>#ai_v1_headline_only#</td>
                         <td>#ai_v2_headline_only#</td>
+                        <td>#ai_v3_headline_only#</td>
                         <td>Headline correct but type incorrect</td>
                     </tr>
                     <tr class="status-warning">
                         <td><strong>Type Match, Headline Wrong</strong></td>
                         <td>#ai_v1_type_only#</td>
                         <td>#ai_v2_type_only#</td>
+                        <td>#ai_v3_type_only#</td>
                         <td>Type correct but headline incorrect</td>
                     </tr>
                     <tr class="status-bad">
                         <td><strong>Both Wrong</strong></td>
                         <td>#ai_v1_both_wrong#</td>
                         <td>#ai_v2_both_wrong#</td>
+                        <td>#ai_v3_both_wrong#</td>
                         <td>Neither headline nor type match user final</td>
                     </tr>
-                    <tr style="border-top: 2px solid #007bff; font-weight: bold;">
+                    <tr style="border-top: 2px solid ##007bff; font-weight: bold;">
                         <td><strong>Success Rate Calculation</strong></td>
                         <td>
                             <cfif total_reviewed GT 0>
