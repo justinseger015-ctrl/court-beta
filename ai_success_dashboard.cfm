@@ -197,6 +197,129 @@
         </div>
     </div>
 
+    <!-- Success Rate Calculation Breakdown -->
+    <div class="section">
+        <h2>Success Rate Calculation Details</h2>
+        <cfquery name="getCalculationBreakdown" datasource="docketwatch">
+            SELECT 
+                -- Total records with user reviews (denominator)
+                COUNT(CASE WHEN headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as total_reviewed,
+                
+                -- AI v1 breakdown
+                COUNT(CASE WHEN headline_optimized IS NOT NULL AND headline_type IS NOT NULL THEN 1 END) as ai_v1_attempted,
+                COUNT(CASE WHEN headline_optimized = headline_final AND headline_type = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v1_perfect_match,
+                COUNT(CASE WHEN headline_optimized = headline_final AND headline_type != headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v1_headline_only,
+                COUNT(CASE WHEN headline_optimized != headline_final AND headline_type = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v1_type_only,
+                COUNT(CASE WHEN headline_optimized != headline_final AND headline_type != headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL 
+                           AND headline_optimized IS NOT NULL AND headline_type IS NOT NULL THEN 1 END) as ai_v1_both_wrong,
+                
+                -- AI v2 breakdown  
+                COUNT(CASE WHEN headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_attempted,
+                COUNT(CASE WHEN headline_v2 = headline_final AND headline_type_v2 = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v2_perfect_match,
+                COUNT(CASE WHEN headline_v2 = headline_final AND headline_type_v2 != headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v2_headline_only,
+                COUNT(CASE WHEN headline_v2 != headline_final AND headline_type_v2 = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v2_type_only,
+                COUNT(CASE WHEN headline_v2 != headline_final AND headline_type_v2 != headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL 
+                           AND headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_both_wrong
+            FROM docketwatch.dbo.damz_test
+            WHERE headline IS NOT NULL
+        </cfquery>
+
+        <p><strong>Formula:</strong> Success Rate = (Perfect Matches / Total Reviewed Records) × 100</p>
+        <p><em>A "Perfect Match" requires BOTH the headline AND headline_type to exactly match the user's final choices.</em></p>
+
+        <cfoutput query="getCalculationBreakdown">
+            <table style="margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>AI v1</th>
+                        <th>AI v2</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Records Attempted</strong></td>
+                        <td>#ai_v1_attempted#</td>
+                        <td>#ai_v2_attempted#</td>
+                        <td>Records where AI generated both headline and type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total User Reviewed</strong></td>
+                        <td colspan="2" style="text-align: center;">#total_reviewed#</td>
+                        <td>Records with both headline_final and headline_type_final (DENOMINATOR)</td>
+                    </tr>
+                    <tr class="status-good">
+                        <td><strong>Perfect Matches</strong></td>
+                        <td>#ai_v1_perfect_match#</td>
+                        <td>#ai_v2_perfect_match#</td>
+                        <td>Both headline AND type match user final (NUMERATOR)</td>
+                    </tr>
+                    <tr class="status-warning">
+                        <td><strong>Headline Match, Type Wrong</strong></td>
+                        <td>#ai_v1_headline_only#</td>
+                        <td>#ai_v2_headline_only#</td>
+                        <td>Headline correct but type incorrect</td>
+                    </tr>
+                    <tr class="status-warning">
+                        <td><strong>Type Match, Headline Wrong</strong></td>
+                        <td>#ai_v1_type_only#</td>
+                        <td>#ai_v2_type_only#</td>
+                        <td>Type correct but headline incorrect</td>
+                    </tr>
+                    <tr class="status-bad">
+                        <td><strong>Both Wrong</strong></td>
+                        <td>#ai_v1_both_wrong#</td>
+                        <td>#ai_v2_both_wrong#</td>
+                        <td>Neither headline nor type match user final</td>
+                    </tr>
+                    <tr style="border-top: 2px solid #007bff; font-weight: bold;">
+                        <td><strong>Success Rate Calculation</strong></td>
+                        <td>
+                            <cfif total_reviewed GT 0>
+                                #ai_v1_perfect_match# ÷ #total_reviewed# = #round((ai_v1_perfect_match / total_reviewed) * 100)#%
+                            <cfelse>
+                                N/A
+                            </cfif>
+                        </td>
+                        <td>
+                            <cfif total_reviewed GT 0>
+                                #ai_v2_perfect_match# ÷ #total_reviewed# = #round((ai_v2_perfect_match / total_reviewed) * 100)#%
+                            <cfelse>
+                                N/A
+                            </cfif>
+                        </td>
+                        <td>Perfect Matches ÷ Total Reviewed × 100</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Additional Analysis -->
+            <h3>Key Points:</h3>
+            <ul>
+                <li><strong>Success Criteria:</strong> BOTH headline_optimized = headline_final AND headline_type = headline_type_final</li>
+                <li><strong>Denominator:</strong> Only records where users provided final review (#total_reviewed# records)</li>
+                <li><strong>Partial Credit:</strong> No partial credit given - must get both headline and type exactly right</li>
+                <cfif total_reviewed GT 0>
+                    <cfset ai_v1_partial = ai_v1_headline_only + ai_v1_type_only>
+                    <cfset ai_v2_partial = ai_v2_headline_only + ai_v2_type_only>
+                    <li><strong>Close Attempts:</strong> 
+                        AI v1 got at least one component right in #ai_v1_partial# additional cases (#round((ai_v1_partial / total_reviewed) * 100)#%), 
+                        AI v2 got at least one component right in #ai_v2_partial# additional cases (#round((ai_v2_partial / total_reviewed) * 100)#%)
+                    </li>
+                </cfif>
+            </ul>
+        </cfoutput>
+    </div>
+
     <!-- AI v1 Analysis -->
     <div class="section">
         <h2>AI v1 Analysis (Original AI Rules)</h2>
