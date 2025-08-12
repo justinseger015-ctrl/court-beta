@@ -27,7 +27,7 @@
             CAST(d.fk_case AS VARCHAR) + '/E' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS http_url,
 
-        -- Constructed file system path
+
         '\\10.146.176.84\general\DOCKETWATCH\docs\cases\' + 
             CAST(d.fk_case AS VARCHAR) + '\E' + 
             CAST(d.doc_id AS VARCHAR) + '.pdf' AS local_path
