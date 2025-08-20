@@ -886,13 +886,14 @@ ORDER BY r.created_at DESC
             <!--- Document Modals (Outside of loops to prevent parsing errors) --->
             <cfif dockets.recordcount GT 0>
                 <cfloop query="dockets">
+                <cfoutput>
                     <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
                         <div class="modal fade" id="documentModal#dockets.id#" tabindex="-1" aria-labelledby="documentModalLabel#dockets.id#" aria-hidden="true">
                             <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="documentModalLabel#dockets.id#">
-                                            <cfoutput>#dockets.pdf_title#</cfoutput>
+                                            #dockets.pdf_title#
                                         </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
@@ -900,7 +901,6 @@ ORDER BY r.created_at DESC
                                         <div class="row">
                                             <!--- Left third: PDF icon --->
                                             <div class="col-md-4 text-center">
-                                                <cfoutput>
                                                 <cfif len(dockets.pdf_path)>
                                                     <a href="#dockets.pdf_path#" target="_blank" class="btn btn-success btn-lg mb-3">
                                                         <i class="fas fa-file-pdf fa-3x"></i>
@@ -967,11 +967,9 @@ ORDER BY r.created_at DESC
                                                         </div>
                                                     </div>
                                                 </div>
-                                                </cfoutput>
                                             </div>
                                             <!--- Right two-thirds: Summary --->
                                             <div class="col-md-8">
-                                                <cfoutput>
                                                 <cfif len(dockets.summary_ai_html)>
                                                     <h6>Summary:</h6>
                                                     <div class="summary-content">
@@ -1006,7 +1004,6 @@ ORDER BY r.created_at DESC
                                                     <cfloop query="attachments">
                                                         <cfif attachments.fk_case_event EQ dockets.id>
                                                             <div class="col-md-3 mb-2">
-                                                                <cfoutput>
                                                                 <cfif len(attachments.pdf_path)>
                                                                     <a href="#attachments.pdf_path#" target="_blank" 
                                                                        class="btn btn-outline-primary btn-sm d-block"
@@ -1021,7 +1018,6 @@ ORDER BY r.created_at DESC
                                                                         <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
                                                                     </span>
                                                                 </cfif>
-                                                                </cfoutput>
                                                             </div>
                                                         </cfif>
                                                     </cfloop>
@@ -1036,6 +1032,7 @@ ORDER BY r.created_at DESC
                             </div>
                         </div>
                     </cfif>
+                </cfoutput>
                 </cfloop>
             </cfif>
 
