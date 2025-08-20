@@ -347,11 +347,7 @@ ORDER BY r.created_at DESC
                         </button>
                     </div>
                 </h6>
-            <cfif len(summary_ai_html)>
-                <div class="mt-2">
-                    #summary_ai_html#
-                </div>
-            </cfif>
+
             </div>
         </div>
     </div>
@@ -813,11 +809,11 @@ ORDER BY r.created_at DESC
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
-                        Docket Entries
+                        Docket Entriesz
                     </h6>
                 </div>
 
-                <cfif dockets.recordcount GT 0>
+                <cfif dockets.recordcount GT 0>ddddd
                     <div class="data-table-wrapper">
                         <table id="docketTable" class="table table-striped table-hover mb-0">
                             <thead class="table-dark">
