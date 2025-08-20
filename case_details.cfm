@@ -113,7 +113,7 @@ WHERE e.fk_cases = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_int
 ORDER BY e.created_at DESC
 
 </cfquery>
-
+ 
 <cfquery name="attachments" datasource="Reach">
 SELECT 
     d.[doc_uid],
@@ -809,11 +809,11 @@ ORDER BY r.created_at DESC
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
-                        Docket Entries
+                        Docket Entriesz
                     </h6>
                 </div>
 
-                <cfif dockets.recordcount GT 0>
+                <cfif dockets.recordcount GT 0>ddddd
                     <div class="data-table-wrapper">
                         <table id="docketTable" class="table table-striped table-hover mb-0">
                             <thead class="table-dark">
@@ -884,100 +884,19 @@ ORDER BY r.created_at DESC
                 </cfif>
             </div>
  
-            <!--- Document Display & Modals (no nested query-driven tags) --->
+            <!--- Document Modals (Outside of loops to prevent parsing errors) --->
 <cfif dockets.recordcount GT 0>
-    <!-- Build attachment map once -->
-    <cfset attachmentMap = structNew()> 
-    <cfif attachments.recordcount GT 0>
-        <cfloop query="attachments">
-            <cfset eid = attachments.fk_case_event>
-            <cfif NOT structKeyExists(attachmentMap, eid)>
-                <cfset attachmentMap[eid] = []>
-            </cfif>
-            <cfset arrayAppend(attachmentMap[eid], {
-                title = attachments.pdf_title,
-                path = attachments.pdf_path,
-                type = attachments.pdf_type
-            })>
-        </cfloop>
-    </cfif>
-
-    <cfset docListHtml = "">
-    <cfset docModalsHtml = "">
-
-    <cfloop query="dockets">
+    <cfoutput query="dockets">
         <cfif len(pdf_path) OR len(summary_ai_html)>
-            <!-- List entry -->
-            <cfset titleHtml = len(pdf_path) ? ('<a href="' & pdf_path & '" target="_blank">' & htmlEditFormat(pdf_title) & '</a>') : htmlEditFormat(pdf_title)>
-            <cfset summaryHtml = len(summary_ai_html) ? ('<div class="mt-2 small">' & summary_ai_html & '</div>') : "">
-            <cfset docListHtml &= '<div class="case-doc-item mb-2">' & titleHtml & summaryHtml & '</div>'>
-
-            <!-- Modal construction -->
-            <cfset attachmentsSection = "">
-            <cfif structKeyExists(attachmentMap, dockets.id)>
-                <cfset attArray = attachmentMap[dockets.id]>
-                <cfset attachmentsList = "">
-                <cfloop from="1" to="#arrayLen(attArray)#" index="ai">
-                    <cfset att = attArray[ai]>
-                    <cfset attachmentsList &= '<li class="mb-1"><i class="fas fa-paperclip me-1" aria-hidden="true"></i><a href="' & att.path & '" target="_blank">' & htmlEditFormat(att.title) & '</a></li>'>
-                </cfloop>
-                <cfset attachmentsSection = '<hr><h6 class="mt-3">Attachments</h6><ul class="list-unstyled mb-0">' & attachmentsList & '</ul>'>
-            </cfif>
-
-            <!-- Modal with left PDF column (approx one-third) and right summary/attachments -->
-            <cfset pdfColumn = ''>
-            <cfif len(pdf_path)>
-                <cfset pdfColumn = '<div class="text-center">' &
-                    '<div class="display-1 text-danger mb-3"><i class="fas fa-file-pdf" aria-hidden="true"></i></div>' &
-                    '<a href="' & pdf_path & '" target="_blank" class="btn btn-outline-primary w-100 mb-2"><i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>Open PDF</a>' &
-                    '<small class="text-muted d-block">Opens in new tab</small>' &
-                    '</div>'>
-            <cfelse>
-                <cfset pdfColumn = '<div class="text-center text-muted">' &
-                    '<div class="display-1 mb-3"><i class="fas fa-file" aria-hidden="true"></i></div>' &
-                    '<p class="small mb-0">No PDF Available</p>' &
-                    '</div>'>
-            </cfif>
-
-            <cfset summarySection = ( len(summary_ai_html) ? summary_ai_html : '<p class="text-muted mb-0">No summary available.</p>' )>
-
-            <cfset modalHtml = '' &
-                '<div class="modal fade" id="documentModal' & dockets.id & '" tabindex="-1" aria-labelledby="documentModalLabel' & dockets.id & '" aria-hidden="true">' &
-                '<div class="modal-dialog modal-xl modal-dialog-scrollable">' &
-                '<div class="modal-content">' &
-                '<div class="modal-header">' &
-                '<h5 class="modal-title" id="documentModalLabel' & dockets.id & '">' & htmlEditFormat(pdf_title) & '</h5>' &
-                '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
-                '</div>' &
-                '<div class="modal-body">' &
-                '<div class="row">' &
-                    '<div class="col-md-4 border-end mb-3 mb-md-0">' & pdfColumn & '</div>' &
-                    '<div class="col-md-8">' &
-                        '<div class="doc-summary">' & summarySection & '</div>' &
-                        attachmentsSection &
-                    '</div>' &
-                '</div>' &
-                '</div>' &
-                '<div class="modal-footer">' &
-                ( len(pdf_path) ? ('<a href="' & pdf_path & '" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf me-1" aria-hidden="true"></i> Open PDF</a>') : '' ) &
-                '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' &
-                '</div>' &
-                '</div>' &
-                '</div>' &
-                '</div>'>
-
-            <cfset docModalsHtml &= modalHtml>
+            <div>
+                <cfif len(pdf_path)>
+                    <a href="#pdf_path#" target="_blank">#pdf_title#</a>
+                <cfelse>
+                    #pdf_title#
+                </cfif>
+            </div>
         </cfif>
-    </cfloop>
-
-    <cfif len(docListHtml)>
-        <div class="mt-3 pt-2 border-top">
-            <h6 class="fw-bold mb-2"><i class="fas fa-file-pdf me-2" aria-hidden="true"></i>Documents</h6>
-            <cfoutput>#docListHtml#</cfoutput>
-        </div>
-    </cfif>
-    <!-- Output modals at end of page body -->
-    <cfoutput>#docModalsHtml#</cfoutput>
+    </cfoutput>
 </cfif>
 
             <!--- Hearings Tab --->
