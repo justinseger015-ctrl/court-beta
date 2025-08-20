@@ -809,11 +809,11 @@ ORDER BY r.created_at DESC
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
-                        Docket Entriesz
+                        Docket Entries
                     </h6>
                 </div>
 
-                <cfif dockets.recordcount GT 0>ddddd
+                <cfif dockets.recordcount GT 0>
                     <div class="data-table-wrapper">
                         <table id="docketTable" class="table table-striped table-hover mb-0">
                             <thead class="table-dark">
@@ -887,10 +887,38 @@ ORDER BY r.created_at DESC
             <!--- Removed legacy Document Modals block that used <cfoutput query="dockets"> to avoid nested query-driven tag error.
                   Rebuild minimal modals safely using a single query-driven <cfloop>. --->
             <cfif dockets.recordcount GT 0>
+                <!-- Build attachment map once (avoid nested query-driven loops) -->
+                <cfset attachmentMap = structNew()> 
+                <cfif attachments.recordcount GT 0>
+                    <cfloop query="attachments">
+                        <cfset evId = attachments.fk_case_event>
+                        <cfif NOT structKeyExists(attachmentMap, evId)>
+                            <cfset attachmentMap[evId] = []>
+                        </cfif>
+                        <cfset arrayAppend(attachmentMap[evId], {
+                            title = attachments.pdf_title,
+                            path = attachments.pdf_path,
+                            type = attachments.pdf_type
+                        })>
+                    </cfloop>
+                </cfif>
+
                 <cfset docModalsHtml = "">
                 <cfloop query="dockets">
                     <cfif len(pdf_path) OR len(summary_ai_html)>
                         <cfset summarySection = ( len(summary_ai_html) ? summary_ai_html : '<p class="text-muted mb-0">No summary available.</p>' )>
+                        <!-- Build attachments section from precomputed map -->
+                        <cfset attachmentsSection = "">
+                        <cfif structKeyExists(attachmentMap, dockets.id)>
+                            <cfset attArray = attachmentMap[dockets.id]>
+                            <cfset attListHtml = "">
+                            <cfloop from="1" to="#arrayLen(attArray)#" index="ai">
+                                <cfset att = attArray[ai]>
+                                <cfset attListHtml &= '<li class="mb-1"><i class="fas fa-paperclip me-1" aria-hidden="true"></i><a href="' & att.path & '" target="_blank">' & htmlEditFormat(att.title) & '</a></li>'>
+                            </cfloop>
+                            <cfset attachmentsSection = '<hr><h6 class="mt-3">Attachments</h6><ul class="list-unstyled mb-0">' & attListHtml & '</ul>'>
+                        </cfif>
+
                         <cfset pdfColumn = ''>
                         <cfif len(pdf_path)>
                             <cfset pdfColumn = '<div class="text-center">' &
@@ -916,7 +944,7 @@ ORDER BY r.created_at DESC
                             '<div class="modal-body">' &
                             '<div class="row">' &
                                 '<div class="col-md-4 border-end mb-3 mb-md-0">' & pdfColumn & '</div>' &
-                                '<div class="col-md-8"><div class="doc-summary">' & summarySection & '</div></div>' &
+                                '<div class="col-md-8"><div class="doc-summary">' & summarySection & '</div>' & attachmentsSection & '</div>' &
                             '</div>' &
                             '</div>' &
                             '<div class="modal-footer">' & pdfLinkButton & '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' & '</div>' &
