@@ -92,9 +92,6 @@
         tr:hover {
             background-color: #f5f5f5;
         }
-        .status-good { color: #4CAF50; font-weight: bold; }
-        .status-bad { color: #f44336; font-weight: bold; }
-        .status-neutral { color: #757575; }
         .refresh-btn {
             background-color: #007bff;
             color: white;
@@ -329,7 +326,7 @@
                         <td>#ai_v3_both_wrong#</td>
                         <td>Neither headline nor type match user final</td>
                     </tr>
-                    <tr style="border-top: 2px solid ##007bff; font-weight: bold;">
+                    <tr style="border-top: 2px solid #007bff; font-weight: bold;">
                         <td><strong>Success Rate Calculation</strong></td>
                         <td>
                             <cfif total_reviewed GT 0>
@@ -341,6 +338,13 @@
                         <td>
                             <cfif total_reviewed GT 0>
                                 #ai_v2_perfect_match# ÷ #total_reviewed# = #round((ai_v2_perfect_match / total_reviewed) * 100)#%
+                            <cfelse>
+                                N/A
+                            </cfif>
+                        </td>
+                        <td>
+                            <cfif total_reviewed GT 0>
+                                #ai_v3_perfect_match# ÷ #total_reviewed# = #round((ai_v3_perfect_match / total_reviewed) * 100)#%
                             <cfelse>
                                 N/A
                             </cfif>
@@ -359,9 +363,11 @@
                 <cfif total_reviewed GT 0>
                     <cfset ai_v1_partial = ai_v1_headline_only + ai_v1_type_only>
                     <cfset ai_v2_partial = ai_v2_headline_only + ai_v2_type_only>
+                    <cfset ai_v3_partial = ai_v3_headline_only + ai_v3_type_only>
                     <li><strong>Close Attempts:</strong> 
                         AI v1 got at least one component right in #ai_v1_partial# additional cases (#round((ai_v1_partial / total_reviewed) * 100)#%), 
-                        AI v2 got at least one component right in #ai_v2_partial# additional cases (#round((ai_v2_partial / total_reviewed) * 100)#%)
+                        AI v2 got at least one component right in #ai_v2_partial# additional cases (#round((ai_v2_partial / total_reviewed) * 100)#%),
+                        AI v3 got at least one component right in #ai_v3_partial# additional cases (#round((ai_v3_partial / total_reviewed) * 100)#%)
                     </li>
                 </cfif>
             </ul>
@@ -522,6 +528,98 @@
         </table>
     </div>
 
+    <!-- AI v3 Analysis -->
+    <div class="section">
+        <h2>AI v3 Analysis (Latest AI Rules)</h2>
+        <cfquery name="getAIv3Details" datasource="docketwatch">
+            SELECT 
+                fk_asset,
+                headline,
+                headline_optimized,
+                headline_v2,
+                headline_v3,
+                headline_final,
+                headline_type,
+                headline_type_v2,
+                headline_type_v3,
+                headline_type_final,
+                CASE 
+                    WHEN headline_v3 = headline_final AND headline_type_v3 = headline_type_final THEN 'Perfect Match'
+                    WHEN headline_v3 IS NULL OR headline_type_v3 IS NULL THEN 'Not Processed'
+                    WHEN headline_final IS NULL OR headline_type_final IS NULL THEN 'Not Reviewed'
+                    WHEN headline_v3 = headline_final AND headline_type_v3 != headline_type_final THEN 'Headline Match, Type Wrong'
+                    WHEN headline_v3 != headline_final AND headline_type_v3 = headline_type_final THEN 'Type Match, Headline Wrong'
+                    ELSE 'Both Wrong'
+                END as status
+            FROM docketwatch.dbo.damz_test
+            WHERE headline_v3 IS NOT NULL AND headline_type_v3 IS NOT NULL
+            ORDER BY 
+                CASE 
+                    WHEN headline_v3 = headline_final AND headline_type_v3 = headline_type_final THEN 1
+                    WHEN headline_v3 IS NULL OR headline_type_v3 IS NULL THEN 2
+                    WHEN headline_final IS NULL OR headline_type_final IS NULL THEN 3
+                    WHEN headline_v3 = headline_final AND headline_type_v3 != headline_type_final THEN 4
+                    WHEN headline_v3 != headline_final AND headline_type_v3 = headline_type_final THEN 5
+                    ELSE 6
+                END,
+                fk_asset
+        </cfquery>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Asset ID</th>
+                    <th>Original</th>
+                    <th>AI v1</th>
+                    <th>AI v2</th>
+                    <th>AI v3</th>
+                    <th>User Final</th>
+                    <th>Type (v1→v2→v3→Final)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <cfoutput query="getAIv3Details" maxrows="50">
+                    <tr>
+                        <td>#left(fk_asset, 8)#...</td>
+                        <td>#headline#</td>
+                        <td>#headline_optimized#</td>
+                        <td>
+                            <cfif headline_v2 NEQ "">
+                                #headline_v2#
+                            <cfelse>
+                                <em>Not processed</em>
+                            </cfif>
+                        </td>
+                        <td>
+                            <cfif headline_v3 NEQ "">
+                                #headline_v3#
+                            <cfelse>
+                                <em>Not processed</em>
+                            </cfif>
+                        </td>
+                        <td>#headline_final#</td>
+                        <td>
+                            #headline_type# → 
+                            <cfif headline_type_v2 NEQ "">#headline_type_v2#<cfelse>N/A</cfif> → 
+                            <cfif headline_type_v3 NEQ "">#headline_type_v3#<cfelse>N/A</cfif> → 
+                            #headline_type_final#
+                        </td>
+                        <td class="
+                            <cfif status EQ 'Perfect Match'>status-good
+                            <cfelseif status EQ 'Both Wrong'>status-bad
+                            <cfelseif status EQ 'Headline Match, Type Wrong' OR status EQ 'Type Match, Headline Wrong'>status-warning
+                            <cfelse>status-neutral</cfif>
+                        ">#status#</td>
+                    </tr>
+                </cfoutput>
+                <cfif getAIv3Details.recordCount GT 50>
+                    <tr><td colspan="8"><em>Showing first 50 records. Total: <cfoutput>#getAIv3Details.recordCount#</cfoutput></em></td></tr>
+                </cfif>
+            </tbody>
+        </table>
+    </div>
+
     <!-- Type Analysis -->
     <div class="section">
         <h2>Headline Type Distribution</h2>
@@ -530,7 +628,8 @@
                 headline_type_final,
                 COUNT(*) as count,
                 COUNT(CASE WHEN headline_optimized = headline_final AND headline_type = headline_type_final THEN 1 END) as ai_v1_success,
-                COUNT(CASE WHEN headline_v2 = headline_final AND headline_type_v2 = headline_type_final THEN 1 END) as ai_v2_success
+                COUNT(CASE WHEN headline_v2 = headline_final AND headline_type_v2 = headline_type_final THEN 1 END) as ai_v2_success,
+                COUNT(CASE WHEN headline_v3 = headline_final AND headline_type_v3 = headline_type_final THEN 1 END) as ai_v3_success
             FROM docketwatch.dbo.damz_test
             WHERE headline_type_final IS NOT NULL
             GROUP BY headline_type_final
@@ -544,8 +643,10 @@
                     <th>Total Count</th>
                     <th>AI v1 Successes</th>
                     <th>AI v2 Successes</th>
+                    <th>AI v3 Successes</th>
                     <th>AI v1 Success Rate</th>
                     <th>AI v2 Success Rate</th>
+                    <th>AI v3 Success Rate</th>
                 </tr>
             </thead>
             <tbody>
@@ -555,6 +656,7 @@
                         <td>#count#</td>
                         <td>#ai_v1_success#</td>
                         <td>#ai_v2_success#</td>
+                        <td>#ai_v3_success#</td>
                         <td>
                             <cfif count GT 0>
                                 #round((ai_v1_success / count) * 100)#%
@@ -565,6 +667,13 @@
                         <td>
                             <cfif count GT 0>
                                 #round((ai_v2_success / count) * 100)#%
+                            <cfelse>
+                                0%
+                            </cfif>
+                        </td>
+                        <td>
+                            <cfif count GT 0>
+                                #round((ai_v3_success / count) * 100)#%
                             <cfelse>
                                 0%
                             </cfif>
@@ -585,8 +694,11 @@
                            AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v1_perfect,
                 COUNT(CASE WHEN headline_v2 = headline_final AND headline_type_v2 = headline_type_final 
                            AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v2_perfect,
+                COUNT(CASE WHEN headline_v3 = headline_final AND headline_type_v3 = headline_type_final 
+                           AND headline_final IS NOT NULL AND headline_type_final IS NOT NULL THEN 1 END) as ai_v3_perfect,
                 COUNT(CASE WHEN headline_optimized IS NOT NULL AND headline_type IS NOT NULL THEN 1 END) as ai_v1_processed,
-                COUNT(CASE WHEN headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_processed
+                COUNT(CASE WHEN headline_v2 IS NOT NULL AND headline_type_v2 IS NOT NULL THEN 1 END) as ai_v2_processed,
+                COUNT(CASE WHEN headline_v3 IS NOT NULL AND headline_type_v3 IS NOT NULL THEN 1 END) as ai_v3_processed
             FROM docketwatch.dbo.damz_test
             WHERE headline IS NOT NULL
         </cfquery>
@@ -607,14 +719,36 @@
                         No reviewed records found
                     </cfif>
                 </li>
+                <li><strong>AI v3 Performance:</strong> 
+                    <cfif reviewed_count GT 0>
+                        #round((ai_v3_perfect / reviewed_count) * 100)#% success rate (#ai_v3_perfect# perfect out of #reviewed_count# reviewed)
+                    <cfelse>
+                        No reviewed records found
+                    </cfif>
+                </li>
                 <li><strong>Improvement from v1 to v2:</strong> 
                     <cfif reviewed_count GT 0>
-                        <cfset improvement = ai_v2_perfect - ai_v1_perfect>
-                        <cfset improvement_pct = round(((ai_v2_perfect / reviewed_count) - (ai_v1_perfect / reviewed_count)) * 100)>
-                        <cfif improvement GT 0>
-                            +#improvement_pct# percentage points improvement (#improvement# more perfect headlines)
-                        <cfelseif improvement LT 0>
-                            #improvement_pct# percentage points decline (#abs(improvement)# fewer perfect headlines)
+                        <cfset improvement_v2 = ai_v2_perfect - ai_v1_perfect>
+                        <cfset improvement_pct_v2 = round(((ai_v2_perfect / reviewed_count) - (ai_v1_perfect / reviewed_count)) * 100)>
+                        <cfif improvement_v2 GT 0>
+                            +#improvement_pct_v2# percentage points improvement (#improvement_v2# more perfect headlines)
+                        <cfelseif improvement_v2 LT 0>
+                            #improvement_pct_v2# percentage points decline (#abs(improvement_v2)# fewer perfect headlines)
+                        <cfelse>
+                            No change in performance
+                        </cfif>
+                    <cfelse>
+                        No data available
+                    </cfif>
+                </li>
+                <li><strong>Improvement from v2 to v3:</strong> 
+                    <cfif reviewed_count GT 0>
+                        <cfset improvement_v3 = ai_v3_perfect - ai_v2_perfect>
+                        <cfset improvement_pct_v3 = round(((ai_v3_perfect / reviewed_count) - (ai_v2_perfect / reviewed_count)) * 100)>
+                        <cfif improvement_v3 GT 0>
+                            +#improvement_pct_v3# percentage points improvement (#improvement_v3# more perfect headlines)
+                        <cfelseif improvement_v3 LT 0>
+                            #improvement_pct_v3# percentage points decline (#abs(improvement_v3)# fewer perfect headlines)
                         <cfelse>
                             No change in performance
                         </cfif>
@@ -623,7 +757,7 @@
                     </cfif>
                 </li>
                 <li><strong>Processing Coverage:</strong> 
-                    AI v1 processed #ai_v1_processed# records, AI v2 processed #ai_v2_processed# records
+                    AI v1 processed #ai_v1_processed# records, AI v2 processed #ai_v2_processed# records, AI v3 processed #ai_v3_processed# records
                 </li>
             </ul>
         </cfoutput>
