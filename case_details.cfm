@@ -917,7 +917,7 @@ ORDER BY r.created_at DESC
                                                             <cfif attachments.recordCount GT 0>
                                                                 <div class="row">
                                                                     <cfloop query="attachments">
-                                                                        <cfif attachments.fk_case_events EQ dockets.id>
+                                                                        <cfif attachments.fk_case_event EQ dockets.id>
                                                                             <div class="col-md-3 mb-2">
                                                                                 <cfif len(attachments.pdf_path)>
                                                                                     <a href="#attachments.pdf_path#" target="_blank" 
