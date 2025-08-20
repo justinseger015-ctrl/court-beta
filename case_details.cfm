@@ -214,7 +214,7 @@ ORDER BY r.created_at DESC
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><cfoutput>Case Details - #case_details.case_number#</cfoutput></title>
-    <cfinclude template="head.cfm"> <!--- Includes Bootstrap & DataTables CSS --->
+    <cfinclude template="head.cfm">
     <style>
         /* Page-specific styling for case details */
         .case-actions {
@@ -322,7 +322,7 @@ ORDER BY r.created_at DESC
 </head>
 <body>
 
-<cfinclude template="navbar.cfm"> <!--- Navigation Bar --->
+<cfinclude template="navbar.cfm">
 
 <div class="container-fluid mt-4">
     <!-- Minimal header section matching search form style -->
@@ -352,8 +352,7 @@ ORDER BY r.created_at DESC
     </div>
 
     <div class="container">
-        <div class="row gx-4"> <!--- Bootstrap Row with horizontal gutter --->
-
+        <div class="row gx-4">
         <!--- Case Detail Section --->
         <div class="col-12 col-xl-6">
             <div class="card shadow-sm mb-4 filter-card">
@@ -597,9 +596,10 @@ ORDER BY r.created_at DESC
 <cfif structKeyExists(url, "tab")>
     <cfset tabName = lcase(trim(url.tab))>
     <cfif listFind("summary,links,dockets,hearings,log,celebrities,alerts", tabName)>
-        <cfset "#tabName#_tab_status" = "active">
+        <!-- fix: dynamic variable assignment -->
+        <cfset variables[tabName & "_tab_status"] = "active">
     <cfelse>
-        <cfset summary_tab_status = "active"> <!--- fallback for invalid tab param --->
+        <cfset summary_tab_status = "active">
     </cfif>
 <cfelse>
     <!--- Default to Summary tab for consistent behavior --->
@@ -869,6 +869,152 @@ ORDER BY r.created_at DESC
                                             </div>
                                         </td>
                                     </tr>
+                                    
+                                    <!--- Document Modal for Each Row --->
+                                    <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
+                                        <div class="modal fade" id="documentModal#dockets.id#" tabindex="-1" aria-labelledby="documentModalLabel#dockets.id#" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="documentModalLabel#dockets.id#">
+                                                            #dockets.pdf_title#
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            <!--- Left third: PDF icon --->
+                                                            <div class="col-md-4 text-center">
+                                                                <cfif len(dockets.pdf_path)>
+                                                                    <a href="#dockets.pdf_path#" target="_blank" class="btn btn-success btn-lg mb-3">
+                                                                        <i class="fas fa-file-pdf fa-3x"></i>
+                                                                        <br><small>View PDF</small>
+                                                                    </a>
+                                                                <cfelse>
+                                                                    <div class="text-muted mb-3">
+                                                                        <i class="fas fa-file-text fa-3x"></i>
+                                                                        <br><small>Summary Only</small>
+                                                                    </div>
+                                                                </cfif>
+                                                                
+                                                                <!--- Document Specifications --->
+                                                                <div class="document-specs text-start">
+                                                                    <div class="card bg-light border-0">
+                                                                        <div class="card-body p-3">
+                                                                            <h6 class="card-title mb-2 text-primary">
+                                                                                <i class="fas fa-info-circle me-1"></i>Document Details
+                                                                            </h6>
+                                                                            
+                                                                            <!--- Document Name --->
+                                                                            <div class="mb-2">
+                                                                                <strong class="text-muted small">Document:</strong>
+                                                                                <div class="small text-dark">
+                                                                                    <cfif len(dockets.pdf_title)>
+                                                                                        #dockets.pdf_title#
+                                                                                    <cfelse>
+                                                                                        Docket Entry ###dockets.event_no#
+                                                                                    </cfif>
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            <!--- Filing Date --->
+                                                                            <div class="mb-2">
+                                                                                <strong class="text-muted small">Filed:</strong>
+                                                                                <div class="small text-dark">
+                                                                                    #dateFormat(dockets.event_date, "mmm dd, yyyy")#
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            <!--- Docket Number --->
+                                                                            <div class="mb-2">
+                                                                                <strong class="text-muted small">Docket ###:</strong>
+                                                                                <div class="small text-dark">#dockets.event_no#</div>
+                                                                            </div>
+                                                                            
+                                                                            <!--- Document Type --->
+                                                                            <cfif len(dockets.pdf_path)>
+                                                                                <div class="mb-2">
+                                                                                    <strong class="text-muted small">Type:</strong>
+                                                                                    <div class="small text-dark">
+                                                                                        <i class="fas fa-file-pdf text-danger me-1"></i>PDF Document
+                                                                                    </div>
+                                                                                </div>
+                                                                            </cfif>
+                                                                            
+                                                                            <!--- Status/Result if available --->
+                                                                            <cfif len(dockets.event_result)>
+                                                                                <div class="mb-0">
+                                                                                    <strong class="text-muted small">Status:</strong>
+                                                                                    <div class="small text-dark">#dockets.event_result#</div>
+                                                                                </div>
+                                                                            </cfif>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!--- Right two-thirds: Summary --->
+                                                            <div class="col-md-8">
+                                                                <cfif len(dockets.summary_ai_html)>
+                                                                    <h6>Summary:</h6>
+                                                                    <div class="summary-content">
+                                                                        #dockets.summary_ai_html#
+                                                                    </div>
+                                                                <cfelse>
+                                                                    <p class="text-muted">No summary available for this document.</p>
+                                                                </cfif>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!--- Only show HR and attachments section if there are attachments for this docket --->
+                                                        <cfset hasAttachments = false>
+                                                        <cfif attachments.recordCount GT 0>
+                                                            <cfloop query="attachments">
+                                                                <cfif attachments.fk_case_event EQ dockets.id>
+                                                                    <cfset hasAttachments = true>
+                                                                    <cfbreak>
+                                                                </cfif>
+                                                            </cfloop>
+                                                        </cfif>
+                                                        
+                                                        <cfif hasAttachments>
+                                                            <!--- Horizontal rule before attachments --->
+                                                            <hr>
+                                                            
+                                                            <!--- Attachments section --->
+                                                            <div class="attachments-section">
+                                                                <h6>Attachments:</h6>
+                                                                <div class="row">
+                                                                    <cfloop query="attachments">
+                                                                        <cfif attachments.fk_case_event EQ dockets.id>
+                                                                            <div class="col-md-3 mb-2">
+                                                                                <cfif len(attachments.pdf_path)>
+                                                                                    <a href="#attachments.pdf_path#" target="_blank" 
+                                                                                       class="btn btn-outline-primary btn-sm d-block"
+                                                                                       title="#attachments.pdf_title#">
+                                                                                        <i class="fas fa-paperclip"></i>
+                                                                                        <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
+                                                                                    </a>
+                                                                                <cfelse>
+                                                                                    <span class="btn btn-outline-secondary btn-sm d-block disabled"
+                                                                                          title="#attachments.pdf_title#">
+                                                                                        <i class="fas fa-paperclip"></i>
+                                                                                        <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
+                                                                                    </span>
+                                                                                </cfif>
+                                                                            </div>
+                                                                        </cfif>
+                                                                    </cfloop>
+                                                                </div>
+                                                            </div>
+                                                        </cfif>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </cfif> <!-- fix: close the cfif that wraps the modal -->
                                 </cfoutput>
                                 </cfloop>
                             </tbody>
@@ -883,161 +1029,6 @@ ORDER BY r.created_at DESC
                 </cfif>
             </div>
            
-            <!--- Document Modals (Outside of loops to prevent parsing errors) --->
-            <cfif dockets.recordcount GT 0>
-                <cfloop query="dockets">
-                    <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
-                        <div class="modal fade" id="documentModal#dockets.id#" tabindex="-1" aria-labelledby="documentModalLabel#dockets.id#" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="documentModalLabel#dockets.id#">
-                                            <cfoutput>#dockets.pdf_title#</cfoutput>
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <!--- Left third: PDF icon --->
-                                            <div class="col-md-4 text-center">
-                                                <cfoutput>
-                                                <cfif len(dockets.pdf_path)>
-                                                    <a href="#dockets.pdf_path#" target="_blank" class="btn btn-success btn-lg mb-3">
-                                                        <i class="fas fa-file-pdf fa-3x"></i>
-                                                        <br><small>View PDF</small>
-                                                    </a>
-                                                <cfelse>
-                                                    <div class="text-muted mb-3">
-                                                        <i class="fas fa-file-text fa-3x"></i>
-                                                        <br><small>Summary Only</small>
-                                                    </div>
-                                                </cfif>
-                                                
-                                                <!--- Document Specifications --->
-                                                <div class="document-specs text-start">
-                                                    <div class="card bg-light border-0">
-                                                        <div class="card-body p-3">
-                                                            <h6 class="card-title mb-2 text-primary">
-                                                                <i class="fas fa-info-circle me-1"></i>Document Details
-                                                            </h6>
-                                                            
-                                                            <!--- Document Name --->
-                                                            <div class="mb-2">
-                                                                <strong class="text-muted small">Document:</strong>
-                                                                <div class="small text-dark">
-                                                                    <cfif len(dockets.pdf_title)>
-                                                                        #dockets.pdf_title#
-                                                                    <cfelse>
-                                                                        Docket Entry ###dockets.event_no#
-                                                                    </cfif>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <!--- Filing Date --->
-                                                            <div class="mb-2">
-                                                                <strong class="text-muted small">Filed:</strong>
-                                                                <div class="small text-dark">
-                                                                    #dateFormat(dockets.event_date, "mmm dd, yyyy")#
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <!--- Docket Number --->
-                                                            <div class="mb-2">
-                                                                <strong class="text-muted small">Docket ###:</strong>
-                                                                <div class="small text-dark">#dockets.event_no#</div>
-                                                            </div>
-                                                            
-                                                            <!--- Document Type --->
-                                                            <cfif len(dockets.pdf_path)>
-                                                                <div class="mb-2">
-                                                                    <strong class="text-muted small">Type:</strong>
-                                                                    <div class="small text-dark">
-                                                                        <i class="fas fa-file-pdf text-danger me-1"></i>PDF Document
-                                                                    </div>
-                                                                </div>
-                                                            </cfif>
-                                                            
-                                                            <!--- Status/Result if available --->
-                                                            <cfif len(dockets.event_result)>
-                                                                <div class="mb-0">
-                                                                    <strong class="text-muted small">Status:</strong>
-                                                                    <div class="small text-dark">#dockets.event_result#</div>
-                                                                </div>
-                                                            </cfif>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                </cfoutput>
-                                            </div>
-                                            <!--- Right two-thirds: Summary --->
-                                            <div class="col-md-8">
-                                                <cfoutput>
-                                                <cfif len(dockets.summary_ai_html)>
-                                                    <h6>Summary:</h6>
-                                                    <div class="summary-content">
-                                                        #dockets.summary_ai_html#
-                                                    </div>
-                                                <cfelse>
-                                                    <p class="text-muted">No summary available for this document.</p>
-                                                </cfif>
-                                                </cfoutput>
-                                            </div>
-                                        </div>
-                                        
-                                        <!--- Only show HR and attachments section if there are attachments for this docket --->
-                                        <cfset hasAttachments = false>
-                                        <cfif attachments.recordCount GT 0>
-                                            <cfloop query="attachments">
-                                                <cfif attachments.fk_case_event EQ dockets.id>
-                                                    <cfset hasAttachments = true>
-                                                    <cfbreak>
-                                                </cfif>
-                                            </cfloop>
-                                        </cfif>
-                                        
-                                        <cfif hasAttachments>
-                                            <!--- Horizontal rule before attachments --->
-                                            <hr>
-                                            
-                                            <!--- Attachments section --->
-                                            <div class="attachments-section">
-                                                <h6>Attachments:</h6>
-                                                <div class="row">
-                                                    <cfloop query="attachments">
-                                                        <cfif attachments.fk_case_event EQ dockets.id>
-                                                            <div class="col-md-3 mb-2">
-                                                                <cfoutput>
-                                                                <cfif len(attachments.pdf_path)>
-                                                                    <a href="#attachments.pdf_path#" target="_blank" 
-                                                                       class="btn btn-outline-primary btn-sm d-block"
-                                                                       title="#attachments.pdf_title#">
-                                                                        <i class="fas fa-paperclip"></i>
-                                                                        <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
-                                                                    </a>
-                                                                <cfelse>
-                                                                    <span class="btn btn-outline-secondary btn-sm d-block disabled"
-                                                                          title="#attachments.pdf_title#">
-                                                                        <i class="fas fa-paperclip"></i>
-                                                                        <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
-                                                                    </span>
-                                                                </cfif>
-                                                                </cfoutput>
-                                                            </div>
-                                                        </cfif>
-                                                    </cfloop>
-                                                </div>
-                                            </div>
-                                        </cfif>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </cfif>
-                </cfloop>
-            </cfif>
 
             <!--- Hearings Tab --->
             <div class="tab-pane p-4 #hearings_tab_status#" id="hearings" role="tabpanel" aria-labelledby="hearings-tab">
@@ -1565,10 +1556,9 @@ $(document).ready(function() {
                 caseID: caseId
             },
             dataType: 'json',
-            timeout: 60000, // 60 second timeout
+            timeout: 60000,
             success: function(response) {
                 if (response.STATUS === 'SUCCESS') {
-                    // Success state with icon
                     var successButton = `
                         <a href="${response.FILEPATH}" 
                            target="_blank" 
@@ -1581,7 +1571,6 @@ $(document).ready(function() {
                     `;
                     buttonContainer.html(successButton);
                     
-                    // Show success notification
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'success',
@@ -1592,7 +1581,6 @@ $(document).ready(function() {
                         });
                     }
                 } else {
-                    // Error state
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'error',
@@ -1602,12 +1590,10 @@ $(document).ready(function() {
                     } else {
                         alert('Error: ' + (response.MESSAGE || 'Unable to download PDF'));
                     }
-                    // Reset button
                     button.prop('disabled', false).html('<i class="fas fa-download" aria-hidden="true"></i>');
                 }
             },
             error: function(xhr, status, error) {
-                // Network error state
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         icon: 'error',
@@ -1979,7 +1965,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fk_case: formData.get('fk_case'),
                 fk_user: formData.get('fk_user'),
                 case_url: formData.get('case_url'),
-                title: formData.get('case_url'), // Use URL as title if no title field
+                title: formData.get('case_url'),
                 category: 'General'
             };
             
@@ -2044,7 +2030,6 @@ function deleteCelebrityMatch(matchId) {
         if (data.success) {
           Swal.fire('Deleted!', data.message || 'Celebrity match removed.', 'success')
             .then(() => {
-              // Reload page and activate the Celebrities tab
               const caseId = new URLSearchParams(window.location.search).get("id");
               window.location.href = `${window.location.pathname}?id=${caseId}&tab=celebrities`;
             });
@@ -2058,13 +2043,6 @@ function deleteCelebrityMatch(matchId) {
 }
 </script>
 
-
-
-            
-
-
-
-
         </div> <!--- /.tab-content --->
     </div>
 </div>
@@ -2072,8 +2050,7 @@ function deleteCelebrityMatch(matchId) {
     </div> <!--- /.container --->
 </div> <!--- /.container-fluid --->
 
-<cfinclude template="footer_script.cfm"> <!--- Includes JS libraries --->
-
+<cfinclude template="footer_script.cfm">
 
 <script>
 // Enhanced case status update with better UX
@@ -2107,7 +2084,6 @@ function updateCaseStatus(caseId, newStatus) {
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading state
                 Swal.fire({
                     title: 'Updating Status...',
                     allowOutsideClick: false,
@@ -2153,7 +2129,6 @@ function updateCaseStatus(caseId, newStatus) {
             }
         });
     } else {
-        // Fallback for no SweetAlert
         if (confirm(`Set this case status to ${newStatus}?`)) {
             fetch('update_case_status.cfm', {
                 method: 'POST',
@@ -2178,8 +2153,6 @@ function updateCaseStatus(caseId, newStatus) {
 }
 </script>
 
-
-
 <script>
 // Enhanced link deletion with better UX
 function deleteLink(linkId) {
@@ -2195,7 +2168,6 @@ function deleteLink(linkId) {
             cancelButtonColor: '#6c757d'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading
                 Swal.fire({
                     title: 'Removing Link...',
                     allowOutsideClick: false,
@@ -2237,7 +2209,6 @@ function deleteLink(linkId) {
             }
         });
     } else {
-        // Fallback for no SweetAlert
         if (confirm('Are you sure you want to remove this link?')) {
             fetch('delete_case_link.cfm', {
                 method: 'POST',
@@ -2260,40 +2231,25 @@ function deleteLink(linkId) {
         }
     }
 }
-
-// Credentials modal utility functions
+// Credentials modal utility functions (finalize)
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
-    if (element) {
-        element.select();
-        element.setSelectionRange(0, 99999); // For mobile devices
-        
-        try {
-            document.execCommand('copy');
-            // Show success feedback
-            const btn = event.target.closest('button');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check text-success"></i>';
-            btn.classList.add('btn-success');
-            btn.classList.remove('btn-outline-secondary');
-            
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-outline-secondary');
-            }, 1500);
-        } catch (err) {
-            console.error('Failed to copy: ', err);
-            // Fallback - select the text for manual copying
-            element.focus();
-            element.select();
-        }
+    if (!element) return;
+
+    // Select the text
+    element.select();
+    element.setSelectionRange(0, 99999);
+
+    try {
+        document.execCommand('copy');
+    } catch (err) {
+        console.error('Failed to copy to clipboard:', err);
     }
 }
 </script>
 
 <!--- Add Link Modal --->
-<div class="modal " id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
+<div class="modal" id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form id="addLinkForm">
       <div class="modal-content">
