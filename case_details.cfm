@@ -347,6 +347,11 @@ ORDER BY r.created_at DESC
                         </button>
                     </div>
                 </h6>
+            <cfif len(summary_ai_html)>
+                <div class="mt-2">
+                    #summary_ai_html#
+                </div>
+            </cfif>
             </div>
         </div>
     </div>
