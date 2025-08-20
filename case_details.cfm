@@ -882,7 +882,7 @@ ORDER BY r.created_at DESC
                     </div>
                 </cfif>
             </div>
-           
+           <cfabort>
             <!--- Document Modals (Outside of loops to prevent parsing errors) --->
             <cfif dockets.recordcount GT 0>
                 <cfoutput query="dockets">
