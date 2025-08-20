@@ -94,7 +94,7 @@ SELECT
     e.[tmz_summarize],
     e.[event_url],
     e.[isDoc],
-    -- Documents table columns
+    -- Documents table columns (only main document, not attachments)
     d.[pdf_title],
     d.[summary_ai_html],
     d.[search_text],
@@ -103,9 +103,10 @@ SELECT
 
 FROM docketwatch.dbo.case_events e
 
--- Join with documents table for PDF information
+-- Join with documents table for PDF information (main document only)
 LEFT JOIN docketwatch.dbo.documents d 
-    ON e.id = d.fk_case_event
+    ON e.id = d.fk_case_event 
+    AND (d.pdf_type IS NULL OR d.pdf_type != 'Attachment')
 
 WHERE e.fk_cases = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
 ORDER BY e.created_at DESC
