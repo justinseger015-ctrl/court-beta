@@ -96,8 +96,14 @@ SELECT
     e.[tmz_summarize],
     e.[event_url],
     e.[isDoc],
-    p.[isDownloaded],
-    p.[local_pdf_filename], -- main docket PDF
+    -- these documents columns added ***now***
+	p.search_text,
+    p.summary_ai_html,
+	p.pdf_title,
+    --pdf_path will be like "/docs/cases/84394/E127138072361.pdf"
+    --full path will be http://docketwatch.tmz.local/docs/cases/84394/E127138072361.pdf
+
+ '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(p.doc_id as varchar) + '.pdf' as pdf_path,
  
   'tbd' AS attachment_links
 
@@ -831,8 +837,29 @@ ORDER BY r.created_at DESC
                                         <td>#event_description#</td>
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
-                                                <!--- View Docket PDF if downloaded --->
-                                                <cfif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
+                                                <!--- View PDF if pdf_path exists --->
+                                                <cfif len(dockets.pdf_path)>
+                                                    <a href="#dockets.pdf_path#"
+                                                       target="_blank"
+                                                       class="btn btn-sm btn-success btn-pdf"
+                                                       title="View PDF: #dockets.pdf_title#"
+                                                       aria-label="View PDF: #dockets.pdf_title#">
+                                                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                                    </a>
+                                                    
+                                                    <!--- Summary Modal Button --->
+                                                    <cfif len(dockets.summary_ai_html)>
+                                                        <button class="btn btn-sm btn-info btn-pdf"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="##summaryModal#dockets.id#"
+                                                                title="View PDF Summary"
+                                                                aria-label="View PDF Summary: #dockets.pdf_title#">
+                                                            <i class="fas fa-eye" aria-hidden="true"></i>
+                                                        </button>
+                                                    </cfif>
+                                                    
+                                                <!--- Legacy: View Docket PDF if downloaded --->
+                                                <cfelseif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
                                                     <a href="/mediaroot/pacer_pdfs/#dockets.local_pdf_filename#"
                                                        target="_blank"
                                                        class="btn btn-sm btn-success btn-pdf"
@@ -858,6 +885,39 @@ ORDER BY r.created_at DESC
                                             </div>
                                         </td>
                                     </tr>
+                                    
+                                    <!--- PDF Summary Modal --->
+                                    <cfif len(dockets.summary_ai_html)>
+                                        <div class="modal fade" id="summaryModal#dockets.id#" tabindex="-1" aria-labelledby="summaryModalLabel#dockets.id#" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="summaryModalLabel#dockets.id#">
+                                                            <i class="fas fa-file-pdf me-2"></i>
+                                                            PDF Summary: #dockets.pdf_title#
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="summary-content">
+                                                            #dockets.summary_ai_html#
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <cfif len(dockets.pdf_path)>
+                                                            <a href="#dockets.pdf_path#" 
+                                                               target="_blank" 
+                                                               class="btn btn-primary">
+                                                                <i class="fas fa-external-link-alt me-2"></i>
+                                                                View Full PDF
+                                                            </a>
+                                                        </cfif>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </cfif>
                                 </cfoutput>
                                 </cfloop>
                             </tbody>
