@@ -884,20 +884,50 @@ ORDER BY r.created_at DESC
                 </cfif>
             </div>
  
-            <!--- Document Modals (Outside of loops to prevent parsing errors) --->
-<cfif dockets.recordcount GT 0>
-    <cfoutput query="dockets">
-        <cfif len(pdf_path) OR len(summary_ai_html)>
-            <div>
-                <cfif len(pdf_path)>
-                    <a href="#pdf_path#" target="_blank">#pdf_title#</a>
-                <cfelse>
-                    #pdf_title#
-                </cfif>
-            </div>
-        </cfif>
-    </cfoutput>
-</cfif>
+            <!--- Removed legacy Document Modals block that used <cfoutput query="dockets"> to avoid nested query-driven tag error.
+                  Rebuild minimal modals safely using a single query-driven <cfloop>. --->
+            <cfif dockets.recordcount GT 0>
+                <cfset docModalsHtml = "">
+                <cfloop query="dockets">
+                    <cfif len(pdf_path) OR len(summary_ai_html)>
+                        <cfset summarySection = ( len(summary_ai_html) ? summary_ai_html : '<p class="text-muted mb-0">No summary available.</p>' )>
+                        <cfset pdfColumn = ''>
+                        <cfif len(pdf_path)>
+                            <cfset pdfColumn = '<div class="text-center">' &
+                                '<div class="display-1 text-danger mb-3"><i class="fas fa-file-pdf" aria-hidden="true"></i></div>' &
+                                '<a href="' & pdf_path & '" target="_blank" class="btn btn-outline-primary w-100 mb-2"><i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>Open PDF</a>' &
+                                '<small class="text-muted d-block">Opens in new tab</small>' &
+                                '</div>'>
+                        <cfelse>
+                            <cfset pdfColumn = '<div class="text-center text-muted">' &
+                                '<div class="display-1 mb-3"><i class="fas fa-file" aria-hidden="true"></i></div>' &
+                                '<p class="small mb-0">No PDF Available</p>' &
+                                '</div>'>
+                        </cfif>
+                        <cfset pdfLinkButton = len(pdf_path) ? ('<a href="' & pdf_path & '" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf me-1" aria-hidden="true"></i> Open PDF</a>') : ''>
+                        <cfset modalHtml = '' &
+                            '<div class="modal fade" id="documentModal' & dockets.id & '" tabindex="-1" aria-hidden="true">' &
+                            '<div class="modal-dialog modal-xl modal-dialog-scrollable">' &
+                            '<div class="modal-content">' &
+                            '<div class="modal-header">' &
+                            '<h5 class="modal-title">' & htmlEditFormat(pdf_title) & '</h5>' &
+                            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
+                            '</div>' &
+                            '<div class="modal-body">' &
+                            '<div class="row">' &
+                                '<div class="col-md-4 border-end mb-3 mb-md-0">' & pdfColumn & '</div>' &
+                                '<div class="col-md-8"><div class="doc-summary">' & summarySection & '</div></div>' &
+                            '</div>' &
+                            '</div>' &
+                            '<div class="modal-footer">' & pdfLinkButton & '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' & '</div>' &
+                            '</div>' &
+                            '</div>' &
+                            '</div>'>
+                        <cfset docModalsHtml &= modalHtml>
+                    </cfif>
+                </cfloop>
+                <cfoutput>#docModalsHtml#</cfoutput>
+            </cfif>
 
             <!--- Hearings Tab --->
             <div class="tab-pane p-4 #hearings_tab_status#" id="hearings" role="tabpanel" aria-labelledby="hearings-tab">
