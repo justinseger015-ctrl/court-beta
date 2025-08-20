@@ -909,13 +909,24 @@ ORDER BY r.created_at DESC
                                                             </div>
                                                         </div>
                                                         
-                                                        <!--- Horizontal rule before attachments --->
-                                                        <hr>
+                                                        <!--- Only show HR and attachments section if there are attachments for this docket --->
+                                                        <cfset hasAttachments = false>
+                                                        <cfif attachments.recordCount GT 0>
+                                                            <cfloop query="attachments">
+                                                                <cfif attachments.fk_case_event EQ dockets.id>
+                                                                    <cfset hasAttachments = true>
+                                                                    <cfbreak>
+                                                                </cfif>
+                                                            </cfloop>
+                                                        </cfif>
                                                         
-                                                        <!--- Attachments section --->
-                                                        <div class="attachments-section">
-                                                            <h6>Attachments:</h6>
-                                                            <cfif attachments.recordCount GT 0>
+                                                        <cfif hasAttachments>
+                                                            <!--- Horizontal rule before attachments --->
+                                                            <hr>
+                                                            
+                                                            <!--- Attachments section --->
+                                                            <div class="attachments-section">
+                                                                <h6>Attachments:</h6>
                                                                 <div class="row">
                                                                     <cfloop query="attachments">
                                                                         <cfif attachments.fk_case_event EQ dockets.id>
@@ -938,10 +949,8 @@ ORDER BY r.created_at DESC
                                                                         </cfif>
                                                                     </cfloop>
                                                                 </div>
-                                                            <cfelse>
-                                                                <p class="text-muted">No attachments for this document.</p>
-                                                            </cfif>
-                                                        </div>
+                                                            </div>
+                                                        </cfif>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
