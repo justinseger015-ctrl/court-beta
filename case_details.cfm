@@ -882,9 +882,9 @@ ORDER BY r.created_at DESC
                     </div>
                 </cfif>
             </div>
-           <cfabort>
+ 
             <!--- Document Modals (Outside of loops to prevent parsing errors) --->
-            <cfif dockets.recordcount GT 0>
+    <cfif dockets.recordcount GT 0>
                 <cfoutput query="dockets">
                     <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
                         <div class="modal fade" id="documentModal#dockets.id#" tabindex="-1" aria-labelledby="documentModalLabel#dockets.id#" aria-hidden="true">
@@ -896,7 +896,7 @@ ORDER BY r.created_at DESC
                                         </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body">
+                                    <!-- Document Modals (Corrected, safe ColdFusion pattern) -->
                                         <div class="row">
                                             <!--- Left third: PDF icon --->
                                             <div class="col-md-4 text-center">
