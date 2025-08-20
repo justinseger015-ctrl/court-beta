@@ -2268,7 +2268,7 @@ function copyToClipboard(elementId) {
   </div>
 </div>
 
-<!--- Tool Credentials Modal --->
+<!-- Minimal modal block for error isolation -->
 <cfoutput>
 <div class="modal fade" id="toolCredentialsModal" tabindex="-1" aria-labelledby="toolCredentialsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
