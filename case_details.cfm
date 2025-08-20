@@ -96,12 +96,11 @@ SELECT
     e.[tmz_summarize],
     e.[event_url],
     e.[isDoc],
-    -- these documents columns added ***now***
+
 	p.search_text,
     p.summary_ai_html,
 	p.pdf_title,
-    --pdf_path will be like "/docs/cases/84394/E127138072361.pdf"
-    --full path will be http://docketwatch.tmz.local/docs/cases/84394/E127138072361.pdf
+
 
  '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(p.doc_id as varchar) + '.pdf' as pdf_path,
  
@@ -109,7 +108,6 @@ SELECT
 
 FROM docketwatch.dbo.case_events e
 
--- Main docket PDF (single)
 LEFT JOIN docketwatch.dbo.case_events_pdf p 
     ON e.id = p.fk_case_event AND p.pdf_type = 'Docket'
 
