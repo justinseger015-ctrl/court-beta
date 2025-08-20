@@ -843,9 +843,7 @@ ORDER BY r.created_at DESC
                                         <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
                                             #dateFormat(event_date, 'mm/dd/yyyy')#
                                         </td>
-                                        <td><strong>#event_description# </strong><Cfif #event_description# is not "" and #summarize# is not "">
-
-                                        <BR></Cfif>#summarize#<cfif #summarize# is "">#summary_ai#</cfif></td>
+                                        <td><strong>#event_description# </strong><cfif len(event_description) AND len(summarize)><BR></cfif>#summarize#<cfif len(summarize) EQ 0>#summary_ai#</cfif></td>
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
                                                 <!--- Single PDF icon that opens comprehensive modal --->
