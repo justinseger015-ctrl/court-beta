@@ -83,33 +83,29 @@ SELECT
     e.[additional_information],
     e.[created_at],
     e.[status],
-    p.[pdf_title],
     e.[event_result],
     e.[party_type],
     e.[party_number],
     e.[amount],
     e.[fk_cases],
     e.[fk_task_run_log],
-    e.[additional_information],
     e.[emailed],
     e.[summarize],
     e.[tmz_summarize],
     e.[event_url],
     e.[isDoc],
-
-	p.search_text,
-    p.summary_ai_html,
-	p.pdf_title,
-
-
- '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(p.doc_id as varchar) + '.pdf' as pdf_path,
- 
-  'tbd' AS attachment_links
+    -- Documents table columns
+    d.[pdf_title],
+    d.[summary_ai_html],
+    d.[search_text],
+    '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
+    'tbd' AS attachment_links
 
 FROM docketwatch.dbo.case_events e
 
-LEFT JOIN docketwatch.dbo.case_events_pdf p 
-    ON e.id = p.fk_case_event AND p.pdf_type = 'Docket'
+-- Join with documents table for PDF information
+LEFT JOIN docketwatch.dbo.documents d 
+    ON e.id = d.fk_case_event
 
 WHERE e.fk_cases = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
 ORDER BY e.created_at DESC
@@ -855,26 +851,8 @@ ORDER BY r.created_at DESC
                                                             <i class="fas fa-eye" aria-hidden="true"></i>
                                                         </button>
                                                     </cfif>
-                                                    
-                                                <!--- Legacy: View Docket PDF if downloaded --->
-                                                <cfelseif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
-                                                    <a href="/mediaroot/pacer_pdfs/#dockets.local_pdf_filename#"
-                                                       target="_blank"
-                                                       class="btn btn-sm btn-success btn-pdf"
-                                                       title="#dockets.pdf_title#"
-                                                       aria-label="View PDF: #dockets.pdf_title#">
-                                                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
-                                                    </a>
-                                                <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
-                                                    <button class="btn btn-sm btn-primary btn-pdf get-pacer-pdf"
-                                                            data-doc-id="#dockets.id#"
-                                                            data-event-url="#dockets.event_url#"
-                                                            data-case-id="#dockets.fk_cases#"
-                                                            title="Download: #dockets.pdf_title#"
-                                                            aria-label="Download PDF: #dockets.pdf_title#">
-                                                        <i class="fas fa-download" aria-hidden="true"></i>
-                                                    </button>
                                                 </cfif>
+                                            
 
                                                 <!--- Attachment PDF icons (e.g., Exhibits) --->
                                                 <cfif len(dockets.attachment_links)>
