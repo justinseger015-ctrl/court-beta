@@ -809,11 +809,11 @@ ORDER BY r.created_at DESC
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-file-alt me-2 text-primary" aria-hidden="true"></i>
-                        Docket Entriesz
+                        Docket Entries
                     </h6>
                 </div>
 
-                <cfif dockets.recordcount GT 0>ddddd
+                <cfif dockets.recordcount GT 0>
                     <div class="data-table-wrapper">
                         <table id="docketTable" class="table table-striped table-hover mb-0">
                             <thead class="table-dark">
@@ -884,19 +884,30 @@ ORDER BY r.created_at DESC
                 </cfif>
             </div>
  
-            <!--- Document Modals (Outside of loops to prevent parsing errors) --->
+            <!--- Document Display (rebuilt without a second query-driven tag to avoid nesting error) --->
 <cfif dockets.recordcount GT 0>
-    <cfoutput query="dockets">
+    <cfset docModalHtml = "">
+    <cfloop query="dockets">
         <cfif len(pdf_path) OR len(summary_ai_html)>
-            <div>
-                <cfif len(pdf_path)>
-                    <a href="#pdf_path#" target="_blank">#pdf_title#</a>
-                <cfelse>
-                    #pdf_title#
-                </cfif>
-            </div>
+            <cfset titleHtml = "">
+            <cfif len(pdf_path)>
+                <cfset titleHtml = '<a href="' & pdf_path & '" target="_blank">' & htmlEditFormat(pdf_title) & '</a>'>
+            <cfelse>
+                <cfset titleHtml = htmlEditFormat(pdf_title)>
+            </cfif>
+            <cfset summaryHtml = "">
+            <cfif len(summary_ai_html)>
+                <cfset summaryHtml = '<div class="mt-2">' & summary_ai_html & '</div>'>
+            </cfif>
+            <cfset docModalHtml &= '<div class="case-doc-item mb-2">' & titleHtml & summaryHtml & '</div>'>
         </cfif>
-    </cfoutput>
+    </cfloop>
+    <cfif len(docModalHtml)>
+        <div class="mt-3 pt-2 border-top">
+            <h6 class="fw-bold mb-2"><i class="fas fa-file-pdf me-2" aria-hidden="true"></i>Documents</h6>
+            <cfoutput>#docModalHtml#</cfoutput>
+        </div>
+    </cfif>
 </cfif>
 
             <!--- Hearings Tab --->
