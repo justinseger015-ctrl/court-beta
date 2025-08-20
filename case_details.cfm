@@ -110,7 +110,20 @@ LEFT JOIN docketwatch.dbo.documents d
 WHERE e.fk_cases = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
 ORDER BY e.created_at DESC
 
+</cfquery>
 
+<cfquery name="attachments" datasource="Reach">
+SELECT 
+    d.[doc_uid],
+    d.[fk_case_event],
+    d.[pdf_title],
+    d.[doc_id],
+    '/docs/cases/' + cast(d.fk_case as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
+    d.[pdf_type]
+FROM docketwatch.dbo.documents d
+WHERE d.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
+AND d.pdf_type = 'Attachment'
+ORDER BY d.pdf_title
 
 </cfquery>
 
@@ -831,63 +844,105 @@ ORDER BY r.created_at DESC
                                         <td>#event_description#</td>
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
-                                                <!--- View PDF if pdf_path exists --->
-                                                <cfif len(dockets.pdf_path)>
-                                                    <a href="#dockets.pdf_path#"
-                                                       target="_blank"
-                                                       class="btn btn-sm btn-success btn-pdf"
-                                                       title="View PDF: #dockets.pdf_title#"
-                                                       aria-label="View PDF: #dockets.pdf_title#">
+                                                <!--- Single PDF icon that opens comprehensive modal --->
+                                                <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
+                                                    <button class="btn btn-sm btn-success btn-pdf"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="##documentModal#dockets.id#"
+                                                            title="View Document: #dockets.pdf_title#"
+                                                            aria-label="View Document: #dockets.pdf_title#">
                                                         <i class="fas fa-file-pdf" aria-hidden="true"></i>
-                                                    </a>
-                                                    
-                                                    <!--- Summary Modal Button --->
-                                                    <cfif len(dockets.summary_ai_html)>
-                                                        <button class="btn btn-sm btn-info btn-pdf"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="##summaryModal#dockets.id#"
-                                                                title="View PDF Summary"
-                                                                aria-label="View PDF Summary: #dockets.pdf_title#">
-                                                            <i class="fas fa-eye" aria-hidden="true"></i>
-                                                        </button>
-                                                    </cfif>
-                                                </cfif>
-                                            
-
-                                                <!--- Attachment PDF icons (e.g., Exhibits) --->
-                                                <cfif len(dockets.attachment_links)>
-                                                    #dockets.attachment_links#
+                                                    </button>
+                                                <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
+                                                    <!--- Legacy PACER download for documents without PDF path --->
+                                                    <button class="btn btn-sm btn-primary btn-pdf get-pacer-pdf"
+                                                            data-doc-id="#dockets.id#"
+                                                            data-event-url="#dockets.event_url#"
+                                                            data-case-id="#dockets.fk_cases#"
+                                                            title="Download: #dockets.pdf_title#"
+                                                            aria-label="Download PDF: #dockets.pdf_title#">
+                                                        <i class="fas fa-download" aria-hidden="true"></i>
+                                                    </button>
                                                 </cfif>
                                             </div>
                                         </td>
                                     </tr>
                                     
-                                    <!--- PDF Summary Modal --->
-                                    <cfif len(dockets.summary_ai_html)>
-                                        <div class="modal fade" id="summaryModal#dockets.id#" tabindex="-1" aria-labelledby="summaryModalLabel#dockets.id#" aria-hidden="true">
+                                    <!--- Document Modal for Each Row --->
+                                    <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
+                                        <div class="modal fade" id="documentModal#dockets.id#" tabindex="-1" aria-labelledby="documentModalLabel#dockets.id#" aria-hidden="true">
                                             <div class="modal-dialog modal-lg">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="summaryModalLabel#dockets.id#">
-                                                            <i class="fas fa-file-pdf me-2"></i>
-                                                            PDF Summary: #dockets.pdf_title#
+                                                        <h5 class="modal-title" id="documentModalLabel#dockets.id#">
+                                                            #dockets.pdf_title#
                                                         </h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <div class="summary-content">
-                                                            #dockets.summary_ai_html#
+                                                        <div class="row">
+                                                            <!--- Left third: PDF icon --->
+                                                            <div class="col-md-4 text-center">
+                                                                <cfif len(dockets.pdf_path)>
+                                                                    <a href="#dockets.pdf_path#" target="_blank" class="btn btn-success btn-lg">
+                                                                        <i class="fas fa-file-pdf fa-3x"></i>
+                                                                        <br><small>View PDF</small>
+                                                                    </a>
+                                                                <cfelse>
+                                                                    <div class="text-muted">
+                                                                        <i class="fas fa-file-text fa-3x"></i>
+                                                                        <br><small>Summary Only</small>
+                                                                    </div>
+                                                                </cfif>
+                                                            </div>
+                                                            <!--- Right two-thirds: Summary --->
+                                                            <div class="col-md-8">
+                                                                <cfif len(dockets.summary_ai_html)>
+                                                                    <h6>Summary:</h6>
+                                                                    <div class="summary-content">
+                                                                        #dockets.summary_ai_html#
+                                                                    </div>
+                                                                <cfelse>
+                                                                    <p class="text-muted">No summary available for this document.</p>
+                                                                </cfif>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!--- Horizontal rule before attachments --->
+                                                        <hr>
+                                                        
+                                                        <!--- Attachments section --->
+                                                        <div class="attachments-section">
+                                                            <h6>Attachments:</h6>
+                                                            <cfif attachments.recordCount GT 0>
+                                                                <div class="row">
+                                                                    <cfloop query="attachments">
+                                                                        <cfif attachments.fk_case_events EQ dockets.id>
+                                                                            <div class="col-md-3 mb-2">
+                                                                                <cfif len(attachments.pdf_path)>
+                                                                                    <a href="#attachments.pdf_path#" target="_blank" 
+                                                                                       class="btn btn-outline-primary btn-sm d-block"
+                                                                                       title="#attachments.pdf_title#">
+                                                                                        <i class="fas fa-paperclip"></i>
+                                                                                        <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
+                                                                                    </a>
+                                                                                <cfelse>
+                                                                                    <span class="btn btn-outline-secondary btn-sm d-block disabled"
+                                                                                          title="#attachments.pdf_title#">
+                                                                                        <i class="fas fa-paperclip"></i>
+                                                                                        <br><small>#left(attachments.pdf_title, 20)#<cfif len(attachments.pdf_title) GT 20>...</cfif></small>
+                                                                                    </span>
+                                                                                </cfif>
+                                                                            </div>
+                                                                        </cfif>
+                                                                    </cfloop>
+                                                                </div>
+                                                            <cfelse>
+                                                                <p class="text-muted">No attachments for this document.</p>
+                                                            </cfif>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <cfif len(dockets.pdf_path)>
-                                                            <a href="#dockets.pdf_path#" 
-                                                               target="_blank" 
-                                                               class="btn btn-primary">
-                                                                <i class="fas fa-external-link-alt me-2"></i>
-                                                                View Full PDF
-                                                            </a>
-                                                        </cfif>
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                     </div>
                                                 </div>
