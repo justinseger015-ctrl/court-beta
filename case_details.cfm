@@ -978,7 +978,6 @@ ORDER BY r.created_at DESC
                                                 <cfelse>
                                                     <p class="text-muted">No summary available for this document.</p>
                                                 </cfif>
-                                                </cfoutput>
                                             </div>
                                         </div>
                                         
