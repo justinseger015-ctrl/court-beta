@@ -96,6 +96,7 @@ SELECT
     e.[isDoc],
     -- Documents table columns (only main document, not attachments)
     d.[pdf_title],
+    d.[summary_ai],
     d.[summary_ai_html],
     d.[search_text],
     '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
@@ -842,7 +843,9 @@ ORDER BY r.created_at DESC
                                         <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
                                             #dateFormat(event_date, 'mm/dd/yyyy')#
                                         </td>
-                                        <td>#event_description#</td>
+                                        <td><strong>#event_description# </strong><Cfif #event_description# is not "" and #summarize# is not "">
+
+                                        <BR></Cfif>#summarize#<cfif #summarize# is "">#summary_ai#</cfif></td>
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
                                                 <!--- Single PDF icon that opens comprehensive modal --->
@@ -885,16 +888,71 @@ ORDER BY r.created_at DESC
                                                             <!--- Left third: PDF icon --->
                                                             <div class="col-md-4 text-center">
                                                                 <cfif len(dockets.pdf_path)>
-                                                                    <a href="#dockets.pdf_path#" target="_blank" class="btn btn-success btn-lg">
+                                                                    <a href="#dockets.pdf_path#" target="_blank" class="btn btn-success btn-lg mb-3">
                                                                         <i class="fas fa-file-pdf fa-3x"></i>
                                                                         <br><small>View PDF</small>
                                                                     </a>
                                                                 <cfelse>
-                                                                    <div class="text-muted">
+                                                                    <div class="text-muted mb-3">
                                                                         <i class="fas fa-file-text fa-3x"></i>
                                                                         <br><small>Summary Only</small>
                                                                     </div>
                                                                 </cfif>
+                                                                
+                                                                <!--- Document Specifications --->
+                                                                <div class="document-specs text-start">
+                                                                    <div class="card bg-light border-0">
+                                                                        <div class="card-body p-3">
+                                                                            <h6 class="card-title mb-2 text-primary">
+                                                                                <i class="fas fa-info-circle me-1"></i>Document Details
+                                                                            </h6>
+                                                                            
+                                                                            <!--- Document Name --->
+                                                                            <div class="mb-2">
+                                                                                <strong class="text-muted small">Document:</strong>
+                                                                                <div class="small text-dark">
+                                                                                    <cfif len(dockets.pdf_title)>
+                                                                                        #dockets.pdf_title#
+                                                                                    <cfelse>
+                                                                                        Docket Entry ###dockets.event_no#
+                                                                                    </cfif>
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            <!--- Filing Date --->
+                                                                            <div class="mb-2">
+                                                                                <strong class="text-muted small">Filed:</strong>
+                                                                                <div class="small text-dark">
+                                                                                    #dateFormat(dockets.event_date, "mmm dd, yyyy")#
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            <!--- Docket Number --->
+                                                                            <div class="mb-2">
+                                                                                <strong class="text-muted small">Docket ###:</strong>
+                                                                                <div class="small text-dark">#dockets.event_no#</div>
+                                                                            </div>
+                                                                            
+                                                                            <!--- Document Type --->
+                                                                            <cfif len(dockets.pdf_path)>
+                                                                                <div class="mb-2">
+                                                                                    <strong class="text-muted small">Type:</strong>
+                                                                                    <div class="small text-dark">
+                                                                                        <i class="fas fa-file-pdf text-danger me-1"></i>PDF Document
+                                                                                    </div>
+                                                                                </div>
+                                                                            </cfif>
+                                                                            
+                                                                            <!--- Status/Result if available --->
+                                                                            <cfif len(dockets.event_result)>
+                                                                                <div class="mb-0">
+                                                                                    <strong class="text-muted small">Status:</strong>
+                                                                                    <div class="small text-dark">#dockets.event_result#</div>
+                                                                                </div>
+                                                                            </cfif>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             <!--- Right two-thirds: Summary --->
                                                             <div class="col-md-8">
