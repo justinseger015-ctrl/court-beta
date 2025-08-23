@@ -839,7 +839,7 @@ ORDER BY r.created_at DESC
                             <tbody>
                                 <cfloop query="dockets">
                                 <cfoutput>
-                                    <tr>
+                                    <tr id="docket-row-#dockets.id#">
                                         <td class="">#event_no#</td>
                                         <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
                                             #dateFormat(event_date, 'mm/dd/yyyy')#
