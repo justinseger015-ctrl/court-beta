@@ -847,6 +847,16 @@ ORDER BY r.created_at DESC
                                         <td><strong>#event_description# </strong><cfif len(event_description) AND len(summarize)><BR></cfif>#summarize#<cfif len(summarize) EQ 0>#summary_ai#</cfif></td>
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
+                                                <!--- Summary AI button --->
+                                                <cfif len(dockets.summary_ai_html)>
+                                                    <button class="btn btn-sm btn-info btn-summary me-1"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="##summaryModal#dockets.id#"
+                                                            title="View AI Summary"
+                                                            aria-label="View AI Summary for event #dockets.event_no#">
+                                                        <i class="fas fa-brain" aria-hidden="true"></i>
+                                                    </button>
+                                                </cfif>
                                                 <!--- Single PDF icon that opens comprehensive modal --->
                                                 <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
                                                     <button class="btn btn-sm btn-success btn-pdf"
@@ -904,7 +914,32 @@ ORDER BY r.created_at DESC
                 </cfif>
 
                 <cfset docModalsHtml = "">
+                <cfset summaryModalsHtml = "">
                 <cfloop query="dockets">
+                    <!--- Generate summary modal if summary_ai exists --->
+                    <cfif len(summary_ai_html)>
+                        <cfset summaryModalHtml = '' &
+                            '<div class="modal fade" id="summaryModal' & dockets.id & '" tabindex="-1" aria-hidden="true">' &
+                            '<div class="modal-dialog modal-lg modal-dialog-scrollable">' &
+                            '<div class="modal-content">' &
+                            '<div class="modal-header">' &
+                            '<h5 class="modal-title">AI Summary - Event #' & dockets.event_no & '</h5>' &
+                            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
+                            '</div>' &
+                            '<div class="modal-body">' &
+                            '<div class="mb-3"><strong>Event:</strong> ' & htmlEditFormat(dockets.event_description) & '</div>' &
+                            '<div class="summary-content">' & dockets.summary_ai_html & '</div>' &
+                            '</div>' &
+                            '<div class="modal-footer">' &
+                            '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' &
+                            '</div>' &
+                            '</div>' &
+                            '</div>' &
+                            '</div>'>
+                        <cfset summaryModalsHtml &= summaryModalHtml>
+                    </cfif>
+                    
+                    <!--- Generate document modal if applicable --->
                     <cfif len(pdf_path) OR len(summary_ai_html)>
                         <cfset summarySection = ( len(summary_ai_html) ? summary_ai_html : '<p class="text-muted mb-0">No summary available.</p>' )>
                         <!-- Build attachments section from precomputed map -->
@@ -954,7 +989,7 @@ ORDER BY r.created_at DESC
                         <cfset docModalsHtml &= modalHtml>
                     </cfif>
                 </cfloop>
-                <cfoutput>#docModalsHtml#</cfoutput>
+                <cfoutput>#summaryModalsHtml##docModalsHtml#</cfoutput>
             </cfif>
 
             <!--- Hearings Tab --->
