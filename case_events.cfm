@@ -325,16 +325,16 @@
             <div class="stat-number">#stats.total_events#</div>
             <div class="stat-label">Total Events</div>
         </div>
-        <div class="stat-card" style="border-top-color: #dc3545;">
-            <div class="stat-number" style="color: #dc3545;">#stats.unacknowledged#</div>
+        <div class="stat-card" style="border-top-color: ##dc3545;">
+            <div class="stat-number" style="color: ##dc3545;">#stats.unacknowledged#</div>
             <div class="stat-label">Needs Attention</div>
         </div>
-        <div class="stat-card" style="border-top-color: #28a745;">
-            <div class="stat-number" style="color: #28a745;">#stats.acknowledged#</div>
+        <div class="stat-card" style="border-top-color: ##28a745;">
+            <div class="stat-number" style="color: ##28a745;">#stats.acknowledged#</div>
             <div class="stat-label">Acknowledged</div>
         </div>
-        <div class="stat-card" style="border-top-color: #ffc107;">
-            <div class="stat-number" style="color: #ffc107;">#stats.with_documents#</div>
+        <div class="stat-card" style="border-top-color: ##ffc107;">
+            <div class="stat-number" style="color: ##ffc107;">#stats.with_documents#</div>
             <div class="stat-label">With Documents</div>
         </div>
         </cfoutput>
@@ -578,13 +578,13 @@
 <cfloop query="events">
     <cfif len(summary_ai_html)>
         <cfoutput>
-        <div class="modal fade" id="summaryModal#events.id#" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="summaryModal#events.id#" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
                             <i class="fas fa-brain me-2"></i>
-                            AI Summary - Event ##events.event_no#
+                AI Summary - Event #events.event_no#
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
