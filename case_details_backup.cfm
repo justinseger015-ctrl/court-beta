@@ -2,22 +2,31 @@
 <cfset subscribers_tab_status = "">
 
 <cfquery name="case_details" datasource="Reach">
-    SELECT [id],
-           [case_number],
-           [case_name],
-           [notes] AS details,
-           [last_updated],
-           [owner],
-           [created_at],
-           [status],
-           ISNULL([case_type], 'Unknown') AS case_type,
-           [case_url],
-           fk_court AS court_code,
-           court_name_pacer,
-           [summarize_html]
-    FROM [docketwatch].[dbo].[cases]
-    WHERE id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
+    SELECT c.fk_tool,
+        c.[id],
+        c.[case_number],
+        c.[case_name],
+        c.[notes] AS details,
+        c.[last_updated],
+        c.[owner],
+        c.[created_at],
+        c.[status],
+        ISNULL(c.[case_type], 'Unknown') AS case_type,
+        c.[case_url],
+        c.fk_court AS court_code,
+        c.court_name_pacer,
+        c.[summarize_html],
+        t.[id] AS tool_id,
+        t.[tool_name] AS tool_name,
+        t.[username],
+        t.[pass],
+        t.[search_url] as tool_url,
+        t.[login_url] as tool_login_url
+    FROM [docketwatch].[dbo].[cases] c
+    LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = c.fk_tool
+    WHERE c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
 </cfquery>
+
 
 <cfquery name="subscribers" datasource="Reach">
 SELECT r.id,
@@ -74,47 +83,49 @@ SELECT
     e.[additional_information],
     e.[created_at],
     e.[status],
-    p.[pdf_title],
     e.[event_result],
     e.[party_type],
     e.[party_number],
     e.[amount],
     e.[fk_cases],
     e.[fk_task_run_log],
-    e.[additional_information],
     e.[emailed],
     e.[summarize],
     e.[tmz_summarize],
     e.[event_url],
     e.[isDoc],
-    p.[isDownloaded],
-    p.[local_pdf_filename], -- main docket PDF
-
-    -- HTML anchor tags for each attachment
-    (
-        SELECT STUFF((
-            SELECT 
-                ' <a href="/mediaroot/pacer_pdfs/' + ap.local_pdf_filename + '" target="_blank" class="btn btn-sm btn-outline-secondary" title="' + 
-                ISNULL(REPLACE(ap.pdf_title, '"', ''), 'Exhibit') + 
-                '"><i class=''fas fa-paperclip''></i></a>'
-            FROM docketwatch.dbo.case_events_pdf ap
-            WHERE ap.fk_case_event = e.id
-              AND ap.pdf_type = 'Attachment'
-              AND ap.isDownloaded = 1
-              AND ap.local_pdf_filename IS NOT NULL order by ap.pdf_no 
-            FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '')
-    ) AS attachment_links
+    -- Documents table columns (only main document, not attachments)
+    d.[pdf_title],
+    d.[summary_ai],
+    d.[summary_ai_html],
+    d.[search_text],
+    '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
+    'tbd' AS attachment_links
 
 FROM docketwatch.dbo.case_events e
 
--- Main docket PDF (single)
-LEFT JOIN docketwatch.dbo.case_events_pdf p 
-    ON e.id = p.fk_case_event AND p.pdf_type = 'Docket'
+-- Join with documents table for PDF information (main document only)
+LEFT JOIN docketwatch.dbo.documents d 
+    ON e.id = d.fk_case_event 
+    AND (d.pdf_type IS NULL OR d.pdf_type != 'Attachment')
 
 WHERE e.fk_cases = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
 ORDER BY e.created_at DESC
 
-
+</cfquery>
+ 
+<cfquery name="attachments" datasource="Reach">
+SELECT 
+    d.[doc_uid],
+    d.[fk_case_event],
+    d.[pdf_title],
+    d.[doc_id],
+    '/docs/cases/' + cast(d.fk_case as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
+    d.[pdf_type]
+FROM docketwatch.dbo.documents d
+WHERE d.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
+AND d.pdf_type = 'Attachment'
+ORDER BY d.pdf_title
 
 </cfquery>
 
@@ -203,7 +214,7 @@ ORDER BY r.created_at DESC
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><cfoutput>Case Details - #case_details.case_number#</cfoutput></title>
-    <cfinclude template="head.cfm"> <!--- Includes Bootstrap & DataTables CSS --->
+    <cfinclude template="head.cfm">
     <style>
         /* Page-specific styling for case details */
         .case-actions {
@@ -236,6 +247,43 @@ ORDER BY r.created_at DESC
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
             border-radius: 0.375rem;
+        }
+        
+        /* Credentials modal styling */
+        #toolCredentialsModal .modal-content {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        #toolCredentialsModal .modal-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid #cbd5e1;
+            padding: 1rem 1.25rem;
+        }
+        
+        #toolCredentialsModal .modal-title {
+            color: #475569;
+            font-weight: 500;
+        }
+        
+        #toolCredentialsModal .input-group .form-control {
+            font-family: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        #toolCredentialsModal .input-group .btn {
+            border-color: #dee2e6;
+        }
+        
+        #toolCredentialsModal .input-group .btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* Copy success animation */
+        #toolCredentialsModal .btn.btn-success {
+            transition: all 0.3s ease;
         }
         
         /* Responsive improvements */
@@ -274,7 +322,7 @@ ORDER BY r.created_at DESC
 </head>
 <body>
 
-<cfinclude template="navbar.cfm"> <!--- Navigation Bar --->
+<cfinclude template="navbar.cfm">
 
 <div class="container-fluid mt-4">
     <!-- Minimal header section matching search form style -->
@@ -299,13 +347,13 @@ ORDER BY r.created_at DESC
                         </button>
                     </div>
                 </h6>
+
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="row gx-4"> <!--- Bootstrap Row with horizontal gutter --->
-
+        <div class="row gx-4">
         <!--- Case Detail Section --->
         <div class="col-12 col-xl-6">
             <div class="card shadow-sm mb-4 filter-card">
@@ -316,10 +364,11 @@ ORDER BY r.created_at DESC
                         <cfif len(trim(case_details.case_url))>
                         <a href="#case_details.case_url#" 
                            target="_blank" 
-                           class="ms-auto text-decoration-none btn btn-primary btn-sm" 
-                           title="View full case"
-                           aria-label="View full case in new window">
-                            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                           class="ms-auto btn btn-primary btn-sm" 
+                           role="button"
+                           aria-label="View full case in external site">
+                            <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
+                            External Link
                         </a>
                         </cfif>
                         </cfoutput>
@@ -331,8 +380,7 @@ ORDER BY r.created_at DESC
                         <strong>Case Name:</strong> <cfoutput>#case_details.case_name#</cfoutput>
                     </div>
 
-
-                    <dl class="row mb-0">
+                    <dl class="row mb-3">
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-flag me-1 text-muted" aria-hidden="true"></i>
                             Status
@@ -405,42 +453,62 @@ ORDER BY r.created_at DESC
                             <cfoutput>#case_details.case_type#</cfoutput>
                         </dd>
 
+                        <cfoutput>
+                        <cfif len(trim(case_details.tool_name))>
                         <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-user me-1 text-muted" aria-hidden="true"></i>
-                            Owner
+                            <i class="fas fa-tools me-1 text-muted" aria-hidden="true"></i>
+                            Tool
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            <cfoutput>#case_details.owner#</cfoutput>
-                        </dd>
-
-                        <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-calendar-plus me-1 text-muted" aria-hidden="true"></i>
-                            Created
-                        </dt>
-                        <dd class="col-sm-8 mb-2">
-                            <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
-                        </dd>
-
-                        <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-clock me-1 text-muted" aria-hidden="true"></i>
-                            Last Updated
-                        </dt>
-                        <dd class="col-sm-8 mb-2">
-                            <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeformat(case_details.last_updated)#</cfoutput>
-                        </dd>
-
-                        <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-sticky-note me-1 text-muted" aria-hidden="true"></i>
-                            Notes / Details
-                        </dt>
-                        <dd class="col-sm-8 mb-0">
-                            <div class="bg-light p-3 rounded">
-                                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit; font-size: inherit;">
-                                    <cfoutput>#htmlEditFormat(case_details.details)#</cfoutput>
-                                </pre>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <cfif len(trim(case_details.case_url))>
+                                        <a href="#case_details.case_url#" target="_blank" class="text-decoration-none">
+                                            #case_details.tool_name#
+                                            <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
+                                        </a>
+                                    <cfelse>
+                                        #case_details.tool_name#
+                                    </cfif>
+                                </div>
+                                <cfif len(trim(case_details.username)) OR len(trim(case_details.pass))>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-secondary ms-2" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="##toolCredentialsModal"
+                                            title="View login credentials"
+                                            aria-label="View tool login credentials">
+                                        <i class="fas fa-key" aria-hidden="true"></i>
+                                    </button>
+                                </cfif>
                             </div>
                         </dd>
+                        </cfif>
+                        </cfoutput>
+
+                        <cfoutput>
+                        <cfif len(trim(case_details.details))>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-tag me-1 text-muted" aria-hidden="true"></i>
+                            Category
+                        </dt>
+                        <dd class="col-sm-8 mb-0">
+                            #htmlEditFormat(case_details.details)#
+                        </dd>
+                        </cfif>
+                        </cfoutput>
                     </dl>
+                    
+                    <!--- Timestamp info --->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
+                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                            &nbsp;&nbsp;&nbsp;
+                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeFormat(case_details.last_updated, "h:mm tt")#</cfoutput>
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -455,10 +523,11 @@ ORDER BY r.created_at DESC
                         <cfif len(trim(courthouse.court_url))>
                             <a href="#courthouse.court_url#" 
                                target="_blank" 
-                               class="ms-auto text-decoration-none btn btn-primary btn-sm" 
-                               title="View Courthouse"
-                               aria-label="View courthouse information in new window">
-                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                               class="ms-auto btn btn-primary btn-sm" 
+                               role="button"
+                               aria-label="View courthouse information in external site">
+                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
+                                External Link
                             </a>
                         </cfif>
                         </cfoutput>
@@ -528,9 +597,10 @@ ORDER BY r.created_at DESC
 <cfif structKeyExists(url, "tab")>
     <cfset tabName = lcase(trim(url.tab))>
     <cfif listFind("summary,links,dockets,hearings,log,celebrities,alerts", tabName)>
-        <cfset "#tabName#_tab_status" = "active">
+        <!-- fix: dynamic variable assignment -->
+        <cfset variables[tabName & "_tab_status"] = "active">
     <cfelse>
-        <cfset summary_tab_status = "active"> <!--- fallback for invalid tab param --->
+        <cfset summary_tab_status = "active">
     </cfif>
 <cfelse>
     <!--- Default to Summary tab for consistent behavior --->
@@ -769,24 +839,35 @@ ORDER BY r.created_at DESC
                             <tbody>
                                 <cfloop query="dockets">
                                 <cfoutput>
-                                    <tr>
+                                    <tr id="docket-row-#dockets.id#">
                                         <td class="">#event_no#</td>
                                         <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
                                             #dateFormat(event_date, 'mm/dd/yyyy')#
                                         </td>
-                                        <td>#event_description#</td>
+                                        <td><strong>#event_description# </strong><cfif len(event_description) AND len(summarize)><BR></cfif>#summarize#<cfif len(summarize) EQ 0>#summary_ai#</cfif></td>
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
-                                                <!--- View Docket PDF if downloaded --->
-                                                <cfif dockets.isDownloaded EQ 1 AND len(dockets.local_pdf_filename)>
-                                                    <a href="/mediaroot/pacer_pdfs/#dockets.local_pdf_filename#"
-                                                       target="_blank"
-                                                       class="btn btn-sm btn-success btn-pdf"
-                                                       title="#dockets.pdf_title#"
-                                                       aria-label="View PDF: #dockets.pdf_title#">
+                                                <!--- Summary AI button --->
+                                                <cfif len(dockets.summary_ai_html)>
+                                                    <button class="btn btn-sm btn-info btn-summary me-1"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="##summaryModal#dockets.id#"
+                                                            title="View AI Summary"
+                                                            aria-label="View AI Summary for event #dockets.event_no#">
+                                                        <i class="fas fa-brain" aria-hidden="true"></i>
+                                                    </button>
+                                                </cfif>
+                                                <!--- Single PDF icon that opens comprehensive modal --->
+                                                <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
+                                                    <button class="btn btn-sm btn-success btn-pdf"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="##documentModal#dockets.id#"
+                                                            title="View Document: #dockets.pdf_title#"
+                                                            aria-label="View Document: #dockets.pdf_title#">
                                                         <i class="fas fa-file-pdf" aria-hidden="true"></i>
-                                                    </a>
+                                                    </button>
                                                 <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
+                                                    <!--- Legacy PACER download for documents without PDF path --->
                                                     <button class="btn btn-sm btn-primary btn-pdf get-pacer-pdf"
                                                             data-doc-id="#dockets.id#"
                                                             data-event-url="#dockets.event_url#"
@@ -795,11 +876,6 @@ ORDER BY r.created_at DESC
                                                             aria-label="Download PDF: #dockets.pdf_title#">
                                                         <i class="fas fa-download" aria-hidden="true"></i>
                                                     </button>
-                                                </cfif>
-
-                                                <!--- Attachment PDF icons (e.g., Exhibits) --->
-                                                <cfif len(dockets.attachment_links)>
-                                                    #dockets.attachment_links#
                                                 </cfif>
                                             </div>
                                         </td>
@@ -817,7 +893,104 @@ ORDER BY r.created_at DESC
                     </div>
                 </cfif>
             </div>
-           
+ 
+            <!--- Removed legacy Document Modals block that used <cfoutput query="dockets"> to avoid nested query-driven tag error.
+                  Rebuild minimal modals safely using a single query-driven <cfloop>. --->
+            <cfif dockets.recordcount GT 0>
+                <!-- Build attachment map once (avoid nested query-driven loops) -->
+                <cfset attachmentMap = structNew()> 
+                <cfif attachments.recordcount GT 0>
+                    <cfloop query="attachments">
+                        <cfset evId = attachments.fk_case_event>
+                        <cfif NOT structKeyExists(attachmentMap, evId)>
+                            <cfset attachmentMap[evId] = []>
+                        </cfif>
+                        <cfset arrayAppend(attachmentMap[evId], {
+                            title = attachments.pdf_title,
+                            path = attachments.pdf_path,
+                            type = attachments.pdf_type
+                        })>
+                    </cfloop>
+                </cfif>
+
+                <cfset docModalsHtml = "">
+                <cfset summaryModalsHtml = "">
+                <cfloop query="dockets">
+                    <!--- Generate summary modal if summary_ai exists --->
+                    <cfif len(summary_ai_html)>
+                        <cfset summaryModalHtml = '' &
+                            '<div class="modal fade" id="summaryModal' & dockets.id & '" tabindex="-1" aria-hidden="true">' &
+                            '<div class="modal-dialog modal-lg modal-dialog-scrollable">' &
+                            '<div class="modal-content">' &
+                            '<div class="modal-header">' &
+                            '<h5 class="modal-title">AI Summary - Event ##' & dockets.event_no & '</h5>' &
+                            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
+                            '</div>' &
+                            '<div class="modal-body">' &
+                            '<div class="mb-3"><strong>Event:</strong> ' & htmlEditFormat(dockets.event_description) & '</div>' &
+                            '<div class="summary-content">' & dockets.summary_ai_html & '</div>' &
+                            '</div>' &
+                            '<div class="modal-footer">' &
+                            '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' &
+                            '</div>' &
+                            '</div>' &
+                            '</div>' &
+                            '</div>'>
+                        <cfset summaryModalsHtml &= summaryModalHtml>
+                    </cfif>
+                    
+                    <!--- Generate document modal if applicable --->
+                    <cfif len(pdf_path) OR len(summary_ai_html)>
+                        <cfset summarySection = ( len(summary_ai_html) ? summary_ai_html : '<p class="text-muted mb-0">No summary available.</p>' )>
+                        <!-- Build attachments section from precomputed map -->
+                        <cfset attachmentsSection = "">
+                        <cfif structKeyExists(attachmentMap, dockets.id)>
+                            <cfset attArray = attachmentMap[dockets.id]>
+                            <cfset attListHtml = "">
+                            <cfloop from="1" to="#arrayLen(attArray)#" index="ai">
+                                <cfset att = attArray[ai]>
+                                <cfset attListHtml &= '<li class="mb-1"><i class="fas fa-paperclip me-1" aria-hidden="true"></i><a href="' & att.path & '" target="_blank">' & htmlEditFormat(att.title) & '</a></li>'>
+                            </cfloop>
+                            <cfset attachmentsSection = '<hr><h6 class="mt-3">Attachments</h6><ul class="list-unstyled mb-0">' & attListHtml & '</ul>'>
+                        </cfif>
+
+                        <cfset pdfColumn = ''>
+                        <cfif len(pdf_path)>
+                            <cfset pdfColumn = '<div class="text-center">' &
+                                '<div class="display-1 text-danger mb-3"><i class="fas fa-file-pdf" aria-hidden="true"></i></div>' &
+                                '<a href="' & pdf_path & '" target="_blank" class="btn btn-outline-primary w-100 mb-2"><i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>Open PDF</a>' &
+                                '<small class="text-muted d-block">Opens in new tab</small>' &
+                                '</div>'>
+                        <cfelse>
+                            <cfset pdfColumn = '<div class="text-center text-muted">' &
+                                '<div class="display-1 mb-3"><i class="fas fa-file" aria-hidden="true"></i></div>' &
+                                '<p class="small mb-0">No PDF Available</p>' &
+                                '</div>'>
+                        </cfif>
+                        <cfset pdfLinkButton = len(pdf_path) ? ('<a href="' & pdf_path & '" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf me-1" aria-hidden="true"></i> Open PDF</a>') : ''>
+                        <cfset modalHtml = '' &
+                            '<div class="modal fade" id="documentModal' & dockets.id & '" tabindex="-1" aria-hidden="true">' &
+                            '<div class="modal-dialog modal-xl modal-dialog-scrollable">' &
+                            '<div class="modal-content">' &
+                            '<div class="modal-header">' &
+                            '<h5 class="modal-title">' & htmlEditFormat(pdf_title) & '</h5>' &
+                            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
+                            '</div>' &
+                            '<div class="modal-body">' &
+                            '<div class="row">' &
+                                '<div class="col-md-4 border-end mb-3 mb-md-0">' & pdfColumn & '</div>' &
+                                '<div class="col-md-8"><div class="doc-summary">' & summarySection & '</div>' & attachmentsSection & '</div>' &
+                            '</div>' &
+                            '</div>' &
+                            '<div class="modal-footer">' & pdfLinkButton & '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' & '</div>' &
+                            '</div>' &
+                            '</div>' &
+                            '</div>'>
+                        <cfset docModalsHtml &= modalHtml>
+                    </cfif>
+                </cfloop>
+                <cfoutput>#summaryModalsHtml##docModalsHtml#</cfoutput>
+            </cfif>
 
             <!--- Hearings Tab --->
             <div class="tab-pane p-4 #hearings_tab_status#" id="hearings" role="tabpanel" aria-labelledby="hearings-tab">
@@ -1208,6 +1381,8 @@ ORDER BY r.created_at DESC
         </cfoutput>
     </div>
 </div>
+
+<script>
 // Enhanced DataTable initialization with loading states
 $(document).ready(function() {
     // Show loading overlay for tables
@@ -1343,10 +1518,9 @@ $(document).ready(function() {
                 caseID: caseId
             },
             dataType: 'json',
-            timeout: 60000, // 60 second timeout
+            timeout: 60000,
             success: function(response) {
                 if (response.STATUS === 'SUCCESS') {
-                    // Success state with icon
                     var successButton = `
                         <a href="${response.FILEPATH}" 
                            target="_blank" 
@@ -1359,7 +1533,6 @@ $(document).ready(function() {
                     `;
                     buttonContainer.html(successButton);
                     
-                    // Show success notification
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'success',
@@ -1370,7 +1543,6 @@ $(document).ready(function() {
                         });
                     }
                 } else {
-                    // Error state
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'error',
@@ -1380,12 +1552,10 @@ $(document).ready(function() {
                     } else {
                         alert('Error: ' + (response.MESSAGE || 'Unable to download PDF'));
                     }
-                    // Reset button
                     button.prop('disabled', false).html('<i class="fas fa-download" aria-hidden="true"></i>');
                 }
             },
             error: function(xhr, status, error) {
-                // Network error state
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         icon: 'error',
@@ -1757,7 +1927,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fk_case: formData.get('fk_case'),
                 fk_user: formData.get('fk_user'),
                 case_url: formData.get('case_url'),
-                title: formData.get('case_url'), // Use URL as title if no title field
+                title: formData.get('case_url'),
                 category: 'General'
             };
             
@@ -1822,7 +1992,6 @@ function deleteCelebrityMatch(matchId) {
         if (data.success) {
           Swal.fire('Deleted!', data.message || 'Celebrity match removed.', 'success')
             .then(() => {
-              // Reload page and activate the Celebrities tab
               const caseId = new URLSearchParams(window.location.search).get("id");
               window.location.href = `${window.location.pathname}?id=${caseId}&tab=celebrities`;
             });
@@ -1836,13 +2005,6 @@ function deleteCelebrityMatch(matchId) {
 }
 </script>
 
-
-
-            
-
-
-
-
         </div> <!--- /.tab-content --->
     </div>
 </div>
@@ -1850,8 +2012,7 @@ function deleteCelebrityMatch(matchId) {
     </div> <!--- /.container --->
 </div> <!--- /.container-fluid --->
 
-<cfinclude template="footer_script.cfm"> <!--- Includes JS libraries --->
-
+<cfinclude template="footer_script.cfm">
 
 <script>
 // Enhanced case status update with better UX
@@ -1885,7 +2046,6 @@ function updateCaseStatus(caseId, newStatus) {
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading state
                 Swal.fire({
                     title: 'Updating Status...',
                     allowOutsideClick: false,
@@ -1931,7 +2091,6 @@ function updateCaseStatus(caseId, newStatus) {
             }
         });
     } else {
-        // Fallback for no SweetAlert
         if (confirm(`Set this case status to ${newStatus}?`)) {
             fetch('update_case_status.cfm', {
                 method: 'POST',
@@ -1956,8 +2115,6 @@ function updateCaseStatus(caseId, newStatus) {
 }
 </script>
 
-
-
 <script>
 // Enhanced link deletion with better UX
 function deleteLink(linkId) {
@@ -1973,7 +2130,6 @@ function deleteLink(linkId) {
             cancelButtonColor: '#6c757d'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Show loading
                 Swal.fire({
                     title: 'Removing Link...',
                     allowOutsideClick: false,
@@ -2015,7 +2171,6 @@ function deleteLink(linkId) {
             }
         });
     } else {
-        // Fallback for no SweetAlert
         if (confirm('Are you sure you want to remove this link?')) {
             fetch('delete_case_link.cfm', {
                 method: 'POST',
@@ -2038,10 +2193,25 @@ function deleteLink(linkId) {
         }
     }
 }
+// Credentials modal utility functions (finalize)
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    // Select the text
+    element.select();
+    element.setSelectionRange(0, 99999);
+
+    try {
+        document.execCommand('copy');
+    } catch (err) {
+        console.error('Failed to copy to clipboard:', err);
+    }
+}
 </script>
 
 <!--- Add Link Modal --->
-<div class="modal " id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
+<div class="modal" id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form id="addLinkForm">
       <div class="modal-content">
@@ -2065,6 +2235,93 @@ function deleteLink(linkId) {
     </form>
   </div>
 </div>
+
+<!-- Minimal modal block for error isolation -->
+<cfoutput>
+<div class="modal fade" id="toolCredentialsModal" tabindex="-1" aria-labelledby="toolCredentialsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="toolCredentialsModalLabel">
+          <i class="fas fa-key me-2"></i>
+          Tool Login Credentials
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <cfif len(trim(case_details.tool_name))>
+          <div class="mb-3">
+            <strong class="text-muted d-block mb-1">Tool:</strong>
+            <span class="fw-bold">#case_details.tool_name#</span>
+          </div>
+        </cfif>
+        
+        <cfif len(trim(case_details.username))>
+          <div class="mb-3">
+            <label class="form-label text-muted mb-1">
+              <i class="fas fa-user me-1"></i>
+              Username:
+            </label>
+            <div class="input-group">
+              <input type="text" 
+                     class="form-control" 
+                     id="toolUsername" 
+                     value="#htmlEditFormat(case_details.username)#" 
+                     readonly>
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      onclick="copyToClipboard('toolUsername')"
+                      title="Copy username">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+        </cfif>
+        
+        <cfif len(trim(case_details.pass))>
+          <div class="mb-3">
+            <label class="form-label text-muted mb-1">
+              <i class="fas fa-lock me-1"></i>
+              Password:
+            </label>
+            <div class="input-group">
+              <input type="text" 
+                     class="form-control" 
+                     id="toolPassword" 
+                     value="#htmlEditFormat(case_details.pass)#" 
+                     readonly>
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      onclick="copyToClipboard('toolPassword')"
+                      title="Copy password">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+        </cfif>
+        
+        <cfif NOT len(trim(case_details.username)) AND NOT len(trim(case_details.pass))>
+          <div class="text-center text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            No credentials available for this tool.
+          </div>
+        </cfif>
+        
+        <cfif len(trim(case_details.tool_login_url))>
+          <div class="mt-3 pt-3 border-top">
+            <a href="#case_details.tool_login_url#" 
+               target="_blank" 
+               class="btn btn-primary btn-sm w-100">
+              <i class="fas fa-sign-in-alt me-1"></i>
+              Open Login Page
+            </a>
+          </div>
+        </cfif>
+      </div>
+    </div>
+  </div>
+</div>
+</cfoutput>
 
 </body>
 </html>
