@@ -220,7 +220,7 @@
 <cfparam name="url.acknowledged" default="all">
 
 <!--- Query for case events with celebrity matches --->
-<cfquery name="events" datasource="Reach">
+<cfquery name="events" datasource="Reach" maxrows="20">
     SELECT 
         e.[id],
         e.[event_no],
