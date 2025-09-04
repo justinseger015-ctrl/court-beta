@@ -40,7 +40,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: var(--tmz-red);
+            background: var(--tmz-dark-gray);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -91,7 +91,7 @@
         .btn-action {
             padding: 0.5rem 1rem;
             font-size: 0.875rem;
-            border-radius: 25px;
+            border-radius: 0.375rem;
             transition: all 0.3s ease;
         }
         
@@ -549,9 +549,9 @@
 
                                     <!--- Navigation Links --->
                                     <a href="case_details.cfm?id=#fk_cases#" 
+                                       title="View Case Details"
                                        class="btn btn-outline-primary btn-action">
-                                        <i class="fas fa-eye me-1"></i>
-                                        Case Details
+                                        <i class="fa-solid fa-file-lines"></i>
                                     </a>
 
                                     <cfif len(case_url)>
