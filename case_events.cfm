@@ -18,11 +18,13 @@
             border-left-color: var(--tmz-red);
             box-shadow: 0 0 20px rgba(157, 52, 51, 0.3);
             animation: pulse-glow 2s infinite;
+            border-top: 2px solid var(--tmz-red);
         }
         
         .event-alert.acknowledged {
             border-left-color: #28a745;
             opacity: 0.8;
+            border-top: 2px solid #28a745;
         }
         
         @keyframes pulse-glow {
@@ -40,13 +42,15 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: var(--tmz-dark-gray);
+            background: linear-gradient(135deg, var(--tmz-dark-gray) 0%, #1a1a1a 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 1.5rem;
             font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .celebrity-avatar {
@@ -54,8 +58,8 @@
             height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
         .event-status {
@@ -84,8 +88,35 @@
         
         .action-buttons {
             display: flex;
+            flex-direction: column;
             gap: 0.5rem;
-            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn-group-vertical {
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        
+        .action-buttons .btn-group-vertical .btn {
+            border-radius: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .action-buttons .btn-group-vertical .btn:first-child {
+            border-top-left-radius: 0.375rem;
+            border-top-right-radius: 0.375rem;
+        }
+        
+        .action-buttons .btn-group-vertical .btn:last-child {
+            border-bottom-left-radius: 0.375rem;
+            border-bottom-right-radius: 0.375rem;
+            border-bottom: none;
+        }
+        
+        .event-number-badge {
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
         }
         
         .btn-action {
@@ -461,7 +492,15 @@
                                             <strong>Case Number:</strong> #case_number#
                                         </div>
                                         <div class="col-md-6">
-                                            <strong>Event ##:</strong> #event_no#
+                                            <strong>Event ##:</strong> 
+                                            <span class="event-number-badge">
+                                                <cfif acknowledged>
+                                                    <i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>
+                                                <cfelse>
+                                                    <i class="fas fa-circle text-danger me-1" style="font-size: 0.5rem;"></i>
+                                                </cfif>
+                                                #event_no#
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="mt-1">
@@ -471,14 +510,17 @@
 
                                 <!--- Event Description --->
                                 <div class="event-description">
-                                    <strong>#event_description#</strong>
-                                    
-                                    <!--- Case Details Link --->
-                                    <a href="case_details.cfm?id=#fk_cases#" 
-                                       title="View Case Details"
-                                       class="btn btn-outline-primary btn-sm ms-2">
-                                        <i class="fa-solid fa-file-lines"></i>
-                                    </a>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <strong>#event_description#</strong>
+                                        
+                                        <!--- Case Details Link --->
+                                        <a href="case_details.cfm?id=#fk_cases#" 
+                                           title="View Case Details"
+                                           class="btn btn-outline-primary"
+                                           style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                            <i class="fa-solid fa-file-lines"></i>
+                                        </a>
+                                    </div>
                                     
                                     <cfif len(additional_information)>
                                         <div class="mt-2 text-muted">
@@ -513,57 +555,63 @@
                             <!--- Actions Column --->
                             <div class="col-md-3">
                                 <div class="action-buttons">
-                                    <!--- PDF Actions --->
-                                    <cfif len(pdf_path)>
-                                        <a href="#pdf_path#" 
-                                           target="_blank" 
-                                           class="btn btn-success btn-action">
-                                            <i class="fas fa-file-pdf me-1"></i>
-                                            View PDF
-                                        </a>
-                                    <cfelseif isDoc AND len(event_url)>
-                                        <button class="btn btn-primary btn-action get-pdf-btn"
+                                    <!--- Document Actions Group --->
+                                    <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Document Actions">
+                                        <cfif len(pdf_path)>
+                                            <a href="#pdf_path#" 
+                                               target="_blank" 
+                                               class="btn btn-success btn-action">
+                                                <i class="fas fa-file-pdf me-1"></i>
+                                                View PDF
+                                            </a>
+                                        <cfelseif isDoc AND len(event_url)>
+                                            <button class="btn btn-primary btn-action get-pdf-btn"
+                                                    data-event-id="#events.id#"
+                                                    data-event-url="#event_url#"
+                                                    data-case-id="#fk_cases#">
+                                                <i class="fas fa-download me-1"></i>
+                                                Get PDF
+                                            </button>
+                                        </cfif>
+
+                                        <!--- Summary Actions --->
+                                        <cfif len(summary_ai_html)>
+                                            <button class="btn btn-primary btn-action"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="##summaryModal#events.id#">
+                                                <i class="fas fa-brain me-1"></i>
+                                                View Summary
+                                            </button>
+                                        <cfelse>
+                                            <button class="btn btn-outline-primary btn-action generate-summary-btn"
+                                                    data-event-id="#events.id#">
+                                                <i class="fas fa-magic me-1"></i>
+                                                Generate Summary
+                                            </button>
+                                        </cfif>
+                                    </div>
+
+                                    <!--- Content Creation Group --->
+                                    <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Content Actions">
+                                        <button class="btn btn-primary btn-action generate-tmz-btn"
                                                 data-event-id="#events.id#"
-                                                data-event-url="#event_url#"
-                                                data-case-id="#fk_cases#">
-                                            <i class="fas fa-download me-1"></i>
-                                            Get PDF
+                                                data-case-name="#htmlEditFormat(case_name)#">
+                                            <i class="fas fa-newspaper me-1"></i>
+                                            TMZ Article
                                         </button>
-                                    </cfif>
+                                    </div>
 
-                                    <!--- Summary Actions --->
-                                    <cfif len(summary_ai_html)>
-                                        <button class="btn btn-primary btn-action"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="##summaryModal#events.id#">
-                                            <i class="fas fa-brain me-1"></i>
-                                            View Summary
-                                        </button>
-                                    <cfelse>
-                                        <button class="btn btn-outline-primary btn-action generate-summary-btn"
-                                                data-event-id="#events.id#">
-                                            <i class="fas fa-magic me-1"></i>
-                                            Generate Summary
-                                        </button>
-                                    </cfif>
-
-                                    <!--- TMZ Article Generator --->
-                                    <button class="btn btn-primary btn-action generate-tmz-btn"
-                                            data-event-id="#events.id#"
-                                            data-case-name="#htmlEditFormat(case_name)#">
-                                        <i class="fas fa-newspaper me-1"></i>
-                                        TMZ Article
-                                    </button>
-
-                                    <!--- Navigation Links --->
-                                    <cfif len(case_url)>
-                                        <a href="#case_url#" 
-                                           target="_blank" 
-                                           class="btn btn-outline-secondary btn-action">
-                                            <i class="fas fa-external-link-alt me-1"></i>
-                                            External Link
-                                        </a>
-                                    </cfif>
+                                    <!--- Navigation Group --->
+                                    <div class="btn-group-vertical w-100" role="group" aria-label="Navigation Actions">
+                                        <cfif len(case_url)>
+                                            <a href="#case_url#" 
+                                               target="_blank" 
+                                               class="btn btn-outline-secondary btn-action">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                External Link
+                                            </a>
+                                        </cfif>
+                                    </div>
                                 </div>
                             </div>
                         </div>
