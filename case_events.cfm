@@ -8,15 +8,15 @@
     <style>
         /* Alert Card Styling */
         .event-alert {
-            border-left: 5px solid #007bff;
+            border-left: 5px solid var(--tmz-red);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
         
         .event-alert.unacknowledged {
-            border-left-color: #dc3545;
-            box-shadow: 0 0 20px rgba(220, 53, 69, 0.3);
+            border-left-color: var(--tmz-red);
+            box-shadow: 0 0 20px rgba(157, 52, 51, 0.3);
             animation: pulse-glow 2s infinite;
         }
         
@@ -26,9 +26,9 @@
         }
         
         @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(220, 53, 69, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(220, 53, 69, 0.5); }
-            100% { box-shadow: 0 0 5px rgba(220, 53, 69, 0.2); }
+            0% { box-shadow: 0 0 5px rgba(157, 52, 51, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(157, 52, 51, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(157, 52, 51, 0.2); }
         }
         
         .event-alert:hover {
@@ -40,7 +40,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--tmz-red);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -97,7 +97,7 @@
         
         .btn-action:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(157, 52, 51, 0.3);
         }
         
         .event-meta {
@@ -119,7 +119,7 @@
         }
         
         .timestamp-badge {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: var(--tmz-red);
             color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 15px;
@@ -139,13 +139,13 @@
             align-items: center;
             justify-content: center;
             border: none;
-            background: rgba(220, 53, 69, 0.9);
+            background: rgba(157, 52, 51, 0.9);
             color: white;
             transition: all 0.3s ease;
         }
         
         .acknowledge-btn:hover {
-            background: rgba(220, 53, 69, 1);
+            background: rgba(157, 52, 51, 1);
             transform: scale(1.1);
         }
         
@@ -173,14 +173,14 @@
             border-radius: 10px;
             padding: 1.5rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-top: 4px solid #007bff;
+            box-shadow: 0 2px 10px rgba(157, 52, 51, 0.2);
+            border-top: 4px solid var(--tmz-red);
         }
         
         .stat-number {
             font-size: 2rem;
             font-weight: bold;
-            color: #007bff;
+            color: var(--tmz-red);
         }
         
         .stat-label {
@@ -325,16 +325,16 @@
             <div class="stat-number">#stats.total_events#</div>
             <div class="stat-label">Total Events</div>
         </div>
-        <div class="stat-card" style="border-top-color: ##dc3545;">
-            <div class="stat-number" style="color: ##dc3545;">#stats.unacknowledged#</div>
+        <div class="stat-card">
+            <div class="stat-number">#stats.unacknowledged#</div>
             <div class="stat-label">Needs Attention</div>
         </div>
-        <div class="stat-card" style="border-top-color: ##28a745;">
-            <div class="stat-number" style="color: ##28a745;">#stats.acknowledged#</div>
+        <div class="stat-card">
+            <div class="stat-number">#stats.acknowledged#</div>
             <div class="stat-label">Acknowledged</div>
         </div>
-        <div class="stat-card" style="border-top-color: ##ffc107;">
-            <div class="stat-number" style="color: ##ffc107;">#stats.with_documents#</div>
+        <div class="stat-card">
+            <div class="stat-number">#stats.with_documents#</div>
             <div class="stat-label">With Documents</div>
         </div>
         </cfoutput>
@@ -525,14 +525,14 @@
 
                                     <!--- Summary Actions --->
                                     <cfif len(summary_ai_html)>
-                                        <button class="btn btn-info btn-action"
+                                        <button class="btn btn-primary btn-action"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="##summaryModal#events.id#">
                                             <i class="fas fa-brain me-1"></i>
                                             View Summary
                                         </button>
                                     <cfelse>
-                                        <button class="btn btn-outline-info btn-action generate-summary-btn"
+                                        <button class="btn btn-outline-primary btn-action generate-summary-btn"
                                                 data-event-id="#events.id#">
                                             <i class="fas fa-magic me-1"></i>
                                             Generate Summary
@@ -540,7 +540,7 @@
                                     </cfif>
 
                                     <!--- TMZ Article Generator --->
-                                    <button class="btn btn-warning btn-action generate-tmz-btn"
+                                    <button class="btn btn-primary btn-action generate-tmz-btn"
                                             data-event-id="#events.id#"
                                             data-case-name="#htmlEditFormat(case_name)#">
                                         <i class="fas fa-newspaper me-1"></i>
@@ -687,7 +687,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     button.replaceWith(`
-                        <button class="btn btn-info btn-action"
+                        <button class="btn btn-primary btn-action"
                                 data-bs-toggle="modal"
                                 data-bs-target="#summaryModal${eventId}">
                             <i class="fas fa-brain me-1"></i>

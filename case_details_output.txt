@@ -1,211 +1,11 @@
-<cfset fk_user = getauthuser()>
-<cfset subscribers_tab_status = "">
-
-<cfquery name="case_details" datasource="Reach">
-    SELECT c.fk_tool,
-        c.[id],
-        c.[case_number],
-        c.[case_name],
-        c.[notes] AS details,
-        c.[last_updated],
-        c.[owner],
-        c.[created_at],
-        c.[status],
-        ISNULL(c.[case_type], 'Unknown') AS case_type,
-        c.[case_url],
-        c.fk_court AS court_code,
-        c.court_name_pacer,
-        c.[summarize_html],
-        t.[id] AS tool_id,
-        t.[tool_name] AS tool_name,
-        t.[username],
-        t.[pass],
-        t.[search_url] as tool_url,
-        t.[login_url] as tool_login_url
-    FROM [docketwatch].[dbo].[cases] c
-    LEFT JOIN [docketwatch].[dbo].[tools] t ON t.id = c.fk_tool
-    WHERE c.id = <cfqueryparam value="#url.id#" cfsqltype="cf_sql_integer">
-</cfquery>
 
 
-<cfquery name="subscribers" datasource="Reach">
-SELECT r.id,
-u.firstname + ' ' + u.lastname as fullname,
-u.firstname,
-u.lastname,
-u.email,
-u.userRole
 
-  FROM [docketwatch].[dbo].[case_email_recipients] r
+            <!-- Handle logout -->
+            
 
-  inner join [docketwatch].[dbo].[users] u on u.username = r.fk_username
-    WHERE r.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer"> and r.notify = 1
-    ORDER BY u.lastname, u.firstname
-</cfquery>
-
-<cfquery name="eligible_users" datasource="Reach">
-    SELECT 
-        u.username AS id,
-        u.firstname + ' ' + u.lastname AS display
-    FROM docketwatch.dbo.users u
-    WHERE u.username NOT IN (
-        SELECT r.fk_username
-        FROM docketwatch.dbo.case_email_recipients r
-        WHERE r.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
-    )
-    ORDER BY u.lastname, u.firstname
-</cfquery>
-
-
-<cfquery name="courthouse" datasource="Reach">
-    SELECT c.[court_code],
-           c.[court_name],
-           c.[address],
-           c.[city],
-           c.[state],
-           c.[zip],
-           ISNULL(c.[image_location], '../services/courthouse.png') AS image_url,
-           o.[name] AS county_name,
-           c.[court_id],
-           c.[court_url],
-           c.[last_scraped]
-    FROM [docketwatch].[dbo].[courts] c
-    INNER JOIN [docketwatch].[dbo].[counties] o ON c.fk_county = o.id
-    WHERE c.court_code = <cfqueryparam value="#case_details.court_code#" cfsqltype="cf_sql_varchar">
-</cfquery>
-
-<cfquery name="dockets" datasource="Reach">
-SELECT 
-    e.[event_no],
-    e.[id],
-    e.[event_date],
-    e.[event_description],
-    e.[additional_information],
-    e.[created_at],
-    e.[status],
-    e.[event_result],
-    e.[party_type],
-    e.[party_number],
-    e.[amount],
-    e.[fk_cases],
-    e.[fk_task_run_log],
-    e.[emailed],
-    e.[summarize],
-    e.[tmz_summarize],
-    e.[event_url],
-    e.[isDoc],
-    -- Documents table columns (only main document, not attachments)
-    d.[pdf_title],
-    d.[summary_ai],
-    d.[summary_ai_html],
-    d.[search_text],
-    '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
-    'tbd' AS attachment_links
-
-FROM docketwatch.dbo.case_events e
-
--- Join with documents table for PDF information (main document only)
-LEFT JOIN docketwatch.dbo.documents d 
-    ON e.id = d.fk_case_event 
-    AND (d.pdf_type IS NULL OR d.pdf_type != 'Attachment')
-
-WHERE e.fk_cases = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
-ORDER BY e.created_at DESC
-
-</cfquery>
- 
-<cfquery name="attachments" datasource="Reach">
-SELECT 
-    d.[doc_uid],
-    d.[fk_case_event],
-    d.[pdf_title],
-    d.[doc_id],
-    '/docs/cases/' + cast(d.fk_case as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
-    d.[pdf_type]
-FROM docketwatch.dbo.documents d
-WHERE d.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
-AND d.pdf_type = 'Attachment'
-ORDER BY d.pdf_title
-
-</cfquery>
-
-<cfquery name="hearings" datasource="Reach">
-    SELECT h.[ID],
-           h.[fk_case],
-           d.[name] AS department,
-           h.[hearing_type] AS type,
-           h.[case_utype_description] AS description,
-           h.[hearing_datetime] AS date,
-           h.[hearing_datetime] AS time
-    FROM [docketwatch].[dbo].[hearings] h
-    LEFT JOIN [docketwatch].[dbo].[departments] d ON d.id = h.fk_department
-    WHERE h.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
-    ORDER BY h.[hearing_datetime] DESC
-</cfquery>
-
-<cfquery name="logs" datasource="Reach">
-SELECT  
-    COUNT(*) as cnt,
-    r.timestamp_started, 
-    r.timestamp_ended,
-    r.status,
-    r.summary,
-    r.created_at,
- s.task_name,
-    DATEDIFF(MINUTE, r.timestamp_started, r.timestamp_ended) AS duration_minutes,
- 
-    DATEDIFF(SECOND, r.timestamp_started, r.timestamp_ended) AS duration_seconds,
- 
-    RIGHT('0' + CAST(DATEDIFF(MINUTE, r.timestamp_started, r.timestamp_ended) AS VARCHAR), 2) + ':' +
-    RIGHT('0' + CAST(DATEDIFF(SECOND, r.timestamp_started, r.timestamp_ended) % 60 AS VARCHAR), 2) AS duration_mmss
-FROM docketwatch.dbo.task_runs_log l
-INNER JOIN docketwatch.dbo.task_runs r ON r.id = l.fk_task_run
-INNER JOIN docketwatch.dbo.cases c ON c.id = l.fk_case
-INNER JOIN docketwatch.dbo.scheduled_task s ON s.id = r.fk_scheduled_task
-WHERE c.id = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
-GROUP BY  
-    r.timestamp_started, 
-    r.timestamp_ended,
-    r.status,
-    r.summary,
-    s.task_name,
-    r.created_at
-ORDER BY r.created_at DESC
-
-</cfquery>
-
-<cfquery name="celebrities" datasource="Reach">
-    SELECT 
-        m.[id],
-        c.id as celebrity_id,
-        c.name AS celebrity_name,
-        a.name AS legal_name,
-        m.[probability_score],
-        m.[priority_score],
-        m.[ranking_score],
-        m.match_status
-    FROM [docketwatch].[dbo].[case_celebrity_matches] m
-    INNER JOIN [docketwatch].[dbo].[celebrities] c ON c.id = m.fk_celebrity
-    LEFT JOIN [docketwatch].[dbo].[celebrity_names] a 
-        ON a.fk_celebrity = c.id AND a.type = 'Legal'
-    WHERE m.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
-    AND m.match_status <> <cfqueryparam value="Removed" cfsqltype="cf_sql_varchar">
-</cfquery>
-
-
-<cfquery name="links" datasource="reach">
-    SELECT 
-        id,
-        fk_case,
-        case_url,
-        title,
-        category,
-        created_at,
-        fk_user,
-        isActive
-    FROM docketwatch.dbo.case_links
-    WHERE fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer"> and isactive = 1
-</cfquery>
+            <!-- Login prompt and validation --->
+            
 
 
 <!DOCTYPE html>
@@ -213,8 +13,38 @@ ORDER BY r.created_at DESC
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><cfoutput>Case Details - #case_details.case_number#</cfoutput></title>
-    <cfinclude template="head.cfm">
+    <title>Case Details - 1:20-cr-00330-PAE</title>
+    
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="css/tmz-brand.css?ver=1.0.11">
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"> 
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
     <style>
         /* Page-specific styling for case details */
         .case-actions {
@@ -322,7 +152,137 @@ ORDER BY r.created_at DESC
 </head>
 <body>
 
-<cfinclude template="navbar.cfm">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        
+        <a class="navbar-brand fw-bold" href="./index.cfm">
+            <i class="fas fa-gavel me-2 text-warning"></i>
+            DocketWatch
+        </a>
+
+        
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                
+                <li class="nav-item">
+                    <a class="nav-link " href="./index.cfm">
+                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    </a>
+                </li>
+
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="caseManagementDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-folder-open me-1"></i>Case Management
+                    </a>
+                    <ul class="dropdown-menu shadow">
+                        <li><a class="dropdown-item" href="./index.cfm?status=Review">
+                            <i class="fas fa-eye me-2"></i>New Cases Review
+                        </a></li>
+                        <li><a class="dropdown-item" href="./index.cfm?status=Tracked">
+                            <i class="fas fa-bookmark me-2"></i>Tracked Cases
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="./case_events.cfm">
+                            <i class="fas fa-calendar-check me-2"></i>Case Events
+                        </a></li>
+                        <li><a class="dropdown-item" href="./latest_pacer_pdfs.cfm">
+                            <i class="fas fa-file-pdf me-2"></i>Latest Pacer PDFs
+                        </a></li>
+                        <li><a class="dropdown-item" href="./case_matches.cfm">
+                            <i class="fas fa-star me-2"></i>Celebrity Matches
+                        </a></li>
+                        <li><a class="dropdown-item" href="./pardons.cfm">
+                            <i class="fas fa-hand-holding-heart me-2"></i>Pardons
+                        </a></li>
+                        <li><a class="dropdown-item" href="./calendar.cfm">
+                            <i class="fas fa-calendar me-2"></i>Calendar
+                        </a></li>
+                    </ul>
+                </li>
+
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-chart-bar me-1"></i>Reports
+                    </a>
+                    <ul class="dropdown-menu shadow">
+                        <li><a class="dropdown-item" href="./case_tracking_summary.cfm">
+                            <i class="fas fa-list-check me-2"></i>Tracking Summary
+                        </a></li>
+                        <li><a class="dropdown-item" href="./scheduled_task_log.cfm">
+                            <i class="fas fa-clock me-2"></i>Scheduled Log
+                        </a></li>
+                        <li><a class="dropdown-item" href="./pacer_costs.cfm">
+                            <i class="fas fa-dollar-sign me-2"></i>Pacer Costs
+                        </a></li>
+                        <li><a class="dropdown-item" href="./not_found.cfm">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Tracked Cases Not Found
+                        </a></li>
+                    </ul>
+                </li>
+
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cog me-1"></i>Admin
+                    </a>
+                    <ul class="dropdown-menu shadow">
+                        <li><a class="dropdown-item" href="./celebrity_gallery.cfm">
+                            <i class="fas fa-users me-2"></i>Celebrities
+                        </a></li>
+                        <li><a class="dropdown-item" href="./tools.cfm">
+                            <i class="fas fa-tools me-2"></i>Tools
+                        </a></li>
+                        
+                            <li><a class="dropdown-item" href="./docketwatch_tools.cfm">
+                                <i class="fas fa-wrench me-2"></i>DocketWatch Tools
+                            </a></li>
+                        
+                    </ul>
+                </li>
+
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="archiveDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-archive me-1"></i>Archive
+                    </a>
+                    <ul class="dropdown-menu shadow">
+                        <li><a class="dropdown-item" href="./index.cfm?status=Removed">
+                            <i class="fas fa-trash-alt me-2"></i>Removed Cases
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-light d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-2"></i>
+                        xkking
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><h6 class="dropdown-header">
+                            <i class="fas fa-user me-2"></i>Signed in as <strong>xkking</strong>
+                        </h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="./logout.cfm">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
 
 <div class="container-fluid mt-4">
     <!-- Minimal header section matching search form style -->
@@ -330,9 +290,9 @@ ORDER BY r.created_at DESC
         <div class="card shadow-sm mb-4 filter-card">
             <div class="card-header">
                 <h6 class="mb-0 d-flex align-items-center">
-                    <i class="fas fa-gavel me-2"></i>Case Details - <cfoutput>#case_details.case_name#</cfoutput>
+                    <i class="fas fa-gavel me-2"></i>Case Details - Trump v. Wall Street Journal
                     <div class="ms-auto d-flex gap-2">
-                        <a href="case_update.cfm?id=<cfoutput>#case_details.id#</cfoutput>" 
+                        <a href="case_update.cfm?id=200922" 
                            class="btn btn-primary btn-sm" 
                            role="button"
                            aria-label="Update case details">
@@ -354,15 +314,14 @@ ORDER BY r.created_at DESC
 
     <div class="container">
         <div class="row gx-4">
-        <!--- Case Detail Section --->
+        
         <div class="col-12 col-xl-6">
             <div class="card shadow-sm mb-4 filter-card">
                 <div class="card-header">
                     <h6 class="mb-0 d-flex align-items-center">
                         <i class="fas fa-file-alt me-2"></i>Case Information
-                        <cfoutput>
-                        <cfif len(trim(case_details.case_url))>
-                        <a href="#case_details.case_url#" 
+                        
+                        <a href="https://ecf.flsd.uscourts.gov/cgi-bin/DktRpt.pl?693830" 
                            target="_blank" 
                            class="ms-auto btn btn-primary btn-sm" 
                            role="button"
@@ -370,14 +329,13 @@ ORDER BY r.created_at DESC
                             <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
                             External Link
                         </a>
-                        </cfif>
-                        </cfoutput>
+                        
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Case Number:</strong> <cfoutput>#case_details.case_number#</cfoutput><br>
-                        <strong>Case Name:</strong> <cfoutput>#case_details.case_name#</cfoutput>
+                        <strong>Case Number:</strong> 1:20-cr-00330-PAE<br>
+                        <strong>Case Name:</strong> Trump v. Wall Street Journal
                     </div>
 
                     <dl class="row mb-3">
@@ -386,62 +344,29 @@ ORDER BY r.created_at DESC
                             Status
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            <cfoutput>
-                            <span id="currentStatus" class="status-badge status-#lcase(case_details.status)#">
-                                <cfif case_details.status EQ "Review">
-                                    <i class="fas fa-search" aria-hidden="true"></i>
-                                <cfelseif case_details.status EQ "Tracked">
+                            
+                            <span id="currentStatus" class="status-badge status-tracked">
+                                
                                     <i class="fas fa-eye" aria-hidden="true"></i>
-                                <cfelseif case_details.status EQ "Removed">
-                                    <i class="fas fa-times" aria-hidden="true"></i>
-                                </cfif>
-                                #case_details.status#
+                                Tracked
                             </span>
-                            </cfoutput>
+                            
 
                             <div class="btn-group ms-2" role="group" aria-label="Status change actions">
-                                <cfoutput>
-                                <cfif case_details.status EQ "Review">
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            onclick="updateCaseStatus(#case_details.id#, 'Removed')"
-                                            aria-label="Remove case from tracking">
-                                        <i class="fas fa-trash me-1" aria-hidden="true"></i>
-                                        Remove
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success" 
-                                            onclick="updateCaseStatus(#case_details.id#, 'Tracked')"
-                                            aria-label="Start tracking case">
-                                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
-                                        Track
-                                    </button>
-                                <cfelseif case_details.status EQ "Tracked">
+                                
                                     <button class="btn btn-sm btn-outline-secondary" 
-                                            onclick="updateCaseStatus(#case_details.id#, 'Review')"
+                                            onclick="updateCaseStatus(200922, 'Review')"
                                             aria-label="Set case to review status">
                                         <i class="fas fa-search me-1" aria-hidden="true"></i>
                                         Review
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" 
-                                            onclick="updateCaseStatus(#case_details.id#, 'Removed')"
+                                            onclick="updateCaseStatus(200922, 'Removed')"
                                             aria-label="Remove case from tracking">
                                         <i class="fas fa-trash me-1" aria-hidden="true"></i>
                                         Remove
                                     </button>
-                                <cfelseif case_details.status EQ "Removed">
-                                    <button class="btn btn-sm btn-outline-secondary" 
-                                            onclick="updateCaseStatus(#case_details.id#, 'Review')"
-                                            aria-label="Set case to review status">
-                                        <i class="fas fa-search me-1" aria-hidden="true"></i>
-                                        Review
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success" 
-                                            onclick="updateCaseStatus(#case_details.id#, 'Tracked')"
-                                            aria-label="Start tracking case">
-                                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
-                                        Track
-                                    </button>
-                                </cfif>
-                                </cfoutput>
+                                
                             </div>
                         </dd>
 
@@ -450,11 +375,10 @@ ORDER BY r.created_at DESC
                             Case Type
                         </dt>
                         <dd class="col-sm-8 mb-2">
-                            <cfoutput>#case_details.case_type#</cfoutput>
+                            
                         </dd>
 
-                        <cfoutput>
-                        <cfif len(trim(case_details.tool_name))>
+                        
                         <dt class="col-sm-4 mb-2">
                             <i class="fas fa-tools me-1 text-muted" aria-hidden="true"></i>
                             Tool
@@ -462,96 +386,64 @@ ORDER BY r.created_at DESC
                         <dd class="col-sm-8 mb-2">
                             <div class="d-flex align-items-center">
                                 <div class="flex-grow-1">
-                                    <cfif len(trim(case_details.case_url))>
-                                        <a href="#case_details.case_url#" target="_blank" class="text-decoration-none">
-                                            #case_details.tool_name#
+                                    
+                                        <a href="https://ecf.flsd.uscourts.gov/cgi-bin/DktRpt.pl?693830" target="_blank" class="text-decoration-none">
+                                            Pacer
                                             <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
                                         </a>
-                                    <cfelse>
-                                        #case_details.tool_name#
-                                    </cfif>
+                                    
                                 </div>
-                                <cfif len(trim(case_details.username)) OR len(trim(case_details.pass))>
+                                
                                     <button type="button" 
                                             class="btn btn-sm btn-outline-secondary ms-2" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="##toolCredentialsModal"
+                                            data-bs-target="#toolCredentialsModal"
                                             title="View login credentials"
                                             aria-label="View tool login credentials">
                                         <i class="fas fa-key" aria-hidden="true"></i>
                                     </button>
-                                </cfif>
+                                
                             </div>
                         </dd>
-                        </cfif>
-                        </cfoutput>
-
-                        <cfoutput>
-                        <cfif len(trim(case_details.details))>
-                        <dt class="col-sm-4 mb-2">
-                            <i class="fas fa-tag me-1 text-muted" aria-hidden="true"></i>
-                            Category
-                        </dt>
-                        <dd class="col-sm-8 mb-0">
-                            #htmlEditFormat(case_details.details)#
-                        </dd>
-                        </cfif>
-                        </cfoutput>
+                        
                     </dl>
                     
-                    <!--- Timestamp info --->
+                    
                     <div class="mt-3 pt-3 border-top">
                         <small class="text-muted">
                             <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
-                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                            Created: 07/29/2025
                             &nbsp;&nbsp;&nbsp;
                             <i class="fas fa-clock me-1" aria-hidden="true"></i>
-                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeFormat(case_details.last_updated, "h:mm tt")#</cfoutput>
+                            Last Updated: 07/29/2025 at 12:25 PM
                         </small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!--- Courthouse Info Section --->
+        
         <div class="col-12 col-xl-6">
             <div class="card shadow-sm mb-4 filter-card">
                 <div class="card-header">
                     <h6 class="mb-0 d-flex align-items-center">
                         <i class="fas fa-university me-2"></i>Courthouse Information
-                        <cfoutput>
-                        <cfif len(trim(courthouse.court_url))>
-                            <a href="#courthouse.court_url#" 
-                               target="_blank" 
-                               class="ms-auto btn btn-primary btn-sm" 
-                               role="button"
-                               aria-label="View courthouse information in external site">
-                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
-                                External Link
-                            </a>
-                        </cfif>
-                        </cfoutput>
+                        
                     </h6>
                 </div>
                 <div class="card-body">
 
-                    <cfoutput>
-                    <cfif case_details.court_name_pacer neq "">
-                        <div class="alert alert-info d-flex align-items-center">
-                            <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
-                            <strong>#case_details.court_name_pacer#</strong>
-                        </div>
-                    <cfelse>
+                    
                         <div class="d-flex align-items-center mb-3">
-                            <img src="#courthouse.image_url#" 
+                            <img src="" 
                                  alt="Courthouse" 
                                  class="courthouse-image rounded-circle me-3">
                             <div>
-                                <h6 class="mb-1 ">#courthouse.court_name#</h6>
+                                <h6 class="mb-1 "></h6>
                                 <p class="mb-0 text-muted">
                                     <i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>
-                                    #courthouse.address#<br>
-                                    #courthouse.city#, #courthouse.state# #courthouse.zip#
+                                    <br>
+                                    , 
                                 </p>
                             </div>
                         </div>
@@ -561,65 +453,36 @@ ORDER BY r.created_at DESC
                                 <i class="fas fa-map me-1 text-muted" aria-hidden="true"></i>
                                 County
                             </dt>
-                            <dd class="col-sm-8 mb-2">#courthouse.county_name#</dd>
+                            <dd class="col-sm-8 mb-2"></dd>
 
                             <dt class="col-sm-4 mb-0">
                                 <i class="fas fa-id-card me-1 text-muted" aria-hidden="true"></i>
                                 Court ID
                             </dt>
-                            <dd class="col-sm-8 mb-0">#courthouse.court_code#</dd>
+                            <dd class="col-sm-8 mb-0"></dd>
                         </dl>
-                    </cfif>
-                    </cfoutput>
+                    
                 </div>
             </div>
         </div>
 
     </div>
-<!--- Set active tab variables --->
-<cfset links_tab_status = "">
-<cfset dockets_tab_status = "">
-<cfset hearings_tab_status = "">
-<cfset log_tab_status = "">
-<cfset celebrities_tab_status = "">
 
 
-<!--- Initialize all tab statuses --->
-<cfset summary_tab_status = "">
-<cfset links_tab_status = "">
-<cfset dockets_tab_status = "">
-<cfset hearings_tab_status = "">
-<cfset log_tab_status = "">
-<cfset celebrities_tab_status = "">
-<cfset subscribers_tab_status = "">
-
-<!--- Handle tab switching --->
-<cfif structKeyExists(url, "tab")>
-    <cfset tabName = lcase(trim(url.tab))>
-    <cfif listFind("summary,links,dockets,hearings,log,celebrities,alerts", tabName)>
-        <!-- fix: dynamic variable assignment -->
-        <cfset variables[tabName & "_tab_status"] = "active">
-    <cfelse>
-        <cfset summary_tab_status = "active">
-    </cfif>
-<cfelse>
-    <!--- Default to Summary tab for consistent behavior --->
-    <cfset summary_tab_status = "active">
-</cfif>
 
 
-<!--- Enhanced Tabs Section --->
+
 <div class="info-card shadow-sm mt-4">
     <div class="card-body p-0">
 
-        <!--- Tab headings with enhanced styling --->
-        <cfoutput>
+        
+        
         <ul class="nav nav-tabs" id="caseTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link #summary_tab_status#" 
+                <a class="nav-link active" 
                    id="summary-tab" 
                    data-bs-toggle="tab" 
-                   href="##summary" 
+                   href="#summary" 
                    role="tab"
                    aria-controls="summary"
                    aria-label="View case summary">
@@ -628,10 +491,10 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link #links_tab_status#" 
+                <a class="nav-link " 
                    id="links-tab" 
                    data-bs-toggle="tab" 
-                   href="##links" 
+                   href="#links" 
                    role="tab"
                    aria-controls="links"
                    aria-label="View case links">
@@ -640,10 +503,10 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link #dockets_tab_status#" 
+                <a class="nav-link " 
                    id="dockets-tab" 
                    data-bs-toggle="tab" 
-                   href="##dockets" 
+                   href="#dockets" 
                    role="tab"
                    aria-controls="dockets"
                    aria-label="View case dockets">
@@ -652,10 +515,10 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link #hearings_tab_status#" 
+                <a class="nav-link " 
                    id="hearings-tab" 
                    data-bs-toggle="tab" 
-                   href="##hearings" 
+                   href="#hearings" 
                    role="tab"
                    aria-controls="hearings"
                    aria-label="View case hearings">
@@ -664,10 +527,10 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link #log_tab_status#" 
+                <a class="nav-link " 
                    id="log-tab" 
                    data-bs-toggle="tab" 
-                   href="##log" 
+                   href="#log" 
                    role="tab"
                    aria-controls="log"
                    aria-label="View case activity log">
@@ -676,10 +539,10 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link #celebrities_tab_status#" 
+                <a class="nav-link " 
                    id="celebrities-tab" 
                    data-bs-toggle="tab" 
-                   href="##celebrities" 
+                   href="#celebrities" 
                    role="tab"
                    aria-controls="celebrities"
                    aria-label="View celebrity matches">
@@ -688,10 +551,10 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link #subscribers_tab_status#" 
+                <a class="nav-link " 
                    id="alerts-tab" 
                    data-bs-toggle="tab" 
-                   href="##alerts" 
+                   href="#alerts" 
                    role="tab"
                    aria-controls="alerts"
                    aria-label="View case subscribers">
@@ -700,31 +563,22 @@ ORDER BY r.created_at DESC
                 </a>
             </li>
         </ul>
-        </cfoutput>
+        
 
-        <!--- Tab content panes with enhanced styling --->
+        
         <div class="tab-content mt-0" id="caseTabsContent">
-            <cfoutput>
-            <div class="tab-pane p-4 #summary_tab_status#" id="summary" role="tabpanel" aria-labelledby="summary-tab">
-                <cfif len(trim(case_details.summarize_html))>
-                    <div class="summary-content">
-                        #REReplace(
-                            case_details.summarize_html,
-                            "<h3(.*?)>(.*?)</h3>",
-                            "<h5\1>\2</h5>",
-                            "all"
-                        )#
-                    </div>
-                <cfelse>
+            
+            <div class="tab-pane p-4 active" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                
                     <div class="empty-state">
                         <i class="fas fa-file-text" aria-hidden="true"></i>
                         <h5>No Summary Available</h5>
                         <p>No summary has been generated for this case yet.</p>
                     </div>
-                </cfif>
+                
             </div>
 
-            <div class="tab-pane p-4 #links_tab_status#" id="links" role="tabpanel" aria-labelledby="links-tab">
+            <div class="tab-pane p-4 " id="links" role="tabpanel" aria-labelledby="links-tab">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0">
                         <i class="fas fa-link me-2 text-primary" aria-hidden="true"></i>
@@ -735,76 +589,19 @@ ORDER BY r.created_at DESC
                         Add Link
                     </button>
                 </div>
-            </cfoutput>
-                <cfif links.recordcount GT 0>
-                    <div class="data-table-wrapper">
-                        <table id="linksTable" class="table table-striped table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col">
-                                        <i class="fas fa-heading me-1" aria-hidden="true"></i>
-                                        Title
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-tag me-1" aria-hidden="true"></i>
-                                        Category
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-user me-1" aria-hidden="true"></i>
-                                        Created By
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-calendar me-1" aria-hidden="true"></i>
-                                        Date Added
-                                    </th>
-                                    <th scope="col" class="text-center">
-                                        <i class="fas fa-cogs me-1" aria-hidden="true"></i>
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <cfloop query="links">
-                                <cfoutput>
-                                    <tr>
-                                        <td>
-                                            <a href="#case_url#" target="_blank" class="text-decoration-none d-flex align-items-center">
-                                                <i class="fas fa-external-link-alt me-2 text-muted" aria-hidden="true"></i>
-                                                #title#
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">#category#</span>
-                                        </td>
-                                        <td>#fk_user#</td>
-                                        <td>#dateFormat(created_at, "mm/dd/yyyy")#</td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-danger" 
-                                                    title="Delete link" 
-                                                    onclick="deleteLink(#id#)"
-                                                    aria-label="Delete link">
-                                                <i class="fas fa-trash" aria-hidden="true"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </cfoutput>
-                                </cfloop>
-                            </tbody>
-                        </table>
-                    </div>
-                <cfelse>
+            
                     <div class="empty-state">
                         <i class="fas fa-link" aria-hidden="true"></i>
                         <h5>No Links Found</h5>
                         <p>No links are associated with this case yet.</p>
                     </div>
-                </cfif>
+                
             </div>
 
 
 
 
-            <!--- Dockets Tab --->
+            
             <div class="tab-pane p-4 #dockets_tab_status#" id="dockets" role="tabpanel" aria-labelledby="dockets-tab">
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
@@ -813,186 +610,19 @@ ORDER BY r.created_at DESC
                     </h6>
                 </div>
 
-                <cfif dockets.recordcount GT 0>
-                    <div class="data-table-wrapper">
-                        <table id="docketTable" class="table table-striped table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col">
-                                        <i class="fas fa-hashtag me-1" aria-hidden="true"></i>
-                                        Event No
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-calendar me-1" aria-hidden="true"></i>
-                                        Date
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
-                                        Description
-                                    </th>
-                                    <th scope="col" class="text-center">
-                                        <i class="fas fa-download me-1" aria-hidden="true"></i>
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <cfloop query="dockets">
-                                <cfoutput>
-                                    <tr id="docket-row-#dockets.id#">
-                                        <td class="">#event_no#</td>
-                                        <td data-order="#dateFormat(event_date, 'yyyy-mm-dd')#">
-                                            #dateFormat(event_date, 'mm/dd/yyyy')#
-                                        </td>
-                                        <td><strong>#event_description# </strong><cfif len(event_description) AND len(summarize)><BR></cfif>#summarize#<cfif len(summarize) EQ 0>#summary_ai#</cfif></td>
-                                        <td class="text-center">
-                                            <div class="pdf-actions" id="button-container-#dockets.id#">
-                                                <!--- Summary AI button --->
-                                                <cfif len(dockets.summary_ai_html)>
-                                                    <button class="btn btn-sm btn-info btn-summary me-1"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="##summaryModal#dockets.id#"
-                                                            title="View AI Summary"
-                                                            aria-label="View AI Summary for event #dockets.event_no#">
-                                                        <i class="fas fa-brain" aria-hidden="true"></i>
-                                                    </button>
-                                                </cfif>
-                                                <!--- Single PDF icon that opens comprehensive modal --->
-                                                <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
-                                                    <button class="btn btn-sm btn-success btn-pdf"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="##documentModal#dockets.id#"
-                                                            title="View Document: #dockets.pdf_title#"
-                                                            aria-label="View Document: #dockets.pdf_title#">
-                                                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
-                                                    </button>
-                                                <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
-                                                    <!--- Legacy PACER download for documents without PDF path --->
-                                                    <button class="btn btn-sm btn-primary btn-pdf get-pacer-pdf"
-                                                            data-doc-id="#dockets.id#"
-                                                            data-event-url="#dockets.event_url#"
-                                                            data-case-id="#dockets.fk_cases#"
-                                                            title="Download: #dockets.pdf_title#"
-                                                            aria-label="Download PDF: #dockets.pdf_title#">
-                                                        <i class="fas fa-download" aria-hidden="true"></i>
-                                                    </button>
-                                                </cfif>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </cfoutput>
-                                </cfloop>
-                            </tbody>
-                        </table>
-                    </div>
-                <cfelse>
+                
                     <div class="empty-state">
                         <i class="fas fa-file-alt" aria-hidden="true"></i>
                         <h5>No Dockets Found</h5>
                         <p>No docket entries are associated with this case yet.</p>
                     </div>
-                </cfif>
+                
             </div>
  
-            <!--- Removed legacy Document Modals block that used <cfoutput query="dockets"> to avoid nested query-driven tag error.
-                  Rebuild minimal modals safely using a single query-driven <cfloop>. --->
-            <cfif dockets.recordcount GT 0>
-                <!-- Build attachment map once (avoid nested query-driven loops) -->
-                <cfset attachmentMap = structNew()> 
-                <cfif attachments.recordcount GT 0>
-                    <cfloop query="attachments">
-                        <cfset evId = attachments.fk_case_event>
-                        <cfif NOT structKeyExists(attachmentMap, evId)>
-                            <cfset attachmentMap[evId] = []>
-                        </cfif>
-                        <cfset arrayAppend(attachmentMap[evId], {
-                            title = attachments.pdf_title,
-                            path = attachments.pdf_path,
-                            type = attachments.pdf_type
-                        })>
-                    </cfloop>
-                </cfif>
+            
+            
 
-                <cfset docModalsHtml = "">
-                <cfset summaryModalsHtml = "">
-                <cfloop query="dockets">
-                    <!--- Generate summary modal if summary_ai exists --->
-                    <cfif len(summary_ai_html)>
-                        <cfset summaryModalHtml = '' &
-                            '<div class="modal fade" id="summaryModal' & dockets.id & '" tabindex="-1" aria-hidden="true">' &
-                            '<div class="modal-dialog modal-lg modal-dialog-scrollable">' &
-                            '<div class="modal-content">' &
-                            '<div class="modal-header">' &
-                            '<h5 class="modal-title">AI Summary - Event ##' & dockets.event_no & '</h5>' &
-                            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
-                            '</div>' &
-                            '<div class="modal-body">' &
-                            '<div class="mb-3"><strong>Event:</strong> ' & htmlEditFormat(dockets.event_description) & '</div>' &
-                            '<div class="summary-content">' & dockets.summary_ai_html & '</div>' &
-                            '</div>' &
-                            '<div class="modal-footer">' &
-                            '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' &
-                            '</div>' &
-                            '</div>' &
-                            '</div>' &
-                            '</div>'>
-                        <cfset summaryModalsHtml &= summaryModalHtml>
-                    </cfif>
-                    
-                    <!--- Generate document modal if applicable --->
-                    <cfif len(pdf_path) OR len(summary_ai_html)>
-                        <cfset summarySection = ( len(summary_ai_html) ? summary_ai_html : '<p class="text-muted mb-0">No summary available.</p>' )>
-                        <!-- Build attachments section from precomputed map -->
-                        <cfset attachmentsSection = "">
-                        <cfif structKeyExists(attachmentMap, dockets.id)>
-                            <cfset attArray = attachmentMap[dockets.id]>
-                            <cfset attListHtml = "">
-                            <cfloop from="1" to="#arrayLen(attArray)#" index="ai">
-                                <cfset att = attArray[ai]>
-                                <cfset attListHtml &= '<li class="mb-1"><i class="fas fa-paperclip me-1" aria-hidden="true"></i><a href="' & att.path & '" target="_blank">' & htmlEditFormat(att.title) & '</a></li>'>
-                            </cfloop>
-                            <cfset attachmentsSection = '<hr><h6 class="mt-3">Attachments</h6><ul class="list-unstyled mb-0">' & attListHtml & '</ul>'>
-                        </cfif>
-
-                        <cfset pdfColumn = ''>
-                        <cfif len(pdf_path)>
-                            <cfset pdfColumn = '<div class="text-center">' &
-                                '<div class="display-1 text-danger mb-3"><i class="fas fa-file-pdf" aria-hidden="true"></i></div>' &
-                                '<a href="' & pdf_path & '" target="_blank" class="btn btn-outline-primary w-100 mb-2"><i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>Open PDF</a>' &
-                                '<small class="text-muted d-block">Opens in new tab</small>' &
-                                '</div>'>
-                        <cfelse>
-                            <cfset pdfColumn = '<div class="text-center text-muted">' &
-                                '<div class="display-1 mb-3"><i class="fas fa-file" aria-hidden="true"></i></div>' &
-                                '<p class="small mb-0">No PDF Available</p>' &
-                                '</div>'>
-                        </cfif>
-                        <cfset pdfLinkButton = len(pdf_path) ? ('<a href="' & pdf_path & '" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf me-1" aria-hidden="true"></i> Open PDF</a>') : ''>
-                        <cfset modalHtml = '' &
-                            '<div class="modal fade" id="documentModal' & dockets.id & '" tabindex="-1" aria-hidden="true">' &
-                            '<div class="modal-dialog modal-xl modal-dialog-scrollable">' &
-                            '<div class="modal-content">' &
-                            '<div class="modal-header">' &
-                            '<h5 class="modal-title">' & htmlEditFormat(pdf_title) & '</h5>' &
-                            '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' &
-                            '</div>' &
-                            '<div class="modal-body">' &
-                            '<div class="row">' &
-                                '<div class="col-md-4 border-end mb-3 mb-md-0">' & pdfColumn & '</div>' &
-                                '<div class="col-md-8"><div class="doc-summary">' & summarySection & '</div>' & attachmentsSection & '</div>' &
-                            '</div>' &
-                            '</div>' &
-                            '<div class="modal-footer">' & pdfLinkButton & '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' & '</div>' &
-                            '</div>' &
-                            '</div>' &
-                            '</div>'>
-                        <cfset docModalsHtml &= modalHtml>
-                    </cfif>
-                </cfloop>
-                <cfoutput>#summaryModalsHtml##docModalsHtml#</cfoutput>
-            </cfif>
-
-            <!--- Hearings Tab --->
+            
             <div class="tab-pane p-4 #hearings_tab_status#" id="hearings" role="tabpanel" aria-labelledby="hearings-tab">
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
@@ -1001,61 +631,17 @@ ORDER BY r.created_at DESC
                     </h6>
                 </div>
 
-                <cfif hearings.recordcount GT 0>
-                    <div class="data-table-wrapper">
-                        <table id="hearingTable" class="table table-striped table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col">
-                                        <i class="fas fa-calendar me-1" aria-hidden="true"></i>
-                                        Date
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-clock me-1" aria-hidden="true"></i>
-                                        Time
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-tag me-1" aria-hidden="true"></i>
-                                        Type
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
-                                        Description
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-building me-1" aria-hidden="true"></i>
-                                        Department
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <cfloop query="hearings">
-                                <cfoutput>
-                                    <tr>
-                                        <td>#dateFormat(date, "mm/dd/yyyy")#</td>
-                                        <td>#timeFormat(time, "h:mm tt")#</td>
-                                        <td>
-                                            <span class="badge bg-info text-dark">#type#</span>
-                                        </td>
-                                        <td>#description#</td>
-                                        <td>#department#</td>
-                                    </tr>
-                                </cfoutput>
-                                </cfloop>
-                            </tbody>
-                        </table>
-                    </div>
-                <cfelse>
+                
                     <div class="empty-state">
                         <i class="fas fa-gavel" aria-hidden="true"></i>
                         <h5>No Hearings Scheduled</h5>
                         <p>No hearings are scheduled for this case.</p>
                     </div>
-                </cfif>
+                
             </div>
    
 
-            <!--- Log Tab --->
+            
             <div class="tab-pane p-4 #log_tab_status#" id="log" role="tabpanel" aria-labelledby="log-tab">
                 <div class="d-flex align-items-center mb-3">
                     <h6 class="mb-0">
@@ -1064,79 +650,16 @@ ORDER BY r.created_at DESC
                     </h6>
                 </div>
 
-                <cfif logs.recordcount GT 0>
-                    <div class="data-table-wrapper">
-                        <table id="logTable" class="table table-striped table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col">
-                                        <i class="fas fa-check-circle me-1" aria-hidden="true"></i>
-                                        Completed
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-tasks me-1" aria-hidden="true"></i>
-                                        Task
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-info-circle me-1" aria-hidden="true"></i>
-                                        Status
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-clock me-1" aria-hidden="true"></i>
-                                        Duration
-                                    </th>
-                                    <th scope="col">
-                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
-                                        Description
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <cfloop query="logs">
-                                <cfoutput>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex flex-column">
-                                                <span class="">#dateFormat(timestamp_ended, "mm/dd/yyyy")#</span>
-                                                <small class="text-muted">#timeFormat(timestamp_ended, "hh:mm tt")#</small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">#task_name#</span>
-                                        </td>
-                                        <td>
-                                            <cfif status EQ "Success">
-                                                <span class="badge bg-success">#status#</span>
-                                            <cfelseif status EQ "Failed">
-                                                <span class="badge bg-danger">#status#</span>
-                                            <cfelse>
-                                                <span class="badge bg-secondary">#status#</span>
-                                            </cfif>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info text-dark">#duration_mmss#</span>
-                                        </td>
-                                        <td>
-                                            <div class="text-truncate" style="max-width: 300px;" title="#HTMLEditFormat(summary)#">
-                                                #HTMLEditFormat(summary)#
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </cfoutput>
-                                </cfloop>
-                            </tbody>
-                        </table>
-                    </div>
-                <cfelse>
+                
                     <div class="empty-state">
                         <i class="fas fa-history" aria-hidden="true"></i>
                         <h5>No Activity Log</h5>
                         <p>No activity has been logged for this case yet.</p>
                     </div>
-                </cfif>
+                
             </div>
 
-            <!--- Subscribers Tab --->
+            
             <div class="tab-pane p-4 #subscribers_tab_status#" id="alerts" role="tabpanel" aria-labelledby="alerts-tab">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0">
@@ -1154,11 +677,13 @@ ORDER BY r.created_at DESC
                             </label>
                             <select id="addUserSelect" class="form-select" aria-label="Select user to add as subscriber">
                                 <option value="">Choose a user to add...</option>
-                                <cfloop query="eligible_users">
-                                <cfoutput>
-                                    <option value="#id#">#display#</option>
-                                </cfoutput>
-                                </cfloop>
+                                
+                                    <option value="AndrewsBr">Brian Andrews</option>
+                                
+                                    <option value="xjevans">Janet Evans</option>
+                                
+                                    <option value="xsfavre">Susan Favre</option>
+                                
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -1172,7 +697,7 @@ ORDER BY r.created_at DESC
                     </div>
                 </div>
 
-                <cfif subscribers.recordcount GT 0>
+                
                     <div class="data-table-wrapper">
                         <table id="alertsTable" class="table table-striped table-hover mb-0">
                             <thead class="table-dark">
@@ -1196,48 +721,140 @@ ORDER BY r.created_at DESC
                                 </tr>
                             </thead>
                             <tbody>
-                                <cfloop query="subscribers">
-                                <cfoutput>
-                                    <tr id="subscriberRow_#subscribers.id#">
+                                
+                                    <tr id="subscriberRow_264221">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
-                                                #fullname#
+                                                Marlee Chartash
                                             </div>
                                         </td>
                                         <td>
-                                            <a href="mailto:#email#" class="text-decoration-none">
-                                                #email#
+                                            <a href="mailto:Marlee.chartash@tmz.com" class="text-decoration-none">
+                                                Marlee.chartash@tmz.com
                                             </a>
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">#userRole#</span>
+                                            <span class="badge bg-secondary">user</span>
                                         </td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-danger" 
-                                                    onclick="removeSubscriber(#id#)"
+                                                    onclick="removeSubscriber(264221)"
                                                     title="Remove subscriber"
-                                                    aria-label="Remove #fullname# from subscribers">
+                                                    aria-label="Remove Marlee Chartash from subscribers">
                                                 <i class="fas fa-trash" aria-hidden="true"></i>
                                             </button>
                                         </td>
                                     </tr>
-                                </cfoutput>
-                                </cfloop>
+                                
+                                    <tr id="subscriberRow_264219">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
+                                                Jennifer Delgado
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:Jennifer.Delgado@tmz.com" class="text-decoration-none">
+                                                Jennifer.Delgado@tmz.com
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">user</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeSubscriber(264219)"
+                                                    title="Remove subscriber"
+                                                    aria-label="Remove Jennifer Delgado from subscribers">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                
+                                    <tr id="subscriberRow_264220">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
+                                                Kevin King
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:Kevin.King@tmz.com" class="text-decoration-none">
+                                                Kevin.King@tmz.com
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">admin</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeSubscriber(264220)"
+                                                    title="Remove subscriber"
+                                                    aria-label="Remove Kevin King from subscribers">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                
+                                    <tr id="subscriberRow_264222">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
+                                                Priscilla Phan
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:Priscilla.Hwang@tmz.com" class="text-decoration-none">
+                                                Priscilla.Hwang@tmz.com
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">user</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeSubscriber(264222)"
+                                                    title="Remove subscriber"
+                                                    aria-label="Remove Priscilla Phan from subscribers">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                
+                                    <tr id="subscriberRow_264223">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2 text-muted" aria-hidden="true"></i>
+                                                Shirley Troche
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:Shirley.Troche@tmz.com" class="text-decoration-none">
+                                                Shirley.Troche@tmz.com
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">user</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeSubscriber(264223)"
+                                                    title="Remove subscriber"
+                                                    aria-label="Remove Shirley Troche from subscribers">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                
                             </tbody>
                         </table>
                     </div>
-                <cfelse>
-                    <div class="empty-state">
-                        <i class="fas fa-users" aria-hidden="true"></i>
-                        <h5>No Subscribers</h5>
-                        <p>No users are subscribed to receive notifications for this case.</p>
-                    </div>
-                </cfif>
+                
             </div>
 
 
-            <!--- Celebrities Tab --->
+            
             <div class="tab-pane p-4 #celebrities_tab_status#" id="celebrities" role="tabpanel" aria-labelledby="celebrities-tab">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0">
@@ -1276,8 +893,8 @@ ORDER BY r.created_at DESC
                     </div>
                 </div>
 
-                <!--- Celebrity matches table --->
-                <div id="celebrityTableWrapper" <cfif celebrities.recordcount EQ 0>style="display:none;"</cfif>>
+                
+                <div id="celebrityTableWrapper" style="display:none;">
                     <div class="data-table-wrapper">
                         <table id="celebTable" class="table table-striped table-hover mb-0">
                             <thead class="table-dark">
@@ -1309,72 +926,19 @@ ORDER BY r.created_at DESC
                                 </tr>
                             </thead>
                             <tbody>
-                                <cfloop query="celebrities">
-                                <cfoutput>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-star me-2 text-warning" aria-hidden="true"></i>
-                                                #celebrity_name#
-                                                <a href="celebrity_details.cfm?id=#celebrities.celebrity_id#" 
-                                                   target="_blank" 
-                                                   class="ms-2 text-decoration-none btn btn-sm btn-outline-primary"
-                                                   title="View celebrity details"
-                                                   aria-label="View details for #celebrity_name#">
-                                                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <cfif Match_status EQ "Verified">
-                                                <span class="badge bg-success">#Match_status#</span>
-                                            <cfelseif Match_status EQ "Pending">
-                                                <span class="badge bg-warning text-dark">#Match_status#</span>
-                                            <cfelse>
-                                                <span class="badge bg-secondary">#Match_status#</span>
-                                            </cfif>
-                                        </td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar" 
-                                                     role="progressbar" 
-                                                     style="width: #numberFormat(probability_score, '0.00')#%"
-                                                     aria-valuenow="#numberFormat(probability_score, '0.00')#" 
-                                                     aria-valuemin="0" 
-                                                     aria-valuemax="100">
-                                                    #numberFormat(probability_score, "0.00")#%
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info text-dark">#numberFormat(priority_score, "0.00")#</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-dark">#numberFormat(ranking_score, "0.00")#</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-danger" 
-                                                    title="Remove celebrity match" 
-                                                    onclick="deleteCelebrityMatch('#celebrities.id#')"
-                                                    aria-label="Remove #celebrity_name# from matches">
-                                                <i class="fas fa-trash" aria-hidden="true"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </cfoutput>
-                                </cfloop>
+                                
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <cfif celebrities.recordcount EQ 0>
+                
                     <div class="empty-state">
                         <i class="fas fa-star" aria-hidden="true"></i>
                         <h5>No Celebrity Matches</h5>
                         <p>No celebrities have been matched to this case yet.</p>
                     </div>
-                </cfif>
+                
             </div>
 
         </div>
@@ -1629,7 +1193,7 @@ $(document).ready(function() {
     }
 
     // Celebrity Search Functionality
-    const caseId = $('#case_details input[name="fk_case"]').val() || <cfoutput>#case_details.id#</cfoutput>;
+    const caseId = $('#case_details input[name="fk_case"]').val() || 200922;
 
     // Initialize Select2 for celebrity search
     $('#celebritySearch').select2({
@@ -1760,7 +1324,7 @@ $(document).ready(function() {
 
     // Subscriber Management
     document.getElementById('addSubscriberBtn').addEventListener('click', function () {
-        const caseId = <cfoutput>#case_details.id#</cfoutput>;
+        const caseId = 200922;
         const select = document.getElementById('addUserSelect');
         const username = select.value;
 
@@ -2005,14 +1569,29 @@ function deleteCelebrityMatch(matchId) {
 }
 </script>
 
-        </div> <!--- /.tab-content --->
+        </div> 
     </div>
 </div>
 
-    </div> <!--- /.container --->
-</div> <!--- /.container-fluid --->
+    </div> 
+</div> 
 
-<cfinclude template="footer_script.cfm">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+
+
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 
 <script>
 // Enhanced case status update with better UX
@@ -2210,7 +1789,7 @@ function copyToClipboard(elementId) {
 }
 </script>
 
-<!--- Add Link Modal --->
+
 <div class="modal" id="addLinkModal" tabindex="-1" aria-labelledby="addLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form id="addLinkForm">
@@ -2220,8 +1799,8 @@ function copyToClipboard(elementId) {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <input type="hidden" name="fk_case" value="<cfoutput>#case_details.id#</cfoutput>">
-          <input type="hidden" name="fk_user" value="<cfoutput>#fk_user#</cfoutput>">
+          <input type="hidden" name="fk_case" value="200922">
+          <input type="hidden" name="fk_user" value="xkking">
 
           <div class="mb-3">
             <label for="case_url" class="form-label">URL</label>
@@ -2237,7 +1816,7 @@ function copyToClipboard(elementId) {
 </div>
 
 <!-- Minimal modal block for error isolation -->
-<cfoutput>
+
 <div class="modal fade" id="toolCredentialsModal" tabindex="-1" aria-labelledby="toolCredentialsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="modal-content">
@@ -2249,14 +1828,12 @@ function copyToClipboard(elementId) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <cfif len(trim(case_details.tool_name))>
+        
           <div class="mb-3">
             <strong class="text-muted d-block mb-1">Tool:</strong>
-            <span class="fw-bold">#case_details.tool_name#</span>
+            <span class="fw-bold">Pacer</span>
           </div>
-        </cfif>
         
-        <cfif len(trim(case_details.username))>
           <div class="mb-3">
             <label class="form-label text-muted mb-1">
               <i class="fas fa-user me-1"></i>
@@ -2266,7 +1843,7 @@ function copyToClipboard(elementId) {
               <input type="text" 
                      class="form-control" 
                      id="toolUsername" 
-                     value="#htmlEditFormat(case_details.username)#" 
+                     value="TMZFEDPACER" 
                      readonly>
               <button class="btn btn-outline-secondary" 
                       type="button" 
@@ -2276,9 +1853,7 @@ function copyToClipboard(elementId) {
               </button>
             </div>
           </div>
-        </cfif>
         
-        <cfif len(trim(case_details.pass))>
           <div class="mb-3">
             <label class="form-label text-muted mb-1">
               <i class="fas fa-lock me-1"></i>
@@ -2288,7 +1863,7 @@ function copyToClipboard(elementId) {
               <input type="text" 
                      class="form-control" 
                      id="toolPassword" 
-                     value="#htmlEditFormat(case_details.pass)#" 
+                     value="Courtpacer19D!" 
                      readonly>
               <button class="btn btn-outline-secondary" 
                       type="button" 
@@ -2298,30 +1873,21 @@ function copyToClipboard(elementId) {
               </button>
             </div>
           </div>
-        </cfif>
         
-        <cfif NOT len(trim(case_details.username)) AND NOT len(trim(case_details.pass))>
-          <div class="text-center text-muted">
-            <i class="fas fa-info-circle me-1"></i>
-            No credentials available for this tool.
-          </div>
-        </cfif>
-        
-        <cfif len(trim(case_details.tool_login_url))>
           <div class="mt-3 pt-3 border-top">
-            <a href="#case_details.tool_login_url#" 
+            <a href="https://pacer.login.uscourts.gov/csologin/login.jsf" 
                target="_blank" 
                class="btn btn-primary btn-sm w-100">
               <i class="fas fa-sign-in-alt me-1"></i>
               Open Login Page
             </a>
           </div>
-        </cfif>
+        
       </div>
     </div>
   </div>
 </div>
-</cfoutput>
+
 
 </body>
 </html>
