@@ -273,10 +273,10 @@
             ROW_NUMBER() OVER (PARTITION BY m.fk_case ORDER BY m.ranking_score DESC) as rn
         FROM docketwatch.dbo.case_celebrity_matches m
         INNER JOIN docketwatch.dbo.celebrities cel ON cel.id = m.fk_celebrity
-        WHERE m.match_status <> 'Removed' AND c.case_number <> 'Unfiled'
+        WHERE m.match_status <> 'Removed' 
     ) celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
     
-    WHERE 1=1
+    WHERE 1=1 AND c.case_number <> 'Unfiled'
     <cfif url.status neq "all">
         AND e.status = <cfqueryparam value="#url.status#" cfsqltype="cf_sql_varchar">
     </cfif>
