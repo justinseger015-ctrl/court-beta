@@ -202,3 +202,259 @@ ORDER BY r.created_at DESC
     <cfinclude template="head.cfm">
 
 </head>
+<body>
+
+<cfinclude template="navbar.cfm">
+
+<div class="container-fluid mt-4">
+    <!-- Minimal header section matching search form style -->
+    <div class="container">
+        <div class="card shadow-sm mb-4 filter-card">
+            <div class="card-header">
+                <h6 class="mb-0 d-flex align-items-center">
+                    <i class="fas fa-gavel me-2"></i>Case Details - <cfoutput>#case_details.case_name#</cfoutput>
+                    <div class="ms-auto d-flex gap-2">
+                        <a href="case_update.cfm?id=<cfoutput>#case_details.id#</cfoutput>" 
+                           class="btn btn-primary btn-sm" 
+                           role="button"
+                           aria-label="Update case details">
+                            <i class="fas fa-edit me-1" aria-hidden="true"></i>
+                            Update
+                        </a>
+                        <button onclick="history.back()" 
+                                class="btn btn-outline-secondary btn-sm"
+                                aria-label="Go back to previous page">
+                            <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>
+                            Back
+                        </button>
+                    </div>
+                </h6>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row gx-4">
+        <!--- Case Detail Section --->
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm mb-4 filter-card">
+                <div class="card-header">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-file-alt me-2"></i>Case Information
+                        <cfoutput>
+                        <cfif len(trim(case_details.case_url))>
+                        <a href="#case_details.case_url#" 
+                           target="_blank" 
+                           class="ms-auto btn btn-primary btn-sm" 
+                           role="button"
+                           aria-label="View full case in external site">
+                            <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
+                            External Link
+                        </a>
+                        </cfif>
+                        </cfoutput>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Case Number:</strong> <cfoutput>#case_details.case_number#</cfoutput><br>
+                        <strong>Case Name:</strong> <cfoutput>#case_details.case_name#</cfoutput>
+                    </div>
+
+                    <dl class="row mb-3">
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-flag me-1 text-muted" aria-hidden="true"></i>
+                            Status
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>
+                            <span id="currentStatus" class="status-badge status-#lcase(case_details.status)#">
+                                <cfif case_details.status EQ "Review">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                <cfelseif case_details.status EQ "Tracked">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                <cfelseif case_details.status EQ "Removed">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </cfif>
+                                #case_details.status#
+                            </span>
+                            </cfoutput>
+
+                            <div class="btn-group ms-2" role="group" aria-label="Status change actions">
+                                <cfoutput>
+                                <cfif case_details.status EQ "Review">
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Removed')"
+                                            aria-label="Remove case from tracking">
+                                        <i class="fas fa-trash me-1" aria-hidden="true"></i>
+                                        Remove
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Tracked')"
+                                            aria-label="Start tracking case">
+                                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                                        Track
+                                    </button>
+                                <cfelseif case_details.status EQ "Tracked">
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Review')"
+                                            aria-label="Set case to review status">
+                                        <i class="fas fa-search me-1" aria-hidden="true"></i>
+                                        Review
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Removed')"
+                                            aria-label="Remove case from tracking">
+                                        <i class="fas fa-trash me-1" aria-hidden="true"></i>
+                                        Remove
+                                    </button>
+                                <cfelseif case_details.status EQ "Removed">
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Review')"
+                                            aria-label="Set case to review status">
+                                        <i class="fas fa-search me-1" aria-hidden="true"></i>
+                                        Review
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="updateCaseStatus(#case_details.id#, 'Tracked')"
+                                            aria-label="Start tracking case">
+                                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                                        Track
+                                    </button>
+                                </cfif>
+                                </cfoutput>
+                            </div>
+                        </dd>
+
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-folder-open me-1 text-muted" aria-hidden="true"></i>
+                            Case Type
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <cfoutput>#case_details.case_type#</cfoutput>
+                        </dd>
+
+                        <cfoutput>
+                        <cfif len(trim(case_details.tool_name))>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-tools me-1 text-muted" aria-hidden="true"></i>
+                            Tool
+                        </dt>
+                        <dd class="col-sm-8 mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <cfif len(trim(case_details.case_url))>
+                                        <a href="#case_details.case_url#" target="_blank" class="text-decoration-none">
+                                            #case_details.tool_name#
+                                            <i class="fas fa-external-link-alt ms-1 text-muted" aria-hidden="true"></i>
+                                        </a>
+                                    <cfelse>
+                                        #case_details.tool_name#
+                                    </cfif>
+                                </div>
+                                <cfif len(trim(case_details.username)) OR len(trim(case_details.pass))>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-secondary ms-2" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="##toolCredentialsModal"
+                                            title="View login credentials"
+                                            aria-label="View tool login credentials">
+                                        <i class="fas fa-key" aria-hidden="true"></i>
+                                    </button>
+                                </cfif>
+                            </div>
+                        </dd>
+                        </cfif>
+                        </cfoutput>
+
+                        <cfoutput>
+                        <cfif len(trim(case_details.details))>
+                        <dt class="col-sm-4 mb-2">
+                            <i class="fas fa-tag me-1 text-muted" aria-hidden="true"></i>
+                            Category
+                        </dt>
+                        <dd class="col-sm-8 mb-0">
+                            #htmlEditFormat(case_details.details)#
+                        </dd>
+                        </cfif>
+                        </cfoutput>
+                    </dl>
+                    
+                    <!--- Timestamp info --->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-plus me-1" aria-hidden="true"></i>
+                            Created: <cfoutput>#dateFormat(case_details.created_at, "mm/dd/yyyy")#</cfoutput>
+                            &nbsp;&nbsp;&nbsp;
+                            <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                            Last Updated: <cfoutput>#dateFormat(case_details.last_updated, "mm/dd/yyyy")# at #timeFormat(case_details.last_updated, "h:mm tt")#</cfoutput>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--- Courthouse Info Section --->
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm mb-4 filter-card">
+                <div class="card-header">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-university me-2"></i>Courthouse Information
+                        <cfoutput>
+                        <cfif len(trim(courthouse.court_url))>
+                            <a href="#courthouse.court_url#" 
+                               target="_blank" 
+                               class="ms-auto btn btn-primary btn-sm" 
+                               role="button"
+                               aria-label="View courthouse information in external site">
+                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
+                                External Link
+                            </a>
+                        </cfif>
+                        </cfoutput>
+                    </h6>
+                </div>
+                <div class="card-body">
+
+                    <cfoutput>
+                    <cfif case_details.court_name_pacer neq "">
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
+                            <strong>#case_details.court_name_pacer#</strong>
+                        </div>
+                    <cfelse>
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="#courthouse.image_url#" 
+                                 alt="Courthouse" 
+                                 class="courthouse-image rounded-circle me-3">
+                            <div>
+                                <h6 class="mb-1 ">#courthouse.court_name#</h6>
+                                <p class="mb-0 text-muted">
+                                    <i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>
+                                    #courthouse.address#<br>
+                                    #courthouse.city#, #courthouse.state# #courthouse.zip#
+                                </p>
+                            </div>
+                        </div>
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4 mb-2">
+                                <i class="fas fa-map me-1 text-muted" aria-hidden="true"></i>
+                                County
+                            </dt>
+                            <dd class="col-sm-8 mb-2">#courthouse.county_name#</dd>
+
+                            <dt class="col-sm-4 mb-0">
+                                <i class="fas fa-id-card me-1 text-muted" aria-hidden="true"></i>
+                                Court ID
+                            </dt>
+                            <dd class="col-sm-8 mb-0">#courthouse.court_code#</dd>
+                        </dl>
+                    </cfif>
+                    </cfoutput>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- /.row -->
