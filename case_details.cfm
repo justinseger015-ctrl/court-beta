@@ -735,7 +735,7 @@ ORDER BY r.created_at DESC
                         Add Link
                     </button>
                 </div>
-
+            </cfoutput>
                 <cfif links.recordcount GT 0>
                     <div class="data-table-wrapper">
                         <table id="linksTable" class="table table-striped table-hover mb-0">
