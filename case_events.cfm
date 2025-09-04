@@ -62,6 +62,36 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
+        .case-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--tmz-red);
+            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .case-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(157, 52, 51, 0.4);
+        }
+        
+        .case-avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--tmz-red) 0%, #8b2635 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.3);
+        }
+        
         .event-status {
             position: absolute;
             top: 15px;
@@ -150,12 +180,41 @@
         }
         
         .timestamp-badge {
-            background: var(--tmz-red);
+            background: var(--tmz-dark-gray);
             color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 15px;
             font-size: 0.8rem;
             font-weight: 500;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-new {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+        
+        .status-rss {
+            background: linear-gradient(45deg, #ffa726, #ff9800);
+            color: white;
+        }
+        
+        .status-rss-pending {
+            background: linear-gradient(45deg, #ffeb3b, #ffc107);
+            color: #333;
+        }
+        
+        .status-null {
+            background: linear-gradient(45deg, #9e9e9e, #757575);
+            color: white;
         }
         
         .acknowledge-btn {
@@ -231,6 +290,17 @@
                 height: 60px;
             }
             
+            .case-avatar {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .case-avatar-placeholder {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
+            }
+            
             .event-status {
                 position: static;
                 margin-bottom: 0.5rem;
@@ -274,6 +344,7 @@
         c.[case_number],
         c.[case_name],
         c.[case_url],
+        c.[case_image_url],
         c.[status] as case_status,
         
         -- Document information
@@ -455,7 +526,20 @@
                             
                             <!--- Avatar Column --->
                             <div class="col-md-2 text-center mb-3">
-                                <cfif len(celebrity_name) AND len(celebrity_image)>
+                                <cfif len(case_image_url)>
+                                    <!--- Case Image Priority --->
+                                    <img src="#case_image_url#" 
+                                         alt="#case_name#" 
+                                         class="case-avatar"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="case-avatar-placeholder" style="display:none;">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <div class="mt-3">
+                                        <strong class="text-primary">Case Image</strong>
+                                    </div>
+                                <cfelseif len(celebrity_name) AND len(celebrity_image)>
+                                    <!--- Celebrity Image Fallback --->
                                     <img src="#celebrity_image#" 
                                          alt="#celebrity_name#" 
                                          class="celebrity-avatar"
@@ -467,6 +551,7 @@
                                         <small class="text-muted">#celebrity_name#</small>
                                     </div>
                                 <cfelseif len(celebrity_name)>
+                                    <!--- Celebrity Name Only --->
                                     <div class="avatar-placeholder">
                                         #left(celebrity_name, 2)#
                                     </div>
@@ -474,6 +559,7 @@
                                         <small class="text-muted">#celebrity_name#</small>
                                     </div>
                                 <cfelse>
+                                    <!--- Generic Legal Case --->
                                     <div class="avatar-placeholder">
                                         <i class="fas fa-gavel"></i>
                                     </div>
@@ -487,10 +573,13 @@
                             <div class="col-md-7">
                                 <!--- Case Information --->
                                 <div class="case-info">
+                                    <!--- Case Name as prominent heading --->
+                                    <h5 class="mb-2 text-dark fw-bold">#case_name#</h5>
+                                    
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="d-flex align-items-center gap-2">
-                                                <span><strong>Case Number:</strong> #case_number#</span>
+                                                <span><strong>Case No.:</strong> #case_number#</span>
                                                 
                                                 <!--- Case Actions Button Group --->
                                                 <div class="btn-group btn-group-sm" role="group">
@@ -522,9 +611,6 @@
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="mt-1">
-                                        <strong>Case Name:</strong> #case_name#
-                                    </div>
                                 </div>
 
                                 <!--- Event Description --->
@@ -541,6 +627,33 @@
                                 <!--- Event Meta Information --->
                                 <div class="event-meta mt-3">
                                     <div class="d-flex flex-wrap gap-3">
+                                        <!--- Status Badge --->
+                                        <div>
+                                            <cfset statusClass = "">
+                                            <cfset statusText = "">
+                                            <cfswitch expression="#lcase(trim(events.status))#">
+                                                <cfcase value="new">
+                                                    <cfset statusClass = "status-new">
+                                                    <cfset statusText = "New">
+                                                </cfcase>
+                                                <cfcase value="rss">
+                                                    <cfset statusClass = "status-rss">
+                                                    <cfset statusText = "RSS">
+                                                </cfcase>
+                                                <cfcase value="rss pending">
+                                                    <cfset statusClass = "status-rss-pending">
+                                                    <cfset statusText = "RSS Pending">
+                                                </cfcase>
+                                                <cfdefaultcase>
+                                                    <cfset statusClass = "status-null">
+                                                    <cfset statusText = "Unknown">
+                                                </cfdefaultcase>
+                                            </cfswitch>
+                                            <span class="status-badge #statusClass#">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                #statusText#
+                                            </span>
+                                        </div>
                                         <div>
                                             <i class="fas fa-calendar me-1"></i>
                                             <strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#
