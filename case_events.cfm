@@ -489,7 +489,26 @@
                                 <div class="case-info">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <strong>Case Number:</strong> #case_number#
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span><strong>Case Number:</strong> #case_number#</span>
+                                                
+                                                <!--- Case Actions Button Group --->
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="case_details.cfm?id=#fk_cases#" 
+                                                       title="View Case Details" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="fa-solid fa-file-lines"></i>
+                                                    </a>
+                                                    <cfif len(case_url)>
+                                                        <a href="#case_url#" 
+                                                           target="_blank" 
+                                                           title="Open Official Court Page" 
+                                                           class="btn btn-outline-secondary btn-sm">
+                                                            <i class="fa-solid fa-up-right-from-square"></i>
+                                                        </a>
+                                                    </cfif>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <strong>Event ##:</strong> 
@@ -510,17 +529,7 @@
 
                                 <!--- Event Description --->
                                 <div class="event-description">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <strong>#event_description#</strong>
-                                        
-                                        <!--- Case Details Link --->
-                                        <a href="case_details.cfm?id=#fk_cases#" 
-                                           title="View Case Details"
-                                           class="btn btn-outline-primary"
-                                           style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                                            <i class="fa-solid fa-file-lines"></i>
-                                        </a>
-                                    </div>
+                                    <strong>#event_description#</strong>
                                     
                                     <cfif len(additional_information)>
                                         <div class="mt-2 text-muted">
@@ -599,18 +608,6 @@
                                             <i class="fas fa-newspaper me-1"></i>
                                             TMZ Article
                                         </button>
-                                    </div>
-
-                                    <!--- Navigation Group --->
-                                    <div class="btn-group-vertical w-100" role="group" aria-label="Navigation Actions">
-                                        <cfif len(case_url)>
-                                            <a href="#case_url#" 
-                                               target="_blank" 
-                                               class="btn btn-outline-secondary btn-action">
-                                                <i class="fas fa-external-link-alt me-1"></i>
-                                                External Link
-                                            </a>
-                                        </cfif>
                                     </div>
                                 </div>
                             </div>
