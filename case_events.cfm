@@ -472,6 +472,14 @@
                                 <!--- Event Description --->
                                 <div class="event-description">
                                     <strong>#event_description#</strong>
+                                    
+                                    <!--- Case Details Link --->
+                                    <a href="case_details.cfm?id=#fk_cases#" 
+                                       title="View Case Details"
+                                       class="btn btn-outline-primary btn-sm ms-2">
+                                        <i class="fa-solid fa-file-lines"></i>
+                                    </a>
+                                    
                                     <cfif len(additional_information)>
                                         <div class="mt-2 text-muted">
                                             #additional_information#
@@ -548,12 +556,6 @@
                                     </button>
 
                                     <!--- Navigation Links --->
-                                    <a href="case_details.cfm?id=#fk_cases#" 
-                                       title="View Case Details"
-                                       class="btn btn-outline-primary btn-action">
-                                        <i class="fa-solid fa-file-lines"></i>
-                                    </a>
-
                                     <cfif len(case_url)>
                                         <a href="#case_url#" 
                                            target="_blank" 
