@@ -83,13 +83,13 @@
             height: 160px;
             border-radius: 12px;
             object-fit: cover;
-            border: 4px solid var(--tmz-red);
-            box-shadow: 0 8px 25px rgba(157, 52, 51, 0.3);
+            border: 2px solid #666666;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .case-avatar:hover {
             transform: scale(1.02);
-            box-shadow: 0 12px 35px rgba(157, 52, 51, 0.4);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
         }
         .case-avatar-placeholder {
             width: 200px;
@@ -605,9 +605,7 @@
 
                                 <div class="event-description">
                                     <strong>#htmlEditFormat(event_description)#</strong>
-                                    <cfif len(additional_information)>
-                                        <div class="mt-2 text-muted">#htmlEditFormat(additional_information)#</div>
-                                    </cfif>
+                              
                                 </div>
 
                                 <div class="event-meta mt-3">
