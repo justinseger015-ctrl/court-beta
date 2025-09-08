@@ -221,8 +221,8 @@
             </div>
         <cfelse>
             <cfoutput query="events">
-            <div class="col-12 mb-4">
-                <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" id="event-#id#">
+                <div class="col-12 mb-4">
+                    <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" id="event-#id#">
 
                     <!-- Acknowledge Button -->
                     <cfif NOT acknowledged>
