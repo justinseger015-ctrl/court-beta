@@ -14,7 +14,7 @@
             SET acknowledged = 1,
                 acknowledged_at = GETDATE(),
                 acknowledged_by = <cfqueryparam value="#getauthuser()#" cfsqltype="cf_sql_varchar">
-            WHERE id = <cfqueryparam value="#form.eventId#" cfsqltype="cf_sql_integer">
+            WHERE id = <cfqueryparam value="#form.eventId#" cfsqltype="cf_sql_varchar">
         </cfquery>
         
         <cfset response.success = true>
