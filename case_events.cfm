@@ -19,7 +19,7 @@
         }
         .event-alert.unacknowledged {
             border-left-color: var(--tmz-red);
-            box-shadow: 0 0 20px rgba(157, 52, 51, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             animation: pulse-glow 2s infinite;
             border-top: 2px solid var(--tmz-red);
         }
@@ -29,9 +29,9 @@
             border-top: 2px solid #28a745;
         }
         @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(157, 52, 51, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(157, 52, 51, 0.5); }
-            100% { box-shadow: 0 0 5px rgba(157, 52, 51, 0.2); }
+            0% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+            50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
+            100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
         }
         .event-alert:hover {
             transform: translateY(-2px);
@@ -40,7 +40,7 @@
         
         .event-alert.unacknowledged:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.4);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
             border-left-color: #ff4444;
         }
         
@@ -103,7 +103,7 @@
             font-size: 2.5rem;
             font-weight: bold;
             border: 4px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
         .event-status {
             position: absolute;
@@ -160,7 +160,7 @@
         }
         .btn-action:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(157, 52, 51, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
         .event-meta {
             font-size: 0.875rem;
@@ -246,7 +246,7 @@
             border-radius: 10px;
             padding: 1.5rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(157, 52, 51, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border-top: 4px solid var(--tmz-red);
         }
         .stat-number {
@@ -271,7 +271,7 @@
         .floating-ack-btn .btn {
             width: 70px;
             height: 70px;
-            box-shadow: 0 4px 20px rgba(157, 52, 51, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             position: relative;
         }
         
