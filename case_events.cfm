@@ -79,22 +79,22 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         .case-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
+            width: 160px;
+            height: 160px;
+            border-radius: 12px;
             object-fit: cover;
             border: 4px solid var(--tmz-red);
-            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.3);
+            box-shadow: 0 8px 25px rgba(157, 52, 51, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .case-avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(157, 52, 51, 0.4);
+            transform: scale(1.02);
+            box-shadow: 0 12px 35px rgba(157, 52, 51, 0.4);
         }
         .case-avatar-placeholder {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
+            width: 160px;
+            height: 160px;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--tmz-red) 0%, #8b2635 100%);
             display: flex;
             align-items: center;
@@ -294,8 +294,8 @@
         @media (max-width: 768px) {
             .action-buttons { justify-content: center; }
             .avatar-placeholder, .celebrity-avatar { width: 60px; height: 60px; }
-            .case-avatar { width: 100px; height: 100px; }
-            .case-avatar-placeholder { width: 100px; height: 100px; font-size: 2rem; }
+            .case-avatar { width: 120px; height: 120px; }
+            .case-avatar-placeholder { width: 120px; height: 120px; font-size: 2rem; }
             .event-status { position: static; margin-bottom: 0.5rem; }
             .acknowledge-btn { position: static; margin-bottom: 0.5rem; }
         }
@@ -495,7 +495,7 @@
             </div>
         </div>
     </div>
-<Cfoutput>
+<CFoutput>
     <div class="d-flex align-items-center justify-content-end mb-3 gap-2">
         <div class="btn-group">
             <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page-1)#" <cfif page EQ 1>style="pointer-events:none;opacity:.5"</cfif>>&laquo; Prev</a>
@@ -503,7 +503,7 @@
             <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page+1)#">Next &raquo;</a>
         </div>
     </div>
-</cfouput>
+</CFoutput>
     <!-- Events List -->
     <div class="row">
      <!---   <cfif events.recordcount EQ 0>
