@@ -288,7 +288,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
+                                     <div class="col-md-6">
                                             <strong>Event ##:</strong>
                                             <span class="event-number-badge">
                                                 <cfif acknowledged>
@@ -305,7 +305,7 @@
                                 <div class="event-description">
                                     <strong>#htmlEditFormat(event_description)#</strong>
                                     <cfif len(additional_information)>
-                                        <div class="mt-2 text-muted">#preserveSingleQuotes(htmlEditFormat(additional_information))#</div>
+                                        <div class="mt-2 text-muted">#htmlEditFormat(additional_information)#</div>
                                     </cfif>
                                 </div>
 
