@@ -495,15 +495,15 @@
             </div>
         </div>
     </div>
-
+<Cfoutput>
     <div class="d-flex align-items-center justify-content-end mb-3 gap-2">
         <div class="btn-group">
             <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page-1)#" <cfif page EQ 1>style="pointer-events:none;opacity:.5"</cfif>>&laquo; Prev</a>
-            <span class="btn btn-outline-secondary btn-sm disabled">Page <cfoutput>#page#</cfoutput></span>
+            <span class="btn btn-outline-secondary btn-sm disabled">Page #page#</span>
             <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page+1)#">Next &raquo;</a>
         </div>
     </div>
-
+</cfouput>
     <!-- Events List -->
     <div class="row">
      <!---   <cfif events.recordcount EQ 0>
