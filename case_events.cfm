@@ -79,7 +79,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         .case-avatar {
-            width: 160px;
+            width: 200px;
             height: 160px;
             border-radius: 12px;
             object-fit: cover;
@@ -92,7 +92,7 @@
             box-shadow: 0 12px 35px rgba(157, 52, 51, 0.4);
         }
         .case-avatar-placeholder {
-            width: 160px;
+            width: 200px;
             height: 160px;
             border-radius: 12px;
             background: linear-gradient(135deg, var(--tmz-red) 0%, #8b2635 100%);
@@ -294,8 +294,8 @@
         @media (max-width: 768px) {
             .action-buttons { justify-content: center; }
             .avatar-placeholder, .celebrity-avatar { width: 60px; height: 60px; }
-            .case-avatar { width: 120px; height: 120px; }
-            .case-avatar-placeholder { width: 120px; height: 120px; font-size: 2rem; }
+            .case-avatar { width: 150px; height: 120px; }
+            .case-avatar-placeholder { width: 150px; height: 120px; font-size: 2rem; }
             .event-status { position: static; margin-bottom: 0.5rem; }
             .acknowledge-btn { position: static; margin-bottom: 0.5rem; }
         }
