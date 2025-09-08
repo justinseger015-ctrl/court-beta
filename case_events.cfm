@@ -5,391 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Case Events - Alert Dashboard</title>
     <cfinclude template="head.cfm">
-    <style>
-        /* Alert Card Styling */
-        .event-alert {
-            border-left: 5px solid var(--tmz-red);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .event-alert.unacknowledged {
-            border-left-color: var(--tmz-red);
-            box-shadow: 0 0 20px rgba(157, 52, 51, 0.3);
-            animation: pulse-glow 2s infinite;
-            border-top: 2px solid var(--tmz-red);
-        }
-        
-        .event-alert.acknowledged {
-            border-left-color: #28a745;
-            opacity: 0.8;
-            border-top: 2px solid #28a745;
-        }
-        
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(157, 52, 51, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(157, 52, 51, 0.5); }
-            100% { box-shadow: 0 0 5px rgba(157, 52, 51, 0.2); }
-        }
-        
-        .event-alert:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .avatar-placeholder {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--tmz-dark-gray) 0%, #1a1a1a 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .celebrity-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        .case-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--tmz-red);
-            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .case-avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(157, 52, 51, 0.4);
-        }
-        
-        .case-avatar-placeholder {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--tmz-red) 0%, #8b2635 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2.5rem;
-            font-weight: bold;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.3);
-        }
-        
-        .event-status {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 10;
-        }
-        
-        .status-new {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            animation: bounce 1s infinite;
-        }
-        
-        .status-acknowledged {
-            background: linear-gradient(45deg, #00d2d3, #54a0ff);
-            color: white;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-        
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .action-buttons .btn-group-vertical {
-            border-radius: 0.375rem;
-            overflow: hidden;
-        }
-        
-        .action-buttons .btn-group-vertical .btn {
-            border-radius: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .action-buttons .btn-group-vertical .btn:first-child {
-            border-top-left-radius: 0.375rem;
-            border-top-right-radius: 0.375rem;
-        }
-        
-        .action-buttons .btn-group-vertical .btn:last-child {
-            border-bottom-left-radius: 0.375rem;
-            border-bottom-right-radius: 0.375rem;
-            border-bottom: none;
-        }
-        
-        .event-number-badge {
-            display: inline-flex;
-            align-items: center;
-            font-weight: 500;
-        }
-        
-        .btn-action {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            border-radius: 0.375rem;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(157, 52, 51, 0.3);
-        }
-        
-        .event-meta {
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-        
-        .case-info {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .event-description {
-            font-size: 1.1rem;
-            line-height: 1.5;
-            margin: 0.5rem 0;
-        }
-        
-        .timestamp-badge {
-            background: var(--tmz-dark-gray);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-new {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-        }
-        
-        .status-rss {
-            background: linear-gradient(45deg, #ffa726, #ff9800);
-            color: white;
-        }
-        
-        .status-rss-pending {
-            background: linear-gradient(45deg, #ffeb3b, #ffc107);
-            color: #333;
-        }
-        
-        .status-null {
-            background: linear-gradient(45deg, #9e9e9e, #757575);
-            color: white;
-        }
-        
-        .acknowledge-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 10;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            background: rgba(157, 52, 51, 0.9);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .acknowledge-btn:hover {
-            background: rgba(157, 52, 51, 1);
-            transform: scale(1.1);
-        }
-        
-        .acknowledge-btn.acknowledged {
-            background: rgba(40, 167, 69, 0.9);
-        }
-        
-        .filter-controls {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(157, 52, 51, 0.2);
-            border-top: 4px solid var(--tmz-red);
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--tmz-red);
-        }
-        
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-        
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .action-buttons {
-                justify-content: center;
-            }
-            
-            .avatar-placeholder,
-            .celebrity-avatar {
-                width: 60px;
-                height: 60px;
-            }
-            
-            .case-avatar {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .case-avatar-placeholder {
-                width: 100px;
-                height: 100px;
-                font-size: 2rem;
-            }
-            
-            .event-status {
-                position: static;
-                margin-bottom: 0.5rem;
-            }
-            
-            .acknowledge-btn {
-                position: static;
-                margin-bottom: 0.5rem;
-            }
-        }
-    </style>
+
 </head>
 <body>
 
 <cfinclude template="navbar.cfm">
 
+<!-- Params and sanitization -->
 <cfparam name="url.status" default="all">
 <cfparam name="url.acknowledged" default="all">
+<cfparam name="url.page" default="1">
+<cfparam name="url.pageSize" default="20">
 
-<!--- Query for case events with celebrity matches --->
-<cfquery name="events" datasource="Reach" maxrows="20">
-    SELECT 
-        e.[id],
-        e.[event_no],
-        e.[event_date],
-        e.[event_description],
-        e.[additional_information],
-        e.[created_at],
-        e.[status],
-        e.[event_result],
-        e.[fk_cases],
-        e.[event_url],
-        e.[isDoc],
-        e.[summarize],
-        e.[tmz_summarize],
-        ISNULL(e.[acknowledged], 0) as acknowledged,
-        e.[acknowledged_at],
-        e.[acknowledged_by],
-        
-        -- Case information
-        c.[case_number],
-        c.[case_name],
-        c.[case_url],
-        c.[case_image_url],
-        c.[status] as case_status,
-        
-        -- Document information
-        d.[pdf_title],
-        d.[summary_ai],
-        d.[summary_ai_html],
-        '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
-        
-        -- Celebrity information (get the highest ranking match)
-        celeb.[celebrity_name],
-        celeb.[celebrity_image],
-        celeb.[match_probability]
-        
-    FROM docketwatch.dbo.case_events e
-    
-    INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
-    
-    LEFT JOIN docketwatch.dbo.documents d 
-        ON e.id = d.fk_case_event 
-        AND (d.pdf_type IS NULL OR d.pdf_type != 'Attachment')
-    
-    LEFT JOIN (
+<cfset allowedStatus = "all,Active,Processed">
+<cfif listFindNoCase(allowedStatus, url.status) EQ 0><cfset url.status = "all"></cfif>
+
+<cfset allowedAck = "all,0,1">
+<cfif listFindNoCase(allowedAck, url.acknowledged) EQ 0><cfset url.acknowledged = "all"></cfif>
+
+<cfset page = val(url.page)>
+<cfif page LT 1><cfset page = 1></cfif>
+
+<cfset pageSize = val(url.pageSize)>
+<cfif pageSize LT 5 OR pageSize GT 100><cfset pageSize = 20></cfif>
+
+<cfset offsetRows = (page - 1) * pageSize>
+
+<!-- Events query (paged, Tracked only) -->
+<cfquery name="events" datasource="Reach">
+    WITH celeb AS (
         SELECT 
             m.fk_case,
-            cel.name as celebrity_name,
-            cel.image_url as celebrity_image,
-            m.probability_score as match_probability,
-            ROW_NUMBER() OVER (PARTITION BY m.fk_case ORDER BY m.ranking_score DESC) as rn
+            cel.name AS celebrity_name,
+            cel.image_url AS celebrity_image,
+            m.probability_score AS match_probability,
+            ROW_NUMBER() OVER (PARTITION BY m.fk_case ORDER BY m.ranking_score DESC) AS rn
         FROM docketwatch.dbo.case_celebrity_matches m
         INNER JOIN docketwatch.dbo.celebrities cel ON cel.id = m.fk_celebrity
-        WHERE m.match_status <> 'Removed' 
-    ) celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
-    
-    WHERE 1=1 AND c.case_number <> 'Unfiled'
-    <cfif url.status neq "all">
+        WHERE m.match_status <> 'Removed'
+    )
+    SELECT 
+        e.id,
+        e.event_no,
+        e.event_date,
+        e.event_description,
+        e.additional_information,
+        e.created_at,
+        e.status,
+        e.event_result,
+        e.fk_cases,
+        e.event_url,
+        e.isDoc,
+        e.summarize,
+        e.tmz_summarize,
+        ISNULL(e.acknowledged, 0) AS acknowledged,
+        e.acknowledged_at,
+        e.acknowledged_by,
+
+        c.case_number,
+        c.case_name,
+        c.case_url,
+        c.case_image_url,
+        c.status AS case_status,
+
+        d.pdf_title,
+        d.summary_ai,
+        d.summary_ai_html,
+        CASE 
+            WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
+                THEN '/pdf/' + d.rel_path
+            WHEN d.id IS NOT NULL 
+                THEN '/docs/cases/' + CAST(e.fk_cases AS varchar(20)) + '/E' + CAST(d.id AS varchar(20)) + '.pdf'
+            ELSE NULL
+        END AS pdf_path,
+
+        celeb.celebrity_name,
+        celeb.celebrity_image,
+        celeb.match_probability
+    FROM docketwatch.dbo.case_events e
+    INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
+    LEFT JOIN docketwatch.dbo.documents d 
+        ON e.id = d.fk_case_event 
+       AND (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
+    LEFT JOIN celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
+    WHERE 1=1
+      AND c.status = 'Tracked'
+      AND c.case_number <> 'Unfiled'
+      <cfif url.status NEQ "all">
         AND e.status = <cfqueryparam value="#url.status#" cfsqltype="cf_sql_varchar">
-    </cfif>
-    <cfif url.acknowledged neq "all">
+      </cfif>
+      <cfif url.acknowledged NEQ "all">
         AND ISNULL(e.acknowledged, 0) = <cfqueryparam value="#url.acknowledged#" cfsqltype="cf_sql_bit">
-    </cfif>
-    
+      </cfif>
     ORDER BY e.created_at DESC, e.acknowledged ASC
+    OFFSET <cfqueryparam value="#offsetRows#" cfsqltype="cf_sql_integer"> ROWS
+    FETCH NEXT <cfqueryparam value="#pageSize#" cfsqltype="cf_sql_integer"> ROWS ONLY;
 </cfquery>
 
-<!--- Statistics queries --->
+<!-- Statistics (Tracked only) -->
 <cfquery name="stats" datasource="Reach">
     SELECT 
         COUNT(*) as total_events,
@@ -399,11 +112,10 @@
     FROM docketwatch.dbo.case_events e
     INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
     WHERE c.status = 'Tracked'
+      AND c.case_number <> 'Unfiled'
 </cfquery>
 
 <div class="container-fluid mt-4">
-    
-    <!--- Header --->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-0">
@@ -420,7 +132,6 @@
         </div>
     </div>
 
-    <!--- Statistics Cards --->
     <div class="stats-cards">
         <cfoutput>
         <div class="stat-card">
@@ -442,7 +153,6 @@
         </cfoutput>
     </div>
 
-    <!--- Filter Controls --->
     <div class="filter-controls">
         <div class="row align-items-center">
             <div class="col-md-3">
@@ -467,23 +177,39 @@
                     <option value="1" <cfif url.acknowledged eq "1">selected</cfif>>Acknowledged</option>
                 </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label">Quick Actions</label>
                 <div class="d-flex gap-2">
                     <button class="btn btn-primary btn-sm" onclick="acknowledgeAll()">
                         <i class="fas fa-check-double me-1"></i>
                         Acknowledge All Visible
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="exportEvents()">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="doExport()">
                         <i class="fas fa-download me-1"></i>
                         Export Events
                     </button>
                 </div>
             </div>
+            <div class="col-md-2">
+                <label class="form-label">Page Size</label>
+                <select id="pageSize" class="form-select form-select-sm" onchange="changePageSize()">
+                    <option value="20"  <cfif pageSize EQ 20>selected</cfif>>20</option>
+                    <option value="50"  <cfif pageSize EQ 50>selected</cfif>>50</option>
+                    <option value="100" <cfif pageSize EQ 100>selected</cfif>>100</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <!--- Events List --->
+    <div class="d-flex align-items-center justify-content-end mb-3 gap-2">
+        <div class="btn-group">
+            <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page-1)#" <cfif page EQ 1>style="pointer-events:none;opacity:.5"</cfif>>&laquo; Prev</a>
+            <span class="btn btn-outline-secondary btn-sm disabled">Page <cfoutput>#page#</cfoutput></span>
+            <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page+1)#">Next &raquo;</a>
+        </div>
+    </div>
+
+    <!-- Events List -->
     <div class="row">
         <cfif events.recordcount EQ 0>
             <div class="col-12">
@@ -494,44 +220,35 @@
                 </div>
             </div>
         <cfelse>
-            <cfloop query="events">
+            <cfoutput query="events">
             <div class="col-12 mb-4">
-                <cfoutput>
-                <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
-                     id="event-#events.id#">
-                     
-                    <!--- Acknowledge Button --->
+                <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" id="event-#id#">
+
+                    <!-- Acknowledge Button -->
                     <cfif NOT acknowledged>
-                        <button class="acknowledge-btn" 
-                                onclick="acknowledgeEvent(#events.id#)"
-                                title="Mark as acknowledged">
+                        <button class="acknowledge-btn" onclick="acknowledgeEvent(#id#)" title="Mark as acknowledged">
                             <i class="fas fa-exclamation"></i>
                         </button>
                     <cfelse>
-                        <button class="acknowledge-btn acknowledged" 
-                                title="Already acknowledged">
+                        <button class="acknowledge-btn acknowledged" title="Already acknowledged">
                             <i class="fas fa-check"></i>
                         </button>
                     </cfif>
 
-                    <!--- Status Badge --->
-                    <div class="event-status">
-                        <span class="badge #iif(acknowledged, de('status-acknowledged'), de('status-new'))#">
-                            #iif(acknowledged, de('ACKNOWLEDGED'), de('NEW'))#
-                        </span>
-                    </div>
+                    <!-- Status Badge -->
+        <div class="event-status">
+            <span class="badge #iif(acknowledged, de('status-acknowledged'), de('status-new'))#">
+                #iif(acknowledged, de('ACKNOWLEDGED'), de('NEW'))#
+            </span>
+        </div>
+
 
                     <div class="card-body">
                         <div class="row">
-                            
-                            <!--- Avatar Column --->
+                            <!-- Avatar Column -->
                             <div class="col-md-2 text-center mb-3">
                                 <cfif len(case_image_url)>
-                                    <!--- Case Image Priority --->
-                                    <img src="#case_image_url#" 
-                                         alt="#case_name#" 
-                                         class="case-avatar"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="case-avatar-placeholder" style="display:none;">
                                         <i class="fas fa-balance-scale"></i>
                                     </div>
@@ -539,60 +256,32 @@
                                         <strong class="text-primary">Case Image</strong>
                                     </div>
                                 <cfelseif len(celebrity_name) AND len(celebrity_image)>
-                                    <!--- Celebrity Image Fallback --->
-                                    <img src="#celebrity_image#" 
-                                         alt="#celebrity_name#" 
-                                         class="celebrity-avatar"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="avatar-placeholder" style="display:none;">
-                                        #left(celebrity_name, 2)#
-                                    </div>
-                                    <div class="mt-2">
-                                        <small class="text-muted">#celebrity_name#</small>
-                                    </div>
+                                    <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="celebrity-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="avatar-placeholder" style="display:none;">#left(celebrity_name, 2)#</div>
+                                    <div class="mt-2"><small class="text-muted">#celebrity_name#</small></div>
                                 <cfelseif len(celebrity_name)>
-                                    <!--- Celebrity Name Only --->
-                                    <div class="avatar-placeholder">
-                                        #left(celebrity_name, 2)#
-                                    </div>
-                                    <div class="mt-2">
-                                        <small class="text-muted">#celebrity_name#</small>
-                                    </div>
+                                    <div class="avatar-placeholder">#left(celebrity_name, 2)#</div>
+                                    <div class="mt-2"><small class="text-muted">#celebrity_name#</small></div>
                                 <cfelse>
-                                    <!--- Generic Legal Case --->
-                                    <div class="avatar-placeholder">
-                                        <i class="fas fa-gavel"></i>
-                                    </div>
-                                    <div class="mt-2">
-                                        <small class="text-muted">Legal Case</small>
-                                    </div>
+                                    <div class="avatar-placeholder"><i class="fas fa-gavel"></i></div>
+                                    <div class="mt-2"><small class="text-muted">Legal Case</small></div>
                                 </cfif>
                             </div>
 
-                            <!--- Main Content Column --->
+                            <!-- Main Content Column -->
                             <div class="col-md-7">
-                                <!--- Case Information --->
                                 <div class="case-info">
-                                    <!--- Case Name as prominent heading --->
-                                    <h5 class="mb-2 text-dark fw-bold">#case_name#</h5>
-                                    
+                                    <h5 class="mb-2 text-dark fw-bold">#htmlEditFormat(case_name)#</h5>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="d-flex align-items-center gap-2">
-                                                <span><strong>Case No.:</strong> #case_number#</span>
-                                                
-                                                <!--- Case Actions Button Group --->
+                                                <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
                                                 <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="case_details.cfm?id=#fk_cases#" 
-                                                       title="View Case Details" 
-                                                       class="btn btn-outline-primary btn-sm">
+                                                    <a href="case_details.cfm?id=#fk_cases#" title="View Case Details" class="btn btn-outline-primary btn-sm">
                                                         <i class="fa-solid fa-file-lines"></i>
                                                     </a>
                                                     <cfif len(case_url)>
-                                                        <a href="#case_url#" 
-                                                           target="_blank" 
-                                                           title="Open Official Court Page" 
-                                                           class="btn btn-outline-secondary btn-sm">
+                                                        <a href="#case_url#" target="_blank" title="Open Official Court Page" class="btn btn-outline-secondary btn-sm">
                                                             <i class="fa-solid fa-up-right-from-square"></i>
                                                         </a>
                                                     </cfif>
@@ -600,7 +289,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <strong>Event ##:</strong> 
+                                            <strong>Event #:</strong>
                                             <span class="event-number-badge">
                                                 <cfif acknowledged>
                                                     <i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>
@@ -613,164 +302,114 @@
                                     </div>
                                 </div>
 
-                                <!--- Event Description --->
                                 <div class="event-description">
-                                    <strong>#event_description#</strong>
-                                    
+                                    <strong>#htmlEditFormat(event_description)#</strong>
                                     <cfif len(additional_information)>
-                                        <div class="mt-2 text-muted">
-                                            #additional_information#
-                                        </div>
+                                        <div class="mt-2 text-muted">#preserveSingleQuotes(htmlEditFormat(additional_information))#</div>
                                     </cfif>
                                 </div>
 
-                                <!--- Event Meta Information --->
                                 <div class="event-meta mt-3">
                                     <div class="d-flex flex-wrap gap-3">
-                                        <!--- Status Badge --->
                                         <div>
                                             <cfset statusClass = "">
                                             <cfset statusText = "">
-                                            <cfswitch expression="#lcase(trim(events.status))#">
-                                                <cfcase value="new">
-                                                    <cfset statusClass = "status-new">
-                                                    <cfset statusText = "New">
-                                                </cfcase>
-                                                <cfcase value="rss">
-                                                    <cfset statusClass = "status-rss">
-                                                    <cfset statusText = "RSS">
-                                                </cfcase>
-                                                <cfcase value="rss pending">
-                                                    <cfset statusClass = "status-rss-pending">
-                                                    <cfset statusText = "RSS Pending">
-                                                </cfcase>
-                                                <cfdefaultcase>
-                                                    <cfset statusClass = "status-null">
-                                                    <cfset statusText = "Unknown">
-                                                </cfdefaultcase>
+                                            <cfswitch expression="#lcase(trim(status))#">
+                                                <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
+                                                <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
+                                                <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
+                                                <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
                                             </cfswitch>
-                                            <span class="status-badge #statusClass#">
-                                                <i class="fas fa-info-circle me-1"></i>
-                                                #statusText#
-                                            </span>
+                                            <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
                                         </div>
+                                        <div><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
                                         <div>
-                                            <i class="fas fa-calendar me-1"></i>
-                                            <strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#
-                                        </div>
-                                        <div>
-                                            <span class="timestamp-badge">
-                                                <i class="fas fa-clock me-1"></i>
-                                                #dateFormat(created_at, "mm/dd/yyyy")# at #timeFormat(created_at, "h:mm tt")#
-                                            </span>
+                                            <span class="timestamp-badge"><i class="fas fa-clock me-1"></i>#dateFormat(created_at, "mm/dd/yyyy")# at #timeFormat(created_at, "h:mm tt")#</span>
                                         </div>
                                         <cfif acknowledged>
-                                            <div class="text-success">
-                                                <i class="fas fa-check-circle me-1"></i>
-                                                Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#
-                                            </div>
+                                            <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
                                         </cfif>
                                     </div>
                                 </div>
                             </div>
 
-                            <!--- Actions Column --->
+                            <!-- Actions Column -->
                             <div class="col-md-3">
                                 <div class="action-buttons">
-                                    <!--- Document Actions Group --->
                                     <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Document Actions">
                                         <cfif len(pdf_path)>
-                                            <a href="#pdf_path#" 
-                                               target="_blank" 
-                                               class="btn btn-success btn-action">
-                                                <i class="fas fa-file-pdf me-1"></i>
-                                                View PDF
-                                            </a>
+                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-action"><i class="fas fa-file-pdf me-1"></i>View PDF</a>
                                         <cfelseif isDoc AND len(event_url)>
-                                            <button class="btn btn-primary btn-action get-pdf-btn"
-                                                    data-event-id="#events.id#"
-                                                    data-event-url="#event_url#"
-                                                    data-case-id="#fk_cases#">
-                                                <i class="fas fa-download me-1"></i>
-                                                Get PDF
+                                            <button class="btn btn-primary btn-action get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                <i class="fas fa-download me-1"></i>Get PDF
                                             </button>
                                         </cfif>
-
-                                        <!--- Summary Actions --->
                                         <cfif len(summary_ai_html)>
-                                            <button class="btn btn-primary btn-action"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="##summaryModal#events.id#">
-                                                <i class="fas fa-brain me-1"></i>
-                                                View Summary
+                                            <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                <i class="fas fa-brain me-1"></i>View Summary
                                             </button>
                                         <cfelse>
-                                            <button class="btn btn-outline-primary btn-action generate-summary-btn"
-                                                    data-event-id="#events.id#">
-                                                <i class="fas fa-magic me-1"></i>
-                                                Generate Summary
+                                            <button class="btn btn-outline-primary btn-action generate-summary-btn" data-event-id="#id#">
+                                                <i class="fas fa-magic me-1"></i>Generate Summary
                                             </button>
                                         </cfif>
                                     </div>
-
-                                    <!--- Content Creation Group --->
                                     <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Content Actions">
-                                        <button class="btn btn-primary btn-action generate-tmz-btn"
-                                                data-event-id="#events.id#"
-                                                data-case-name="#htmlEditFormat(case_name)#">
-                                            <i class="fas fa-newspaper me-1"></i>
-                                            TMZ Article
+                                        <button class="btn btn-primary btn-action generate-tmz-btn" data-event-id="#id#" data-case-name="#htmlEditFormat(case_name)#">
+                                            <i class="fas fa-newspaper me-1"></i>TMZ Article
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                </cfoutput>
-            </div>
-            </cfloop>
+                        </div> <!-- row -->
+                    </div> <!-- card-body -->
+                </div> <!-- card -->
+            </div> <!-- col -->
+            </cfoutput>
         </cfif>
-    </div>
-</div>
-
-<!--- Summary Modals --->
-<cfloop query="events">
+    </div> <!-- row -->
+</div> <!-- container-fluid -->
+<!-- Summary Modals -->
+<cfoutput query="events">
     <cfif len(summary_ai_html)>
-        <cfoutput>
-    <div class="modal fade" id="summaryModal#events.id#" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-brain me-2"></i>
-                AI Summary - Event #events.event_no#
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="summaryModal#id#" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-brain me-2"></i>AI Summary - Event #event_no#</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)<br>
+                        <strong>Event:</strong> #htmlEditFormat(event_description)#
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <strong>Case:</strong> #case_name# (#case_number#)<br>
-                            <strong>Event:</strong> #event_description#
-                        </div>
-                        <hr>
-                        <div class="summary-content">
-                            #summary_ai_html#
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
+                    <hr>
+                    <div class="summary-content">#summary_ai_html#</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
-        </cfoutput>
+    </div>
     </cfif>
-</cfloop>
+</cfoutput>
+<cfscript>
+/* Build page URL with preserved filters */
+function buildPageUrl(newPage){
+    var params = [];
+    if (url.status NEQ "all") arrayAppend(params, "status=" & urlEncodedFormat(url.status));
+    if (url.acknowledged NEQ "all") arrayAppend(params, "acknowledged=" & urlEncodedFormat(url.acknowledged));
+    if (pageSize NEQ 20) arrayAppend(params, "pageSize=" & pageSize);
+    if (newPage LT 1) newPage = 1;
+    arrayAppend(params, "page=" & newPage);
+    return getPageContext().getRequest().getRequestURI() & "?" & arrayToList(params, "&");
+}
+</cfscript>
 
 <script>
 $(document).ready(function() {
-    
     // Auto-refresh every 30 seconds
     setInterval(function() {
         if (document.visibilityState === 'visible') {
@@ -778,66 +417,42 @@ $(document).ready(function() {
         }
     }, 30000);
 
-    // Get PDF functionality
+    // Get PDF
     $('body').on('click', '.get-pdf-btn', function() {
         var button = $(this);
         var eventId = button.data('event-id');
         var eventUrl = button.data('event-url');
         var caseId = button.data('case-id');
 
-        button.prop('disabled', true).html(`
-            <span class="spinner-border spinner-border-sm me-1"></span>
-            Getting PDF...
-        `);
+        button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Getting PDF...');
 
         $.ajax({
             url: 'ajax_getPacerDoc.cfm',
             method: 'POST',
-            data: {
-                docID: eventId,
-                eventURL: eventUrl,
-                caseID: caseId
-            },
+            data: { docID: eventId, eventURL: eventUrl, caseID: caseId },
             dataType: 'json',
             success: function(response) {
                 if (response.STATUS === 'SUCCESS') {
-                    button.replaceWith(`
-                        <a href="${response.FILEPATH}" 
-                           target="_blank" 
-                           class="btn btn-success btn-action">
-                            <i class="fas fa-file-pdf me-1"></i>
-                            View PDF
-                        </a>
-                    `);
-                    
+                    button.replaceWith('<a href="' + response.FILEPATH + '" target="_blank" class="btn btn-success btn-action"><i class="fas fa-file-pdf me-1"></i>View PDF</a>');
                     showNotification('success', 'PDF downloaded successfully!');
                 } else {
                     showNotification('error', 'Failed to download PDF: ' + (response.MESSAGE || 'Unknown error'));
-                    button.prop('disabled', false).html(`
-                        <i class="fas fa-download me-1"></i>
-                        Get PDF
-                    `);
+                    button.prop('disabled', false).html('<i class="fas fa-download me-1"></i>Get PDF');
                 }
             },
             error: function() {
                 showNotification('error', 'Network error occurred');
-                button.prop('disabled', false).html(`
-                    <i class="fas fa-download me-1"></i>
-                    Get PDF
-                `);
+                button.prop('disabled', false).html('<i class="fas fa-download me-1"></i>Get PDF');
             }
         });
     });
 
-    // Generate Summary functionality
+    // Generate Summary
     $('body').on('click', '.generate-summary-btn', function() {
         var button = $(this);
         var eventId = button.data('event-id');
 
-        button.prop('disabled', true).html(`
-            <span class="spinner-border spinner-border-sm me-1"></span>
-            Generating...
-        `);
+        button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Generating...');
 
         $.ajax({
             url: 'ajax_generateSummary.cfm',
@@ -846,76 +461,39 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
-                    button.replaceWith(`
-                        <button class="btn btn-primary btn-action"
-                                data-bs-toggle="modal"
-                                data-bs-target="#summaryModal${eventId}">
-                            <i class="fas fa-brain me-1"></i>
-                            View Summary
-                        </button>
-                    `);
-                    
-                    // Add the modal to the page
+                    button.replaceWith('<button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#summaryModal' + eventId + '"><i class="fas fa-brain me-1"></i>View Summary</button>');
                     $('body').append(response.modalHtml);
-                    
                     showNotification('success', 'Summary generated successfully!');
                 } else {
                     showNotification('error', 'Failed to generate summary: ' + (response.message || 'Unknown error'));
-                    button.prop('disabled', false).html(`
-                        <i class="fas fa-magic me-1"></i>
-                        Generate Summary
-                    `);
+                    button.prop('disabled', false).html('<i class="fas fa-magic me-1"></i>Generate Summary');
                 }
             },
             error: function() {
                 showNotification('error', 'Network error occurred');
-                button.prop('disabled', false).html(`
-                    <i class="fas fa-magic me-1"></i>
-                    Generate Summary
-                `);
+                button.prop('disabled', false).html('<i class="fas fa-magic me-1"></i>Generate Summary');
             }
         });
     });
 
-    // Generate TMZ Article functionality
+    // Generate TMZ Article (mock)
     $('body').on('click', '.generate-tmz-btn', function() {
         var button = $(this);
-        var eventId = button.data('event-id');
         var caseName = button.data('case-name');
 
-        button.prop('disabled', true).html(`
-            <span class="spinner-border spinner-border-sm me-1"></span>
-            Writing...
-        `);
+        button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Writing...');
 
-        // Simulate TMZ article generation
         setTimeout(function() {
             Swal.fire({
                 title: 'TMZ Article Generated!',
-                html: `
-                    <div class="text-left">
-                        <h6>BREAKING: ${caseName} - New Court Filing!</h6>
-                        <p class="small text-muted">
-                            [MOCK ARTICLE] In a shocking turn of events, new court documents have been filed in the ${caseName} case. 
-                            Sources close to the situation say this could be a game-changer. Stay tuned for more updates as this story develops...
-                        </p>
-                        <div class="mt-3">
-                            <button class="btn btn-sm btn-primary me-2">Share on Social</button>
-                            <button class="btn btn-sm btn-outline-secondary">Save Draft</button>
-                        </div>
-                    </div>
-                `,
+                html: '<div class="text-left"><h6>BREAKING: ' + caseName + ' - New Court Filing!</h6><p class="small text-muted">[MOCK ARTICLE] In a shocking turn of events, new court documents have been filed in the ' + caseName + ' case. Sources close to the situation say this could be a game-changer. Stay tuned for more updates as this story develops...</p><div class="mt-3"><button class="btn btn-sm btn-primary me-2">Share on Social</button><button class="btn btn-sm btn-outline-secondary">Save Draft</button></div></div>',
                 icon: 'success',
                 width: 600,
                 showConfirmButton: false,
                 timer: 5000
             });
-
-            button.prop('disabled', false).html(`
-                <i class="fas fa-newspaper me-1"></i>
-                TMZ Article
-            `);
-        }, 2000);
+            button.prop('disabled', false).html('<i class="fas fa-newspaper me-1"></i>TMZ Article');
+        }, 1500);
     });
 });
 
@@ -930,14 +508,9 @@ function acknowledgeEvent(eventId) {
             if (response.success) {
                 const eventCard = $('#event-' + eventId);
                 eventCard.removeClass('unacknowledged').addClass('acknowledged');
-                
-                // Update acknowledge button
                 const ackBtn = eventCard.find('.acknowledge-btn');
                 ackBtn.addClass('acknowledged').html('<i class="fas fa-check"></i>').prop('onclick', null);
-                
-                // Update status badge
                 eventCard.find('.event-status .badge').removeClass('status-new').addClass('status-acknowledged').text('ACKNOWLEDGED');
-                
                 showNotification('success', 'Event acknowledged!');
                 updateEventCounts();
             } else {
@@ -950,17 +523,16 @@ function acknowledgeEvent(eventId) {
     });
 }
 
-// Acknowledge all visible events
+// Acknowledge all visible
 function acknowledgeAll() {
     const unacknowledged = $('.event-alert.unacknowledged');
     if (unacknowledged.length === 0) {
         showNotification('info', 'No events need acknowledgment');
         return;
     }
-
     Swal.fire({
         title: 'Acknowledge All Events?',
-        text: `This will acknowledge ${unacknowledged.length} visible events.`,
+        text: 'This will acknowledge ' + unacknowledged.length + ' visible events.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Yes, acknowledge all',
@@ -975,30 +547,48 @@ function acknowledgeAll() {
     });
 }
 
-// Update filters
+// Filters and export
 function updateFilters() {
     const status = $('#statusFilter').val();
     const acknowledged = $('#ackFilter').val();
-    
     let url = window.location.pathname + '?';
     const params = [];
-    
     if (status !== 'all') params.push('status=' + encodeURIComponent(status));
     if (acknowledged !== 'all') params.push('acknowledged=' + encodeURIComponent(acknowledged));
-    
+    const pageSize = $('#pageSize').val();
+    if (pageSize) params.push('pageSize=' + encodeURIComponent(pageSize));
+    params.push('page=1');
     window.location.href = url + params.join('&');
 }
 
-// Export events (placeholder)
-function exportEvents() {
-    showNotification('info', 'Export functionality coming soon!');
+function doExport(){
+  const status = $('#statusFilter').val();
+  const acknowledged = $('#ackFilter').val();
+  const url = 'export_events.cfm?status=' + encodeURIComponent(status) + '&acknowledged=' + encodeURIComponent(acknowledged);
+  window.location = url;
 }
 
-// Update event counts
+function changePageSize() {
+    const status = $('#statusFilter').val();
+    const acknowledged = $('#ackFilter').val();
+    const pageSize = $('#pageSize').val();
+    let url = window.location.pathname + '?';
+    const params = [];
+    if (status !== 'all') params.push('status=' + encodeURIComponent(status));
+    if (acknowledged !== 'all') params.push('acknowledged=' + encodeURIComponent(acknowledged));
+    if (pageSize) params.push('pageSize=' + encodeURIComponent(pageSize));
+    params.push('page=1');
+    window.location.href = url + params.join('&');
+}
+
+// Stats refresh
 function updateEventCounts() {
+    const status = $('#statusFilter').val();
+    const acknowledged = $('#ackFilter').val();
     $.ajax({
         url: 'ajax_getEventCounts.cfm',
         method: 'GET',
+        data: { status: status, acknowledged: acknowledged },
         dataType: 'json',
         success: function(data) {
             $('.stat-card:nth-child(1) .stat-number').text(data.total);
@@ -1009,10 +599,10 @@ function updateEventCounts() {
     });
 }
 
-// Show notifications
+// Notifications
 function showNotification(type, message) {
     if (typeof Swal !== 'undefined') {
-        const icons = { success: 'success', error: 'error', info: 'info' };
+        const icons = { success: 'success', error: 'error', info: 'info', question: 'question' };
         Swal.fire({
             icon: icons[type] || 'info',
             title: message,
