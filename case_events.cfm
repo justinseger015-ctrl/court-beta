@@ -37,6 +37,25 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+        
+        .event-alert.unacknowledged:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(157, 52, 51, 0.4);
+            border-left-color: #ff4444;
+        }
+        
+        .event-alert.unacknowledged:hover::after {
+            content: "Click to acknowledge";
+            position: absolute;
+            top: 10px;
+            right: 100px;
+            background: rgba(157, 52, 51, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            z-index: 5;
+        }
         .avatar-placeholder {
             width: 80px;
             height: 80px;
@@ -238,6 +257,38 @@
         .stat-label {
             color: #6c757d;
             font-size: 0.9rem;
+        }
+        
+        /* Floating Acknowledge Button */
+        .floating-ack-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+        
+        .floating-ack-btn .btn {
+            width: 70px;
+            height: 70px;
+            box-shadow: 0 4px 20px rgba(157, 52, 51, 0.4);
+            position: relative;
+        }
+        
+        .floating-ack-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: white !important;
+            color: var(--tmz-red) !important;
+            font-weight: bold;
+            border: 2px solid var(--tmz-red);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         /* Mobile responsiveness */
         @media (max-width: 768px) {
@@ -466,11 +517,17 @@
         <cfelse> --->
             <cfoutput query="events">
                 <div class="col-12 mb-4">
-                    <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" id="event-#id#">
+                    <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
+                         id="event-#id#" 
+                         <cfif NOT acknowledged>
+                         data-event-id="#id#" 
+                         style="cursor: pointer;" 
+                         title="Click to acknowledge this event"
+                         </cfif>>
 
                     <!-- Acknowledge Button -->
                     <cfif NOT acknowledged>
-                        <button class="acknowledge-btn" onclick="acknowledgeEvent(#id#)" title="Mark as acknowledged">
+                        <button class="acknowledge-btn" onclick="acknowledgeEvent(#id#); event.stopPropagation();" title="Mark as acknowledged">
                             <i class="fas fa-exclamation"></i>
                         </button>
                     <cfelse>
@@ -613,6 +670,15 @@
   
     </div> <!-- row -->
 </div> <!-- container-fluid -->
+
+<!-- Floating Acknowledge All Button -->
+<div id="floatingAckBtn" class="floating-ack-btn" style="display: none;">
+    <button class="btn btn-danger btn-lg rounded-circle" onclick="acknowledgeAll()" title="Acknowledge All Unacknowledged Events">
+        <i class="fas fa-check-double"></i>
+        <span class="badge badge-light" id="unackCount">0</span>
+    </button>
+</div>
+
 <!-- Summary Modals -->
 <cfoutput query="events">
     <cfif len(summary_ai_html)>
@@ -654,12 +720,24 @@ function buildPageUrl(newPage){
 
 <script>
 $(document).ready(function() {
+    // Initialize floating acknowledge button
+    updateEventCounts();
+    
     // Auto-refresh every 30 seconds
     setInterval(function() {
         if (document.visibilityState === 'visible') {
             updateEventCounts();
         }
     }, 30000);
+
+    // Click on unacknowledged card to acknowledge
+    $('body').on('click', '.event-alert.unacknowledged[data-event-id]', function(e) {
+        // Don't trigger if clicking on buttons, links, or other interactive elements
+        if ($(e.target).closest('button, a, .btn').length === 0) {
+            const eventId = $(this).data('event-id');
+            acknowledgeEvent(eventId);
+        }
+    });
 
     // Get PDF
     $('body').on('click', '.get-pdf-btn', function() {
@@ -743,6 +821,10 @@ $(document).ready(function() {
 
 // Acknowledge single event
 function acknowledgeEvent(eventId) {
+    // Show loading state
+    const eventCard = $('#event-' + eventId);
+    eventCard.css('opacity', '0.7').find('.acknowledge-btn').prop('disabled', true);
+    
     $.ajax({
         url: 'ajax_acknowledgeEvent.cfm',
         method: 'POST',
@@ -750,11 +832,29 @@ function acknowledgeEvent(eventId) {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                const eventCard = $('#event-' + eventId);
+                // Update visual state
                 eventCard.removeClass('unacknowledged').addClass('acknowledged');
+                
+                // Remove clickable behavior
+                eventCard.removeAttr('data-event-id style title').css('cursor', 'default');
+                
+                // Update acknowledge button
                 const ackBtn = eventCard.find('.acknowledge-btn');
-                ackBtn.addClass('acknowledged').html('<i class="fas fa-check"></i>').prop('onclick', null);
+                ackBtn.addClass('acknowledged').html('<i class="fas fa-check"></i>').prop('onclick', null).prop('disabled', false);
+                
+                // Update status badge
                 eventCard.find('.event-status .badge').removeClass('status-new').addClass('status-acknowledged').text('ACKNOWLEDGED');
+                
+                // Add acknowledged timestamp to meta section
+                const now = new Date();
+                const timeString = now.toLocaleDateString() + ' at ' + now.toLocaleTimeString();
+                eventCard.find('.event-meta .d-flex').append(
+                    '<div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged ' + timeString + '</div>'
+                );
+                
+                // Restore opacity with animation
+                eventCard.animate({'opacity': '0.8'}, 500);
+                
                 showNotification('success', 'Event acknowledged!');
                 updateEventCounts();
             } else {
@@ -839,8 +939,25 @@ function updateEventCounts() {
             $('.stat-card:nth-child(2) .stat-number').text(data.unacknowledged);
             $('.stat-card:nth-child(3) .stat-number').text(data.acknowledged);
             $('.stat-card:nth-child(4) .stat-number').text(data.withDocs);
+            
+            // Update floating acknowledge button
+            updateFloatingAckButton(data.unacknowledged);
         }
     });
+}
+
+// Update floating acknowledge button visibility and count
+function updateFloatingAckButton(unackCount) {
+    const floatingBtn = $('#floatingAckBtn');
+    const countBadge = $('#unackCount');
+    
+    if (unackCount > 0) {
+        countBadge.text(unackCount);
+        floatingBtn.fadeIn(300);
+    } else {
+        floatingBtn.fadeOut(300);
+    }
+}
 }
 
 // Notifications
