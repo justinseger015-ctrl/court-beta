@@ -958,7 +958,6 @@ function updateFloatingAckButton(unackCount) {
         floatingBtn.fadeOut(300);
     }
 }
-}
 
 // Notifications
 function showNotification(type, message) {
