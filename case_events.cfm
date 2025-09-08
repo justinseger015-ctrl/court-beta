@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Case Events - Alert Dashboard</title>
     <cfinclude template="head.cfm">
-    <style></style>
+    <style>
           :root {
             --tmz-red: #9d3433;
             --tmz-dark-gray: #2b2b2b;
