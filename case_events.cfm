@@ -211,7 +211,7 @@
 
     <!-- Events List -->
     <div class="row">
-        <cfif events.recordcount EQ 0>
+     <!---   <cfif events.recordcount EQ 0>
             <div class="col-12">
                 <div class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
@@ -219,7 +219,7 @@
                     <p class="text-muted">No case events match your current filters.</p>
                 </div>
             </div>
-        <cfelse>
+        <cfelse> --->
             <cfoutput query="events">
                 <div class="col-12 mb-4">
                     <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" id="event-#id#">
@@ -289,7 +289,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <strong>Event #:</strong>
+                                            <strong>Event ##:</strong>
                                             <span class="event-number-badge">
                                                 <cfif acknowledged>
                                                     <i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>
@@ -366,7 +366,7 @@
                 </div> <!-- card -->
             </div> <!-- col -->
             </cfoutput>
-        </cfif>
+  
     </div> <!-- row -->
 </div> <!-- container-fluid -->
 <!-- Summary Modals -->
