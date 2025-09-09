@@ -12,20 +12,16 @@
         }
         /* Alert Card Styling */
         .event-alert {
-            border-left: 5px solid var(--tmz-red);
+            border: 1px solid #dee2e6;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
         .event-alert.unacknowledged {
-            border-left-color: var(--tmz-red);
             animation: pulse-glow 2s infinite;
-            border-top: 2px solid var(--tmz-red);
         }
         .event-alert.acknowledged {
-            border-left-color: #28a745;
             opacity: 0.8;
-            border-top: 2px solid #28a745;
         }
         @keyframes pulse-glow {
             0% { transform: scale(1); }
@@ -38,7 +34,6 @@
         
         .event-alert.unacknowledged:hover {
             transform: translateY(-3px);
-            border-left-color: #ff4444;
         }
         
         .event-alert.unacknowledged:hover::after {
@@ -235,7 +230,7 @@
         
         /* Event Panel Indentation */
         .event-panel-container {
-            margin-left: 2rem;
+            margin-left: 3rem;
             margin-bottom: 0.75rem;
             position: relative;
         }
@@ -243,7 +238,7 @@
         .event-panel-container::before {
             content: '';
             position: absolute;
-            left: -1rem;
+            left: -1.5rem;
             top: 0;
             bottom: 0;
             width: 3px;
@@ -407,10 +402,10 @@
             
             /* Event panel mobile indentation */
             .event-panel-container {
-                margin-left: 1rem;
+                margin-left: 1.5rem;
             }
             .event-panel-container::before {
-                left: -0.5rem;
+                left: -0.75rem;
                 width: 2px;
             }
             
