@@ -462,14 +462,23 @@
 <cfinclude template="navbar.cfm">
 
 <!-- Params and sanitization -->
-<cfparam name="url.status" default="all">
+<cfparam name="url.case_id" default="all">
 <cfparam name="url.acknowledged" default="all">
 <!--- Pagination removed since we're only showing current day events --->
 <!--- <cfparam name="url.page" default="1"> --->
 <!--- <cfparam name="url.pageSize" default="20"> --->
 
-<cfset allowedStatus = "all,Active,Processed">
-<cfif listFindNoCase(allowedStatus, url.status) EQ 0><cfset url.status = "all"></cfif>
+<!--- Get cases that have events today for filter dropdown --->
+<cfquery name="casesWithEvents" datasource="Reach">
+    SELECT DISTINCT c.id, c.case_name, c.case_number, COUNT(e.id) as event_count
+    FROM docketwatch.dbo.cases c
+    INNER JOIN docketwatch.dbo.case_events e ON c.id = e.fk_cases
+    WHERE c.status = 'Tracked'
+      AND c.case_number <> 'Unfiled'
+      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+    GROUP BY c.id, c.case_name, c.case_number
+    ORDER BY c.case_name
+</cfquery>
 
 <cfset allowedAck = "all,0,1">
 <cfif listFindNoCase(allowedAck, url.acknowledged) EQ 0><cfset url.acknowledged = "all"></cfif>
@@ -557,8 +566,8 @@
     LEFT JOIN docketwatch.dbo.case_priority cp ON cp.id = c.fk_priority
     WHERE 1=1
       AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
-      <cfif url.status NEQ "all">
-        AND e.status = <cfqueryparam value="#url.status#" cfsqltype="cf_sql_varchar">
+      <cfif url.case_id NEQ "all">
+        AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
       </cfif>
       <cfif url.acknowledged NEQ "all">
         AND ISNULL(e.acknowledged, 0) = <cfqueryparam value="#url.acknowledged#" cfsqltype="cf_sql_bit">
@@ -621,14 +630,15 @@
     <div class="filter-controls">
         <div class="row align-items-center">
             <div class="col-md-3">
-                <label for="statusFilter" class="form-label">
+                <label for="caseFilter" class="form-label">
                     <i class="fas fa-filter me-1"></i>
-                    Filter by Status
+                    Filter by Case
                 </label>
-                <select id="statusFilter" class="form-select" onchange="updateFilters()">
-                    <option value="all" <cfif url.status eq "all">selected</cfif>>All Status</option>
-                    <option value="Active" <cfif url.status eq "Active">selected</cfif>>Active</option>
-                    <option value="Processed" <cfif url.status eq "Processed">selected</cfif>>Processed</option>
+                <select id="caseFilter" class="form-select" onchange="updateFilters()">
+                    <option value="all" <cfif url.case_id eq "all">selected</cfif>>All Cases</option>
+                    <cfoutput query="casesWithEvents">
+                        <option value="#id#" <cfif url.case_id eq id>selected</cfif>>#htmlEditFormat(case_name)# (#event_count# events)</option>
+                    </cfoutput>
                 </select>
             </div>
             <div class="col-md-3">
@@ -1148,11 +1158,11 @@ function acknowledgeAll() {
 
 // Filters and export
 function updateFilters() {
-    const status = $('#statusFilter').val();
+    const case_id = $('#caseFilter').val();
     const acknowledged = $('#ackFilter').val();
     let url = window.location.pathname + '?';
     const params = [];
-    if (status !== 'all') params.push('status=' + encodeURIComponent(status));
+    if (case_id !== 'all') params.push('case_id=' + encodeURIComponent(case_id));
     if (acknowledged !== 'all') params.push('acknowledged=' + encodeURIComponent(acknowledged));
     const pageSize = $('#pageSize').val();
     if (pageSize) params.push('pageSize=' + encodeURIComponent(pageSize));
@@ -1161,9 +1171,9 @@ function updateFilters() {
 }
 
 function doExport(){
-  const status = $('#statusFilter').val();
+  const case_id = $('#caseFilter').val();
   const acknowledged = $('#ackFilter').val();
-  const url = 'export_events.cfm?status=' + encodeURIComponent(status) + '&acknowledged=' + encodeURIComponent(acknowledged);
+  const url = 'export_events.cfm?case_id=' + encodeURIComponent(case_id) + '&acknowledged=' + encodeURIComponent(acknowledged);
   window.location = url;
 }
 
@@ -1185,12 +1195,12 @@ function changePageSize() {
 
 // Stats refresh
 function updateEventCounts() {
-    const status = $('#statusFilter').val();
+    const case_id = $('#caseFilter').val();
     const acknowledged = $('#ackFilter').val();
     $.ajax({
         url: 'ajax_getEventCounts.cfm?bypass=1',
         method: 'GET',
-        data: { status: status, acknowledged: acknowledged },
+        data: { case_id: case_id, acknowledged: acknowledged },
         dataType: 'json',
         success: function(data) {
             $('.stat-card:nth-child(1) .stat-number').text(data.activeCases);

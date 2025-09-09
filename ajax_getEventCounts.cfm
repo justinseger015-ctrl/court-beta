@@ -1,5 +1,8 @@
 <cfheader name="Content-Type" value="application/json">
 
+<cfparam name="url.case_id" default="all">
+<cfparam name="url.acknowledged" default="all">
+
 <cftry>
     <!--- Get current statistics --->
     <cfquery name="stats" datasource="Reach">
@@ -13,6 +16,12 @@
         WHERE c.status = 'Tracked'
           AND c.case_number <> 'Unfiled'
           AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+          <cfif url.case_id NEQ "all">
+            AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
+          </cfif>
+          <cfif url.acknowledged NEQ "all">
+            AND ISNULL(e.acknowledged, 0) = <cfqueryparam value="#url.acknowledged#" cfsqltype="cf_sql_bit">
+          </cfif>
     </cfquery>
     
     <cfset response = structNew()>
