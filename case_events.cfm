@@ -988,8 +988,16 @@ $(document).ready(function() {
 
 // Acknowledge single event
 function acknowledgeEvent(eventId) {
+    console.log('Acknowledging event:', eventId);
+    
     // Show loading state
     const eventCard = $('#event-' + eventId);
+    if (eventCard.length === 0) {
+        console.error('Event card not found for ID:', eventId);
+        showNotification('error', 'Event card not found');
+        return;
+    }
+    
     eventCard.css('opacity', '0.7');
     
     $.ajax({
@@ -997,35 +1005,77 @@ function acknowledgeEvent(eventId) {
         method: 'POST',
         data: { eventId: eventId },
         dataType: 'json',
+        timeout: 10000,
         success: function(response) {
-            if (response.success) {
-                // Update visual state
-                eventCard.removeClass('unacknowledged').addClass('acknowledged');
-                
-                // Remove clickable behavior
-                eventCard.removeAttr('data-event-id style title').css('cursor', 'default');
-                
-                // Update status badge
-                eventCard.find('.event-status .badge').removeClass('status-new').addClass('status-acknowledged').text('ACKNOWLEDGED');
-                
-                // Add acknowledged timestamp to meta section
-                const now = new Date();
-                const timeString = now.toLocaleDateString() + ' at ' + now.toLocaleTimeString();
-                eventCard.find('.event-meta .d-flex').append(
-                    '<div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged ' + timeString + '</div>'
-                );
-                
-                // Restore opacity with animation
-                eventCard.animate({'opacity': '0.8'}, 500);
-                
-                showNotification('success', 'Event acknowledged!');
-                updateEventCounts();
-            } else {
-                showNotification('error', 'Failed to acknowledge event');
+            console.log('AJAX Response:', response);
+            
+            try {
+                if (response && response.success) {
+                    // Update visual state
+                    eventCard.removeClass('unacknowledged').addClass('acknowledged');
+                    
+                    // Remove clickable behavior
+                    eventCard.removeAttr('data-event-id style title').css('cursor', 'default');
+                    
+                    // Update status badge
+                    const statusBadge = eventCard.find('.event-status .badge');
+                    if (statusBadge.length > 0) {
+                        statusBadge.removeClass('status-new').addClass('status-acknowledged').text('ACKNOWLEDGED');
+                    }
+                    
+                    // Update discovery time background (red to grey)
+                    const discoveryTime = eventCard.find('.discovery-time');
+                    if (discoveryTime.length > 0) {
+                        discoveryTime.css('background', 'linear-gradient(135deg, #6c757d, #495057)');
+                    }
+                    
+                    // Update right-side acknowledge area
+                    const acknowledgeArea = eventCard.find('.col-md-2').last();
+                    if (acknowledgeArea.length > 0) {
+                        acknowledgeArea.html('<div class="text-success text-center"><i class="fas fa-check-circle fa-2x mb-1"></i><br><small>Acknowledged</small></div>');
+                    }
+                    
+                    // Add acknowledged timestamp to meta section
+                    const now = new Date();
+                    const timeString = now.toLocaleDateString();
+                    const existingMeta = eventCard.find('.event-meta .d-flex');
+                    if (existingMeta.length > 0 && existingMeta.find('.text-success').length === 0) {
+                        existingMeta.append(
+                            '<div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged ' + timeString + '</div>'
+                        );
+                    }
+                    
+                    // Restore opacity with animation
+                    eventCard.animate({'opacity': '0.8'}, 500);
+                    
+                    showNotification('success', 'Event acknowledged!');
+                    updateEventCounts();
+                } else {
+                    eventCard.css('opacity', '1');
+                    const errorMsg = response && response.message ? response.message : 'Unknown error occurred';
+                    showNotification('error', 'Failed to acknowledge event: ' + errorMsg);
+                }
+            } catch (e) {
+                console.error('Error updating UI:', e);
+                eventCard.css('opacity', '1');
+                showNotification('error', 'Error updating interface: ' + e.message);
             }
         },
-        error: function() {
-            showNotification('error', 'Network error occurred');
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', {xhr: xhr, status: status, error: error});
+            eventCard.css('opacity', '1');
+            
+            let errorMessage = 'Network error occurred';
+            if (xhr.responseText) {
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    errorMessage = errorResponse.message || errorMessage;
+                } catch (e) {
+                    errorMessage = xhr.responseText.substring(0, 100);
+                }
+            }
+            
+            showNotification('error', errorMessage);
         }
     });
 }
