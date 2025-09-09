@@ -887,7 +887,41 @@
                             </div>
                         </div>
                     </cfoutput>
+
+                    <!-- Generate Case Summary Modal for this case -->
+                    <div class="modal fade" id="caseSummaryModal#fk_cases#" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="fas fa-file-text me-2"></i>Case Summary</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)
+                                    </div>
+                                    <hr>
+                                    <cfif len(trim(summarize_html))>
+                                        <div class="summary-content">#REReplace(summarize_html, "(\r\n|\n|\r)", "<br>", "all")#</div>
+                                    <cfelse>
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-file-text fa-3x mb-3" style="opacity: 0.3;"></i>
+                                            <p class="mb-0">No case summary available.</p>
+                                            <small class="text-muted">Summary can be generated from the case details page.</small>
+                                        </div>
+                                    </cfif>
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="case_details.cfm?id=#fk_cases#" class="btn btn-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Full Case Details
+                                    </a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </cfoutput>
+
             </div>
         </cfif>
     </div>
@@ -926,53 +960,6 @@
         </div>
     </div>
     </cfif>
-</cfoutput>
-
-<!-- Case Summary Modals -->
-<cfquery name="casesWithSummary" datasource="Reach">
-    SELECT DISTINCT c.id as fk_cases, c.case_name, c.case_number, c.summarize_html
-    FROM docketwatch.dbo.cases c
-    INNER JOIN docketwatch.dbo.case_events e ON c.id = e.fk_cases
-    WHERE c.status = 'Tracked'
-      AND c.case_number <> 'Unfiled'
-      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
-      <cfif url.case_id NEQ "all">
-        AND c.id = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
-      </cfif>
-</cfquery>
-
-<cfoutput query="casesWithSummary">
-    <div class="modal fade" id="caseSummaryModal#fk_cases#" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-file-text me-2"></i>Case Summary</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)
-                    </div>
-                    <hr>
-                    <cfif len(trim(summarize_html))>
-                        <div class="summary-content">#REReplace(summarize_html, "(\r\n|\n|\r)", "<br>", "all")#</div>
-                    <cfelse>
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-file-text fa-3x mb-3" style="opacity: 0.3;"></i>
-                            <p class="mb-0">No case summary available.</p>
-                            <small class="text-muted">Summary can be generated from the case details page.</small>
-                        </div>
-                    </cfif>
-                </div>
-                <div class="modal-footer">
-                    <a href="case_details.cfm?id=#fk_cases#" class="btn btn-primary">
-                        <i class="fas fa-external-link-alt me-1"></i>View Full Case Details
-                    </a>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </cfoutput>
 <cfscript>
 /* Build page URL with preserved filters - COMMENTED OUT since pagination removed */
