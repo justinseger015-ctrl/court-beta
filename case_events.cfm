@@ -738,9 +738,7 @@
                                             <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
                                             <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
                                         </cfswitch>
-                                        <div>
-                                            <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
-                                        </div>
+                                        <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
                                     </div>
                                 </div>
                             </div>
@@ -785,13 +783,24 @@
                                                 </div>
 
                                                 <div class="event-meta mt-3">
-                                                    <div class="d-flex flex-wrap gap-3">
+                                                    <div class="d-flex flex-wrap gap-3 align-items-center">
                                                         <div style="color: ##2d3748; font-weight: 600; font-size: 0.95rem;"><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
                                                         <cfif len(celebrity_name)>
                                                             <span class="badge bg-info">
                                                                 <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
                                                             </span>
                                                         </cfif>
+                                                        <!--- Status Badge - Commented Out
+                                                        <cfset statusClass = "">
+                                                        <cfset statusText = "">
+                                                        <cfswitch expression="#lcase(trim(status))#">
+                                                            <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
+                                                            <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
+                                                            <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
+                                                            <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
+                                                        </cfswitch>
+                                                        <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                                        --->
                                                         <!--- Acknowledged Date - Commented Out
                                                         <cfif acknowledged>
                                                             <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
@@ -799,20 +808,53 @@
                                                         --->
                                                     </div>
                                                 </div>
+
+                                                <!-- Event Action Buttons -->
+                                                <div class="event-actions mt-3">
+                                                    <div class="btn-group" role="group">
+                                                        <cfif len(pdf_path)>
+                                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
+                                                                <i class="fas fa-file-pdf me-1"></i>Get PDF
+                                                            </a>
+                                                        <cfelseif isDoc AND len(event_url)>
+                                                            <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                                <i class="fas fa-download me-1"></i>Get PDF
+                                                            </button>
+                                                        </cfif>
+                                                        <cfif len(summary_ai_html)>
+                                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                                <i class="fas fa-brain me-1"></i>View Summary
+                                                            </button>
+                                                        <cfelse>
+                                                            <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
+                                                                <i class="fas fa-robot me-1"></i>Generate Summary
+                                                            </button>
+                                                        </cfif>
+                                                        <cfif isDoc>
+                                                            <button class="btn btn-outline-danger btn-sm generate-article-btn" data-event-id="#id#">
+                                                                <i class="fas fa-newspaper me-1"></i>TMZ Article
+                                                            </button>
+                                                        </cfif>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         
-                                        <!-- Status Badge Column (Right Side) -->
+                                        <!-- Right Column - Acknowledge Area -->
                                         <div class="col-md-2 d-flex align-items-center justify-content-center">
-                                            <cfset statusClass = "">
-                                            <cfset statusText = "">
-                                            <cfswitch expression="#lcase(trim(status))#">
-                                                <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
-                                                <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
-                                                <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
-                                                <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
-                                            </cfswitch>
-                                            <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                            <cfif NOT acknowledged>
+                                                <div class="text-center">
+                                                    <div class="text-muted mb-2">
+                                                        <i class="fas fa-hand-pointer fa-2x"></i>
+                                                    </div>
+                                                    <small class="text-muted">Click to Acknowledge</small>
+                                                </div>
+                                            <cfelse>
+                                                <div class="text-success text-center">
+                                                    <i class="fas fa-check-circle fa-2x mb-1"></i>
+                                                    <br><small>Acknowledged</small>
+                                                </div>
+                                            </cfif>
                                         </div>
                                     </div>
                                 </div>
