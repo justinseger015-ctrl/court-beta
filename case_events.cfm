@@ -19,7 +19,6 @@
         }
         .event-alert.unacknowledged {
             border-left-color: var(--tmz-red);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             animation: pulse-glow 2s infinite;
             border-top: 2px solid var(--tmz-red);
         }
@@ -29,18 +28,16 @@
             border-top: 2px solid #28a745;
         }
         @keyframes pulse-glow {
-            0% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-            50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
-            100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+            100% { transform: scale(1); }
         }
         .event-alert:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
         .event-alert.unacknowledged:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
             border-left-color: #ff4444;
         }
         
@@ -201,7 +198,6 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
             border: 1px solid #dee2e6;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
         .case-header h4 {
@@ -253,6 +249,34 @@
             width: 3px;
             background: linear-gradient(to bottom, #dee2e6, #f8f9fa);
             border-radius: 2px;
+        }
+        
+        /* Discovery Time Display */
+        .discovery-time {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px 0 0 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 80px;
+            border-right: 3px solid rgba(255,255,255,0.3);
+        }
+        
+        .discovery-time .time {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+        
+        .discovery-time .label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .event-description {
             font-size: 1.1rem;
@@ -379,6 +403,27 @@
                 width: 60px;
                 height: 45px;
                 font-size: 1rem;
+            }
+            
+            /* Event panel mobile indentation */
+            .event-panel-container {
+                margin-left: 1rem;
+            }
+            .event-panel-container::before {
+                left: -0.5rem;
+                width: 2px;
+            }
+            
+            /* Discovery time mobile styles */
+            .discovery-time {
+                border-radius: 8px 8px 0 0;
+                border-right: none;
+                border-bottom: 3px solid rgba(255,255,255,0.3);
+                min-height: 60px;
+                padding: 0.75rem;
+            }
+            .discovery-time .time {
+                font-size: 1.25rem;
             }
         }
     </style>
@@ -671,7 +716,7 @@
 
                     <!-- EVENTS FOR THIS CASE -->
                     <cfoutput>
-                        <div class="col-12 mb-3">
+                        <div class="event-panel-container">
                             <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
                                  id="event-#id#" 
                                  <cfif NOT acknowledged>
@@ -687,74 +732,86 @@
                                     </span>
                                 </div>
 
-                                <!-- Acknowledge Button -->
-                                <cfif NOT acknowledged>
-                                    <button class="acknowledge-btn" onclick="acknowledgeEvent(#id#)" title="Acknowledge Event">
-                                        <i class="fas fa-exclamation"></i>
-                                    </button>
-                                <cfelse>
-                                    <button class="acknowledge-btn acknowledged" title="Event Acknowledged">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </cfif>
+                                <!-- Acknowledge Button Removed - Using color coding and acknowledge date instead -->
 
-                                <div class="card-body">
-                                    <div class="row">
+                                <div class="card-body p-0">
+                                    <div class="row g-0">
+                                        <!-- Discovery Time Column -->
+                                        <div class="col-md-2">
+                                            <div class="discovery-time">
+                                                <div class="time">#timeFormat(created_at, "h:mm tt")#</div>
+                                                <div class="label">Discovered</div>
+                                            </div>
+                                        </div>
+                                        
                                         <!-- Main Content Column -->
-                                        <div class="col-md-12">
-                                            <div class="event-description">
-                                                <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
-                                            </div>
+                                        <div class="col-md-8">
+                                            <div class="p-3">
+                                                <div class="event-description">
+                                                    <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
+                                                </div>
 
-                                            <div class="event-meta mt-3">
-                                                <div class="d-flex flex-wrap gap-3">
-                                                    <div>
-                                                        <cfset statusClass = "">
-                                                        <cfset statusText = "">
-                                                        <cfswitch expression="#lcase(trim(status))#">
-                                                            <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
-                                                            <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
-                                                            <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
-                                                            <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
-                                                        </cfswitch>
-                                                        <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                                <div class="event-meta mt-3">
+                                                    <div class="d-flex flex-wrap gap-3">
+                                                        <div>
+                                                            <cfset statusClass = "">
+                                                            <cfset statusText = "">
+                                                            <cfswitch expression="#lcase(trim(status))#">
+                                                                <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
+                                                                <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
+                                                                <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
+                                                                <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
+                                                            </cfswitch>
+                                                            <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                                        </div>
+                                                        <div><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
+                                                        <cfif acknowledged>
+                                                            <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
+                                                        </cfif>
                                                     </div>
-                                                    <div><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
-                                                    <div>
-                                                        <span class="timestamp-badge"><i class="fas fa-clock me-1"></i>#dateFormat(created_at, "mm/dd/yyyy")# at #timeFormat(created_at, "h:mm tt")#</span>
+                                                </div>
+
+                                                <!-- Event Action Buttons -->
+                                                <div class="event-actions mt-3">
+                                                    <div class="btn-group" role="group">
+                                                        <cfif len(pdf_path)>
+                                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
+                                                                <i class="fas fa-file-pdf me-1"></i>Get PDF
+                                                            </a>
+                                                        <cfelseif isDoc AND len(event_url)>
+                                                            <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                                <i class="fas fa-download me-1"></i>Get PDF
+                                                            </button>
+                                                        </cfif>
+                                                        <cfif len(summary_ai_html)>
+                                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                                <i class="fas fa-brain me-1"></i>View Summary
+                                                            </button>
+                                                        <cfelse>
+                                                            <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
+                                                                <i class="fas fa-magic me-1"></i>Generate Summary
+                                                            </button>
+                                                        </cfif>
+                                                        <button class="btn btn-danger btn-sm generate-tmz-btn" data-event-id="#id#" data-case-name="#htmlEditFormat(case_name)#">
+                                                            <i class="fas fa-newspaper me-1"></i>TMZ Article
+                                                        </button>
                                                     </div>
-                                                    <cfif acknowledged>
-                                                        <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
-                                                    </cfif>
                                                 </div>
                                             </div>
-
-                                            <!-- Event Action Buttons -->
-                                            <div class="event-actions mt-3">
-                                                <div class="btn-group" role="group">
-                                                    <cfif len(pdf_path)>
-                                                        <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
-                                                            <i class="fas fa-file-pdf me-1"></i>Get PDF
-                                                        </a>
-                                                    <cfelseif isDoc AND len(event_url)>
-                                                        <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
-                                                            <i class="fas fa-download me-1"></i>Get PDF
-                                                        </button>
-                                                    </cfif>
-                                                    <cfif len(summary_ai_html)>
-                                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
-                                                            <i class="fas fa-brain me-1"></i>View Summary
-                                                        </button>
-                                                    <cfelse>
-                                                        <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
-                                                            <i class="fas fa-magic me-1"></i>Generate Summary
-                                                        </button>
-                                                    </cfif>
-                                                    <button class="btn btn-danger btn-sm generate-tmz-btn" data-event-id="#id#" data-case-name="#htmlEditFormat(case_name)#">
-                                                        <i class="fas fa-newspaper me-1"></i>TMZ Article
-                                                    </button>
+                                        </div>
+                                        
+                                        <!-- Right Side Acknowledge Area -->
+                                        <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                            <cfif NOT acknowledged>
+                                                <button class="btn btn-outline-primary btn-sm" onclick="acknowledgeEvent(#id#)" title="Acknowledge Event">
+                                                    <i class="fas fa-check me-1"></i>Acknowledge
+                                                </button>
+                                            <cfelse>
+                                                <div class="text-success text-center">
+                                                    <i class="fas fa-check-circle fa-2x mb-1"></i><br>
+                                                    <small>Acknowledged</small>
                                                 </div>
-                                            </div>
+                                            </cfif>
                                         </div>
                                     </div>
                                 </div>
