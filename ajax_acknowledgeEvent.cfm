@@ -1,4 +1,5 @@
 <cfheader name="Content-Type" value="application/json">
+<cfsetting enablecfoutputonly="true">
 
 <cfparam name="form.eventId" default="">
 
@@ -29,4 +30,6 @@
     </cfcatch>
 </cftry>
 
+<cfsetting enablecfoutputonly="false">
 <cfoutput>#serializeJSON(response)#</cfoutput>
+<cfsetting enablecfoutputonly="true">

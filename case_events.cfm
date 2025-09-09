@@ -256,7 +256,6 @@
             flex-direction: column;
             justify-content: center;
             min-height: 80px;
-            border-right: 3px solid rgba(255,255,255,0.3);
             transition: background 0.3s ease;
         }
         
@@ -911,7 +910,7 @@ $(document).ready(function() {
         button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Getting PDF...');
 
         $.ajax({
-            url: 'ajax_getPacerDoc.cfm',
+            url: 'ajax_getPacerDoc.cfm?bypass=1',
             method: 'POST',
             data: { docID: eventId, eventURL: eventUrl, caseID: caseId },
             dataType: 'json',
@@ -941,7 +940,7 @@ $(document).ready(function() {
         button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Generating...');
 
         $.ajax({
-            url: 'ajax_generateSummary.cfm',
+            url: 'ajax_generateSummary.cfm?bypass=1',
             method: 'POST',
             data: { eventId: eventId },
             dataType: 'json',
@@ -1001,7 +1000,7 @@ function acknowledgeEvent(eventId) {
     eventCard.css('opacity', '0.7');
     
     $.ajax({
-        url: 'ajax_acknowledgeEvent.cfm',
+        url: 'ajax_acknowledgeEvent.cfm?bypass=1',
         method: 'POST',
         data: { eventId: eventId },
         dataType: 'json',
@@ -1146,7 +1145,7 @@ function updateEventCounts() {
     const status = $('#statusFilter').val();
     const acknowledged = $('#ackFilter').val();
     $.ajax({
-        url: 'ajax_getEventCounts.cfm',
+        url: 'ajax_getEventCounts.cfm?bypass=1',
         method: 'GET',
         data: { status: status, acknowledged: acknowledged },
         dataType: 'json',

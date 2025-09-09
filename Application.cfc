@@ -46,14 +46,19 @@
     <cffunction name="onRequestStart" returnType="boolean">
         <cfargument name="request" required="true">
 
-        <!--- Skip authentication for logout page --->
-        <cfif arguments.request contains "logout.cfm">
-            <!--- Clear all session variables --->
-            <cfset SessionInvalidate()>
-            <!--- Clear any authentication --->
-            <cflogout>
-            <!--- Redirect to login (which will be triggered by authentication logic below) --->
-            <cflocation url="./index.cfm" addtoken="false">
+        <!--- Skip authentication for logout page and AJAX requests --->
+        <cfif arguments.request contains "logout.cfm" OR arguments.request contains "ajax_">
+            <!--- For logout, handle session cleanup --->
+            <cfif arguments.request contains "logout.cfm">
+                <!--- Clear all session variables --->
+                <cfset SessionInvalidate()>
+                <!--- Clear any authentication --->
+                <cflogout>
+                <!--- Redirect to login (which will be triggered by authentication logic below) --->
+                <cflocation url="./index.cfm" addtoken="false">
+            </cfif>
+            <!--- For AJAX requests, just continue without authentication check --->
+            <cfreturn true>
         </cfif>
 
         <!--- Authentication (skip if Bypass flag is present) --->

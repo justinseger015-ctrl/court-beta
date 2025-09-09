@@ -1,4 +1,4 @@
-<cfheader name="Content-Type" content="application/json">
+<cfheader name="Content-Type" value="application/json">
 
 <cftry>
     <!--- Get current statistics --->
