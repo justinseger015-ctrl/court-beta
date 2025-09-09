@@ -105,6 +105,31 @@
             border: 4px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
+        
+        /* Inline Case Avatar Styles */
+        .case-avatar-inline {
+            height: 80px;
+            width: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #666666;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .case-avatar-placeholder-inline {
+            height: 80px;
+            width: 100px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--tmz-red) 0%, #8b2635 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #666666;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
         .event-status {
             position: absolute;
             top: 15px;
@@ -269,6 +294,10 @@
             .avatar-placeholder, .celebrity-avatar { width: 60px; height: 60px; }
             .case-avatar { width: 150px; height: 120px; }
             .case-avatar-placeholder { width: 150px; height: 120px; font-size: 2rem; }
+            .case-avatar-inline { width: 80px; height: 60px; }
+            .case-avatar-placeholder-inline { width: 80px; height: 60px; font-size: 1rem; }
+            .case-info { flex-direction: column !important; align-items: flex-start !important; }
+            .case-image-container { margin-bottom: 1rem !important; margin-right: 0 !important; }
             .event-status { position: static; margin-bottom: 0.5rem; }
         }
     </style>
@@ -515,8 +544,27 @@
                         <div class="row">
                             <!-- Main Content Column - Full Width -->
                             <div class="col-md-12">
-                                <div class="case-info">
-                                    <h5 class="mb-2 text-dark fw-bold">#htmlEditFormat(case_name)#</h5>
+                                <div class="case-info d-flex align-items-center">
+                                    <!-- Case Image/Avatar -->
+                                    <div class="case-image-container me-3">
+                                        <cfif len(case_image_url)>
+                                            <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar-inline" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="case-avatar-placeholder-inline" style="display:none;">
+                                                <i class="fas fa-balance-scale"></i>
+                                            </div>
+                                        <cfelseif len(celebrity_name) AND len(celebrity_image)>
+                                            <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="case-avatar-inline" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="case-avatar-placeholder-inline" style="display:none;">#left(celebrity_name, 2)#</div>
+                                        <cfelseif len(celebrity_name)>
+                                            <div class="case-avatar-placeholder-inline">#left(celebrity_name, 2)#</div>
+                                        <cfelse>
+                                            <div class="case-avatar-placeholder-inline"><i class="fas fa-gavel"></i></div>
+                                        </cfif>
+                                    </div>
+                                    
+                                    <!-- Case Content -->
+                                    <div class="case-content flex-grow-1">
+                                        <h5 class="mb-2 text-dark fw-bold">#htmlEditFormat(case_name)#</h5>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="d-flex align-items-center gap-2">
@@ -537,9 +585,8 @@
                                             <strong>Priority:</strong> #htmlEditFormat(priority)#
                                         </div>
                                     </div>
-
-                                    
-                                </div>
+                                    </div> <!-- /case-content -->
+                                </div> <!-- /case-info -->
 
                                 <div class="event-description">
                                     <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
