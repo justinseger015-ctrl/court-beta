@@ -361,7 +361,6 @@
             padding: 1.5rem;
             text-align: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-top: 4px solid var(--tmz-red);
         }
         .stat-number {
             font-size: 2rem;
