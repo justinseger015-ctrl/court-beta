@@ -568,10 +568,10 @@
 <!-- Statistics (Tracked only) -->
 <cfquery name="stats" datasource="Reach">
     SELECT 
+        COUNT(DISTINCT e.fk_cases) as active_cases,
         COUNT(*) as total_events,
         SUM(CASE WHEN ISNULL(acknowledged, 0) = 0 THEN 1 ELSE 0 END) as unacknowledged,
-        SUM(CASE WHEN ISNULL(acknowledged, 0) = 1 THEN 1 ELSE 0 END) as acknowledged,
-        SUM(CASE WHEN isDoc = 1 THEN 1 ELSE 0 END) as with_documents
+        SUM(CASE WHEN ISNULL(acknowledged, 0) = 1 THEN 1 ELSE 0 END) as acknowledged
     FROM docketwatch.dbo.case_events e
     INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
     WHERE c.status = 'Tracked'
@@ -599,8 +599,12 @@
     <div class="stats-cards">
         <cfoutput>
         <div class="stat-card">
+            <div class="stat-number">#stats.active_cases#</div>
+            <div class="stat-label">Total Active Cases</div>
+        </div>
+        <div class="stat-card">
             <div class="stat-number">#stats.total_events#</div>
-            <div class="stat-label">Total Events</div>
+            <div class="stat-label">Total Case Events Today</div>
         </div>
         <div class="stat-card">
             <div class="stat-number">#stats.unacknowledged#</div>
@@ -609,10 +613,6 @@
         <div class="stat-card">
             <div class="stat-number">#stats.acknowledged#</div>
             <div class="stat-label">Acknowledged</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">#stats.with_documents#</div>
-            <div class="stat-label">With Documents</div>
         </div>
         </cfoutput>
     </div>
@@ -1192,10 +1192,10 @@ function updateEventCounts() {
         data: { status: status, acknowledged: acknowledged },
         dataType: 'json',
         success: function(data) {
-            $('.stat-card:nth-child(1) .stat-number').text(data.total);
-            $('.stat-card:nth-child(2) .stat-number').text(data.unacknowledged);
-            $('.stat-card:nth-child(3) .stat-number').text(data.acknowledged);
-            $('.stat-card:nth-child(4) .stat-number').text(data.withDocs);
+            $('.stat-card:nth-child(1) .stat-number').text(data.activeCases);
+            $('.stat-card:nth-child(2) .stat-number').text(data.total);
+            $('.stat-card:nth-child(3) .stat-number').text(data.unacknowledged);
+            $('.stat-card:nth-child(4) .stat-number').text(data.acknowledged);
             
             // Update floating acknowledge button
             updateFloatingAckButton(data.unacknowledged);
