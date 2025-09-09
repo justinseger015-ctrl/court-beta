@@ -236,6 +236,24 @@
             font-size: 1.2rem;
             border: 2px solid #dee2e6;
         }
+        
+        /* Event Panel Indentation */
+        .event-panel-container {
+            margin-left: 2rem;
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+        
+        .event-panel-container::before {
+            content: '';
+            position: absolute;
+            left: -1rem;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #dee2e6, #f8f9fa);
+            border-radius: 2px;
+        }
         .event-description {
             font-size: 1.1rem;
             line-height: 1.5;
@@ -373,7 +391,7 @@
 <!-- Params and sanitization -->
 <cfparam name="url.status" default="all">
 <cfparam name="url.acknowledged" default="all">
-<!--- Pagination removed since we're only showing current day events ---></cfparam>
+<!--- Pagination removed since we're only showing current day events --->
 <!--- <cfparam name="url.page" default="1"> --->
 <!--- <cfparam name="url.pageSize" default="20"> --->
 
@@ -383,7 +401,7 @@
 <cfset allowedAck = "all,0,1">
 <cfif listFindNoCase(allowedAck, url.acknowledged) EQ 0><cfset url.acknowledged = "all"></cfif>
 
-<!--- Pagination variables removed ---></cfparam>
+<!--- Pagination variables removed --->
 <!--- <cfset page = val(url.page)> --->
 <!--- <cfif page LT 1><cfset page = 1></cfif> --->
 
