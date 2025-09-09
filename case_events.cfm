@@ -740,11 +740,6 @@
                                         </cfswitch>
                                         <div>
                                             <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
-                                            <cfif len(celebrity_name)>
-                                                <span class="badge bg-info ms-2">
-                                                    <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
-                                                </span>
-                                            </cfif>
                                         </div>
                                     </div>
                                 </div>
@@ -791,20 +786,12 @@
 
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3">
-                                                        <!--- Status Badge - Commented Out
-                                                        <div>
-                                                            <cfset statusClass = "">
-                                                            <cfset statusText = "">
-                                                            <cfswitch expression="#lcase(trim(status))#">
-                                                                <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
-                                                                <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
-                                                                <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
-                                                                <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
-                                                            </cfswitch>
-                                                            <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
-                                                        </div>
-                                                        --->
                                                         <div style="color: ##2d3748; font-weight: 600; font-size: 0.95rem;"><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
+                                                        <cfif len(celebrity_name)>
+                                                            <span class="badge bg-info">
+                                                                <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
+                                                            </span>
+                                                        </cfif>
                                                         <!--- Acknowledged Date - Commented Out
                                                         <cfif acknowledged>
                                                             <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
@@ -812,10 +799,27 @@
                                                         --->
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Status Badge Column (Right Side) -->
+                                        <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                            <cfset statusClass = "">
+                                            <cfset statusText = "">
+                                            <cfswitch expression="#lcase(trim(status))#">
+                                                <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
+                                                <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
+                                                <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
+                                                <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
+                                            </cfswitch>
+                                            <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                                <!-- Event Action Buttons -->
-                                                <div class="event-actions mt-3">
-                                                    <div class="btn-group" role="group">
+                                <!-- Event Action Buttons -->
+                                <div class="event-actions mt-3">
+                                    <div class="btn-group" role="group">
                                                         <cfif len(pdf_path)>
                                                             <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
                                                                 <i class="fas fa-file-pdf me-1"></i>Get PDF
