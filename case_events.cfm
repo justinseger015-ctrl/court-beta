@@ -235,17 +235,6 @@
             position: relative;
         }
         
-        .event-panel-container::before {
-            content: '';
-            position: absolute;
-            left: -1.5rem;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(to bottom, #dee2e6, #f8f9fa);
-            border-radius: 2px;
-        }
-        
         /* Discovery Time Display */
         .discovery-time {
             color: white;
@@ -412,10 +401,6 @@
             /* Event panel mobile indentation */
             .event-panel-container {
                 margin-left: 1.5rem;
-            }
-            .event-panel-container::before {
-                left: -0.75rem;
-                width: 2px;
             }
             
             /* Discovery time mobile styles */
