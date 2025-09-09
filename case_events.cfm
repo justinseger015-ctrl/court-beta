@@ -193,6 +193,49 @@
             padding: 1rem;
             margin-bottom: 1rem;
         }
+        
+        /* Case Header Styles */
+        .case-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .case-header h4 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        
+        .case-header .case-meta {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .case-header .case-avatar-header {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .case-header .case-avatar-placeholder-header {
+            width: 80px;
+            height: 60px;
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 2px solid #dee2e6;
+        }
         .event-description {
             font-size: 1.1rem;
             line-height: 1.5;
@@ -299,6 +342,26 @@
             .case-info { flex-direction: column !important; align-items: flex-start !important; }
             .case-image-container { margin-bottom: 1rem !important; margin-right: 0 !important; }
             .event-status { position: static; margin-bottom: 0.5rem; }
+            
+            /* Case header mobile styles */
+            .case-header {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            .case-header .d-flex {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .case-header .me-3 {
+                margin-bottom: 1rem !important;
+                margin-right: 0 !important;
+            }
+            .case-avatar-header,
+            .case-avatar-placeholder-header {
+                width: 60px;
+                height: 45px;
+                font-size: 1rem;
+            }
         }
     </style>
 
@@ -310,8 +373,9 @@
 <!-- Params and sanitization -->
 <cfparam name="url.status" default="all">
 <cfparam name="url.acknowledged" default="all">
-<cfparam name="url.page" default="1">
-<cfparam name="url.pageSize" default="20">
+<!--- Pagination removed since we're only showing current day events ---></cfparam>
+<!--- <cfparam name="url.page" default="1"> --->
+<!--- <cfparam name="url.pageSize" default="20"> --->
 
 <cfset allowedStatus = "all,Active,Processed">
 <cfif listFindNoCase(allowedStatus, url.status) EQ 0><cfset url.status = "all"></cfif>
@@ -319,15 +383,16 @@
 <cfset allowedAck = "all,0,1">
 <cfif listFindNoCase(allowedAck, url.acknowledged) EQ 0><cfset url.acknowledged = "all"></cfif>
 
-<cfset page = val(url.page)>
-<cfif page LT 1><cfset page = 1></cfif>
+<!--- Pagination variables removed ---></cfparam>
+<!--- <cfset page = val(url.page)> --->
+<!--- <cfif page LT 1><cfset page = 1></cfif> --->
 
-<cfset pageSize = val(url.pageSize)>
-<cfif pageSize LT 5 OR pageSize GT 100><cfset pageSize = 20></cfif>
+<!--- <cfset pageSize = val(url.pageSize)> --->
+<!--- <cfif pageSize LT 5 OR pageSize GT 100><cfset pageSize = 20></cfif> --->
 
-<cfset offsetRows = (page - 1) * pageSize>
+<!--- <cfset offsetRows = (page - 1) * pageSize> --->
 
-<!-- Events query (paged, Tracked only) -->
+<!-- Events query (grouped by case, sorted by latest event) -->
 <cfquery name="events" datasource="Reach">
     WITH celeb AS (
         SELECT 
@@ -339,6 +404,17 @@
         FROM docketwatch.dbo.case_celebrity_matches m
         INNER JOIN docketwatch.dbo.celebrities cel ON cel.id = m.fk_celebrity
         WHERE m.match_status <> 'Removed'
+    ),
+    LatestPerCase AS (
+        SELECT
+            e.fk_cases,
+            MAX(e.created_at) AS latest_event_created_at
+        FROM docketwatch.dbo.case_events e
+        INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
+        WHERE c.status = 'Tracked'
+          AND c.case_number <> 'Unfiled'
+          AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+        GROUP BY e.fk_cases
     )
     SELECT 
         e.id,
@@ -378,17 +454,17 @@
         celeb.celebrity_name,
         celeb.celebrity_image,
         cp.name as priority,
-        celeb.match_probability
-    FROM docketwatch.dbo.case_events e
-    INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
+        celeb.match_probability,
+        lpc.latest_event_created_at
+    FROM LatestPerCase lpc
+    INNER JOIN docketwatch.dbo.cases c ON c.id = lpc.fk_cases
+    INNER JOIN docketwatch.dbo.case_events e ON e.fk_cases = lpc.fk_cases
     LEFT JOIN docketwatch.dbo.documents d 
         ON e.id = d.fk_case_event 
        AND (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
     LEFT JOIN celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
     LEFT JOIN docketwatch.dbo.case_priority cp ON cp.id = c.fk_priority
     WHERE 1=1
-      AND c.status = 'Tracked'
-      AND c.case_number <> 'Unfiled'
       AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
       <cfif url.status NEQ "all">
         AND e.status = <cfqueryparam value="#url.status#" cfsqltype="cf_sql_varchar">
@@ -396,9 +472,7 @@
       <cfif url.acknowledged NEQ "all">
         AND ISNULL(e.acknowledged, 0) = <cfqueryparam value="#url.acknowledged#" cfsqltype="cf_sql_bit">
       </cfif>
-    ORDER BY e.created_at DESC, e.acknowledged ASC
-    OFFSET <cfqueryparam value="#offsetRows#" cfsqltype="cf_sql_integer"> ROWS
-    FETCH NEXT <cfqueryparam value="#pageSize#" cfsqltype="cf_sql_integer"> ROWS ONLY;
+    ORDER BY lpc.latest_event_created_at DESC, e.created_at DESC
 </cfquery>
 
 <!-- Statistics (Tracked only) -->
@@ -490,28 +564,30 @@
                     </button>
                 </div>
             </div>
-            <div class="col-md-2">
+            <!--- Page Size selector removed since we're showing all current day events --->
+            <!--- <div class="col-md-2">
                 <label class="form-label">Page Size</label>
                 <select id="pageSize" class="form-select form-select-sm" onchange="changePageSize()">
                     <option value="20"  <cfif pageSize EQ 20>selected</cfif>>20</option>
                     <option value="50"  <cfif pageSize EQ 50>selected</cfif>>50</option>
                     <option value="100" <cfif pageSize EQ 100>selected</cfif>>100</option>
                 </select>
-            </div>
+            </div> --->
         </div>
     </div>
 <CFoutput>
-    <div class="d-flex align-items-center justify-content-end mb-3 gap-2">
+    <!--- Pagination navigation removed since we're showing all current day events --->
+    <!--- <div class="d-flex align-items-center justify-content-end mb-3 gap-2">
         <div class="btn-group">
             <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page-1)#" <cfif page EQ 1>style="pointer-events:none;opacity:.5"</cfif>>&laquo; Prev</a>
             <span class="btn btn-outline-secondary btn-sm disabled">Page #page#</span>
             <a class="btn btn-outline-secondary btn-sm" href="#buildPageUrl(page+1)#">Next &raquo;</a>
         </div>
-    </div>
+    </div> --->
 </CFoutput>
-    <!-- Events List -->
+    <!-- Events List Grouped by Case -->
     <div class="row">
-     <!---   <cfif events.recordcount EQ 0>
+        <cfif events.recordcount EQ 0>
             <div class="col-12">
                 <div class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
@@ -519,141 +595,158 @@
                     <p class="text-muted">No case events match your current filters.</p>
                 </div>
             </div>
-        <cfelse> --->
-            <cfoutput query="events">
-                <div class="col-12 mb-4">
-                    <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
-                         id="event-#id#" 
-                         <cfif NOT acknowledged>
-                         data-event-id="#id#" 
-                         style="cursor: pointer;" 
-                         title="Click to acknowledge this event"
-                         </cfif>>
-
-                    <!-- Event Status Badge -->
-
-                    <!-- Status Badge -->
-        <div class="event-status">
-            <span class="badge #iif(acknowledged, de('status-acknowledged'), de('status-new'))#">
-                #iif(acknowledged, de('ACKNOWLEDGED'), de('NEW'))#
-            </span>
-        </div>
-
-
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Main Content Column - Full Width -->
-                            <div class="col-md-12">
-                                <div class="case-info d-flex align-items-center">
-                                    <!-- Case Image/Avatar -->
-                                    <div class="case-image-container me-3">
-                                        <cfif len(case_image_url)>
-                                            <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar-inline" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div class="case-avatar-placeholder-inline" style="display:none;">
-                                                <i class="fas fa-balance-scale"></i>
+        <cfelse>
+            <div class="col-12">
+                <!-- Group events by case -->
+                <cfoutput query="events" group="fk_cases">
+                    <!-- CASE HEADER -->
+                    <div class="case-header" role="heading" aria-level="3">
+                        <div class="d-flex align-items-center">
+                            <!-- Case Image/Avatar -->
+                            <div class="me-3">
+                                <cfif len(case_image_url)>
+                                    <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar-header" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="case-avatar-placeholder-header" style="display:none;">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                <cfelseif len(celebrity_name) AND len(celebrity_image)>
+                                    <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="case-avatar-header" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="case-avatar-placeholder-header" style="display:none;">#left(celebrity_name, 2)#</div>
+                                <cfelseif len(celebrity_name)>
+                                    <div class="case-avatar-placeholder-header">#left(celebrity_name, 2)#</div>
+                                <cfelse>
+                                    <div class="case-avatar-placeholder-header"><i class="fas fa-gavel"></i></div>
+                                </cfif>
+                            </div>
+                            
+                            <!-- Case Content -->
+                            <div class="flex-grow-1">
+                                <h4 class="mb-2">#htmlEditFormat(case_name)#</h4>
+                                <div class="row case-meta">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="case_details.cfm?id=#fk_cases#" title="View Case Details" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fa-solid fa-file-lines"></i>
+                                                </a>
+                                                <cfif len(case_url)>
+                                                    <a href="#case_url#" target="_blank" title="Open Official Court Page" class="btn btn-outline-secondary btn-sm">
+                                                        <i class="fa-solid fa-up-right-from-square"></i>
+                                                    </a>
+                                                </cfif>
                                             </div>
-                                        <cfelseif len(celebrity_name) AND len(celebrity_image)>
-                                            <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="case-avatar-inline" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div class="case-avatar-placeholder-inline" style="display:none;">#left(celebrity_name, 2)#</div>
-                                        <cfelseif len(celebrity_name)>
-                                            <div class="case-avatar-placeholder-inline">#left(celebrity_name, 2)#</div>
-                                        <cfelse>
-                                            <div class="case-avatar-placeholder-inline"><i class="fas fa-gavel"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Priority:</strong> #htmlEditFormat(priority)#
+                                        <cfif len(celebrity_name)>
+                                            <span class="badge bg-info ms-2">
+                                                <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
+                                            </span>
                                         </cfif>
                                     </div>
-                                    
-                                    <!-- Case Content -->
-                                    <div class="case-content flex-grow-1">
-                                        <h5 class="mb-2 text-dark fw-bold">#htmlEditFormat(case_name)#</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EVENTS FOR THIS CASE -->
+                    <cfoutput>
+                        <div class="col-12 mb-3">
+                            <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
+                                 id="event-#id#" 
+                                 <cfif NOT acknowledged>
+                                 data-event-id="#id#" 
+                                 style="cursor: pointer;" 
+                                 title="Click to acknowledge this event"
+                                 </cfif>>
+
+                                <!-- Event Status Badge -->
+                                <div class="event-status">
+                                    <span class="badge #iif(acknowledged, de('status-acknowledged'), de('status-new'))#">
+                                        #iif(acknowledged, de('ACKNOWLEDGED'), de('NEW'))#
+                                    </span>
+                                </div>
+
+                                <!-- Acknowledge Button -->
+                                <cfif NOT acknowledged>
+                                    <button class="acknowledge-btn" onclick="acknowledgeEvent(#id#)" title="Acknowledge Event">
+                                        <i class="fas fa-exclamation"></i>
+                                    </button>
+                                <cfelse>
+                                    <button class="acknowledge-btn acknowledged" title="Event Acknowledged">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </cfif>
+
+                                <div class="card-body">
                                     <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="case_details.cfm?id=#fk_cases#" title="View Case Details" class="btn btn-outline-primary btn-sm">
-                                                        <i class="fa-solid fa-file-lines"></i>
-                                                    </a>
-                                                    <cfif len(case_url)>
-                                                        <a href="#case_url#" target="_blank" title="Open Official Court Page" class="btn btn-outline-secondary btn-sm">
-                                                            <i class="fa-solid fa-up-right-from-square"></i>
-                                                        </a>
+                                        <!-- Main Content Column -->
+                                        <div class="col-md-12">
+                                            <div class="event-description">
+                                                <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
+                                            </div>
+
+                                            <div class="event-meta mt-3">
+                                                <div class="d-flex flex-wrap gap-3">
+                                                    <div>
+                                                        <cfset statusClass = "">
+                                                        <cfset statusText = "">
+                                                        <cfswitch expression="#lcase(trim(status))#">
+                                                            <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
+                                                            <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
+                                                            <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
+                                                            <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
+                                                        </cfswitch>
+                                                        <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                                    </div>
+                                                    <div><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
+                                                    <div>
+                                                        <span class="timestamp-badge"><i class="fas fa-clock me-1"></i>#dateFormat(created_at, "mm/dd/yyyy")# at #timeFormat(created_at, "h:mm tt")#</span>
+                                                    </div>
+                                                    <cfif acknowledged>
+                                                        <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
                                                     </cfif>
                                                 </div>
                                             </div>
-                                        </div>
-                                     <div class="col-md-6">
-                                            <strong>Priority:</strong> #htmlEditFormat(priority)#
-                                        </div>
-                                    </div>
-                                    </div> <!-- /case-content -->
-                                </div> <!-- /case-info -->
 
-                                <div class="event-description">
-                                    <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
-                              
-                                </div>
-
-                                <div class="event-meta mt-3">
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div>
-                                            <cfset statusClass = "">
-                                            <cfset statusText = "">
-                                            <cfswitch expression="#lcase(trim(status))#">
-                                                <cfcase value="new"><cfset statusClass = "status-new"><cfset statusText = "New"></cfcase>
-                                                <cfcase value="rss"><cfset statusClass = "status-rss"><cfset statusText = "RSS"></cfcase>
-                                                <cfcase value="rss pending"><cfset statusClass = "status-rss-pending"><cfset statusText = "RSS Pending"></cfcase>
-                                                <cfdefaultcase><cfset statusClass = "status-null"><cfset statusText = "Unknown"></cfdefaultcase>
-                                            </cfswitch>
-                                            <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
+                                            <!-- Event Action Buttons -->
+                                            <div class="event-actions mt-3">
+                                                <div class="btn-group" role="group">
+                                                    <cfif len(pdf_path)>
+                                                        <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-file-pdf me-1"></i>Get PDF
+                                                        </a>
+                                                    <cfelseif isDoc AND len(event_url)>
+                                                        <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                            <i class="fas fa-download me-1"></i>Get PDF
+                                                        </button>
+                                                    </cfif>
+                                                    <cfif len(summary_ai_html)>
+                                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                            <i class="fas fa-brain me-1"></i>View Summary
+                                                        </button>
+                                                    <cfelse>
+                                                        <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
+                                                            <i class="fas fa-magic me-1"></i>Generate Summary
+                                                        </button>
+                                                    </cfif>
+                                                    <button class="btn btn-danger btn-sm generate-tmz-btn" data-event-id="#id#" data-case-name="#htmlEditFormat(case_name)#">
+                                                        <i class="fas fa-newspaper me-1"></i>TMZ Article
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
-                                        <div>
-                                            <span class="timestamp-badge"><i class="fas fa-clock me-1"></i>#dateFormat(created_at, "mm/dd/yyyy")# at #timeFormat(created_at, "h:mm tt")#</span>
-                                        </div>
-                                        <cfif acknowledged>
-                                            <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
-                                        </cfif>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Actions Column - COMMENTED OUT -->
-                            <!--
-                            <div class="col-md-3">
-                                <div class="action-buttons">
-                                    <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Document Actions">
-                                        <cfif len(pdf_path)>
-                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-action"><i class="fas fa-file-pdf me-1"></i>View PDF</a>
-                                        <cfelseif isDoc AND len(event_url)>
-                                            <button class="btn btn-primary btn-action get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
-                                                <i class="fas fa-download me-1"></i>Get PDF
-                                            </button>
-                                        </cfif>
-                                        <cfif len(summary_ai_html)>
-                                            <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
-                                                <i class="fas fa-brain me-1"></i>View Summary
-                                            </button>
-                                        <cfelse>
-                                            <button class="btn btn-outline-primary btn-action generate-summary-btn" data-event-id="#id#">
-                                                <i class="fas fa-magic me-1"></i>Generate Summary
-                                            </button>
-                                        </cfif>
-                                    </div>
-                                    <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Content Actions">
-                                        <button class="btn btn-primary btn-action generate-tmz-btn" data-event-id="#id#" data-case-name="#htmlEditFormat(case_name)#">
-                                            <i class="fas fa-newspaper me-1"></i>TMZ Article
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            -->
-                        </div> <!-- row -->
-                    </div> <!-- card-body -->
-                </div> <!-- card -->
-            </div> <!-- col -->
-            </cfoutput>
-  
-    </div> <!-- row -->
+                        </div>
+                    </cfoutput>
+                </cfoutput>
+            </div>
+        </cfif>
+    </div>
 </div> <!-- container-fluid -->
 
 <!-- Floating Acknowledge All Button -->
@@ -691,7 +784,8 @@
     </cfif>
 </cfoutput>
 <cfscript>
-/* Build page URL with preserved filters */
+/* Build page URL with preserved filters - COMMENTED OUT since pagination removed */
+/*
 function buildPageUrl(newPage){
     var params = [];
     if (url.status NEQ "all") arrayAppend(params, "status=" & urlEncodedFormat(url.status));
@@ -701,6 +795,7 @@ function buildPageUrl(newPage){
     arrayAppend(params, "page=" & newPage);
     return getPageContext().getRequest().getRequestURI() & "?" & arrayToList(params, "&");
 }
+*/
 </cfscript>
 
 <script>
@@ -900,6 +995,8 @@ function doExport(){
   window.location = url;
 }
 
+// Change page size function - COMMENTED OUT since pagination removed
+/*
 function changePageSize() {
     const status = $('#statusFilter').val();
     const acknowledged = $('#ackFilter').val();
@@ -912,6 +1009,7 @@ function changePageSize() {
     params.push('page=1');
     window.location.href = url + params.join('&');
 }
+*/
 
 // Stats refresh
 function updateEventCounts() {
