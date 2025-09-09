@@ -191,8 +191,9 @@
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
         .case-header h4 {
@@ -230,16 +231,17 @@
         
         /* Event Panel Indentation */
         .event-panel-container {
-            margin-left: 3rem;
-            margin-bottom: 0.75rem;
+            margin-left: 3.5rem;
+            margin-bottom: 1rem;
             position: relative;
+            padding-left: 1rem;
         }
         
         /* Discovery Time Display */
         .discovery-time {
             color: white;
             padding: 1rem;
-            border-radius: 8px 0 0 8px;
+            border-radius: 8px 0 0 0;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -253,9 +255,10 @@
             background: linear-gradient(135deg, var(--tmz-red), #c41e3a);
         }
         
-        /* Acknowledged - Grey background */
+        /* Acknowledged - Light Grey background */
         .event-alert.acknowledged .discovery-time {
-            background: linear-gradient(135deg, #6c757d, #495057);
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            color: #495057;
         }
         
         .discovery-time .time {
@@ -400,7 +403,8 @@
             
             /* Event panel mobile indentation */
             .event-panel-container {
-                margin-left: 1.5rem;
+                margin-left: 2rem;
+                padding-left: 0.75rem;
             }
             
             /* Discovery time mobile styles */
@@ -791,16 +795,7 @@
                                         
                                         <!-- Right Side Acknowledge Area -->
                                         <div class="col-md-2 d-flex align-items-center justify-content-center">
-                                            <cfif NOT acknowledged>
-                                                <button class="btn btn-outline-primary btn-sm" onclick="acknowledgeEvent(#id#)" title="Acknowledge Event">
-                                                    <i class="fas fa-check me-1"></i>Acknowledge
-                                                </button>
-                                            <cfelse>
-                                                <div class="text-success text-center">
-                                                    <i class="fas fa-check-circle fa-2x mb-1"></i><br>
-                                                    <small>Acknowledged</small>
-                                                </div>
-                                            </cfif>
+                                           
                                         </div>
                                     </div>
                                 </div>
@@ -1010,7 +1005,7 @@ function acknowledgeEvent(eventId) {
                     // Update discovery time background (red to grey)
                     const discoveryTime = eventCard.find('.discovery-time');
                     if (discoveryTime.length > 0) {
-                        discoveryTime.css('background', 'linear-gradient(135deg, #6c757d, #495057)');
+                        discoveryTime.css('background', 'linear-gradient(135deg, #e9ecef, #dee2e6)');
                     }
                     
                     <!--- Update right-side acknowledge area --->
