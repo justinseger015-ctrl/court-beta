@@ -376,6 +376,7 @@
 
         celeb.celebrity_name,
         celeb.celebrity_image,
+        cp.name as priority,
         celeb.match_probability
     FROM docketwatch.dbo.case_events e
     INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
@@ -383,9 +384,11 @@
         ON e.id = d.fk_case_event 
        AND (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
     LEFT JOIN celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
+    LEFT JOIN docketwatch.dbo.case_priority cp ON cp.id = c.fk_priority
     WHERE 1=1
       AND c.status = 'Tracked'
       AND c.case_number <> 'Unfiled'
+      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
       <cfif url.status NEQ "all">
         AND e.status = <cfqueryparam value="#url.status#" cfsqltype="cf_sql_varchar">
       </cfif>
@@ -408,6 +411,7 @@
     INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
     WHERE c.status = 'Tracked'
       AND c.case_number <> 'Unfiled'
+      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
 </cfquery>
 
 <div class="container-fluid mt-4">
@@ -590,21 +594,15 @@
                                             </div>
                                         </div>
                                      <div class="col-md-6">
-                                            <strong>Event ##:</strong>
-                                            <span class="event-number-badge">
-                                                <cfif acknowledged>
-                                                    <i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>
-                                                <cfelse>
-                                                    <i class="fas fa-circle text-danger me-1" style="font-size: 0.5rem;"></i>
-                                                </cfif>
-                                                #event_no#
-                                            </span>
+                                            <strong>Priority:</strong> #htmlEditFormat(priority)#
                                         </div>
                                     </div>
+
+                                    
                                 </div>
 
                                 <div class="event-description">
-                                    <strong>#htmlEditFormat(event_description)#</strong>
+                                    <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
                               
                                 </div>
 
@@ -690,7 +688,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)<br>
-                        <strong>Event:</strong> #htmlEditFormat(event_description)#
+                        <strong>Event:</strong> <cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#
                     </div>
                     <hr>
                     <div class="summary-content">#summary_ai_html#</div>
