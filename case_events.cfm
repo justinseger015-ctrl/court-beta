@@ -1001,11 +1001,23 @@ function acknowledgeEvent(eventId) {
                     // Remove clickable behavior
                     eventCard.removeAttr('data-event-id style title').css('cursor', 'default');
                     
+                    // Update status badge
+                    // const statusBadge = eventCard.find('.event-status .badge');
+                    // if (statusBadge.length > 0) {
+                    //     statusBadge.removeClass('status-new').addClass('status-acknowledged').text('ACKNOWLEDGED');
+                    // }
+                    
                     // Update discovery time background (red to grey)
                     const discoveryTime = eventCard.find('.discovery-time');
                     if (discoveryTime.length > 0) {
                         discoveryTime.css('background', 'linear-gradient(135deg, #6c757d, #495057)');
                     }
+                    
+                    // Update right-side acknowledge area
+                    // const acknowledgeArea = eventCard.find('.col-md-2').last();
+                    // if (acknowledgeArea.length > 0) {
+                    //     acknowledgeArea.html('<div class="text-success text-center"><i class="fas fa-check-circle fa-2x mb-1"></i><br><small>Acknowledged</small></div>');
+                    // }
                     
                     // Add acknowledged timestamp to meta section
                     const now = new Date();
