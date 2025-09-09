@@ -248,7 +248,6 @@
         
         /* Discovery Time Display */
         .discovery-time {
-            background: linear-gradient(135deg, #6c757d, #495057);
             color: white;
             padding: 1rem;
             border-radius: 8px 0 0 8px;
@@ -258,6 +257,17 @@
             justify-content: center;
             min-height: 80px;
             border-right: 3px solid rgba(255,255,255,0.3);
+            transition: background 0.3s ease;
+        }
+        
+        /* Unacknowledged - Red background */
+        .event-alert.unacknowledged .discovery-time {
+            background: linear-gradient(135deg, var(--tmz-red), #c41e3a);
+        }
+        
+        /* Acknowledged - Grey background */
+        .event-alert.acknowledged .discovery-time {
+            background: linear-gradient(135deg, #6c757d, #495057);
         }
         
         .discovery-time .time {
