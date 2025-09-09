@@ -114,17 +114,12 @@
         .status-new {
             background: linear-gradient(45deg, #ff6b6b, #ee5a24);
             color: white;
-            animation: bounce 1s infinite;
         }
         .status-acknowledged {
             background: linear-gradient(45deg, #00d2d3, #54a0ff);
             color: white;
         }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
+        /* ACTION BUTTONS CSS - COMMENTED OUT
         .action-buttons {
             display: flex;
             flex-direction: column;
@@ -147,6 +142,7 @@
             border-bottom-right-radius: 0.375rem;
             border-bottom: none;
         }
+        */
         .event-number-badge {
             display: inline-flex;
             align-items: center;
@@ -204,29 +200,6 @@
         .status-null {
             background: linear-gradient(45deg, #9e9e9e, #757575);
             color: white;
-        }
-        .acknowledge-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 10;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            background: rgba(157, 52, 51, 0.9);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .acknowledge-btn:hover {
-            background: rgba(157, 52, 51, 1);
-            transform: scale(1.1);
-        }
-        .acknowledge-btn.acknowledged {
-            background: rgba(40, 167, 69, 0.9);
         }
         .filter-controls {
             background: white;
@@ -292,12 +265,11 @@
         }
         /* Mobile responsiveness */
         @media (max-width: 768px) {
-            .action-buttons { justify-content: center; }
+            /* .action-buttons { justify-content: center; } - COMMENTED OUT */
             .avatar-placeholder, .celebrity-avatar { width: 60px; height: 60px; }
             .case-avatar { width: 150px; height: 120px; }
             .case-avatar-placeholder { width: 150px; height: 120px; font-size: 2rem; }
             .event-status { position: static; margin-bottom: 0.5rem; }
-            .acknowledge-btn { position: static; margin-bottom: 0.5rem; }
         }
     </style>
 
@@ -529,16 +501,7 @@
                          title="Click to acknowledge this event"
                          </cfif>>
 
-                    <!-- Acknowledge Button -->
-                    <cfif NOT acknowledged>
-                        <button class="acknowledge-btn" onclick="acknowledgeEvent(#id#); event.stopPropagation();" title="Mark as acknowledged">
-                            <i class="fas fa-exclamation"></i>
-                        </button>
-                    <cfelse>
-                        <button class="acknowledge-btn acknowledged" title="Already acknowledged">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </cfif>
+                    <!-- Event Status Badge -->
 
                     <!-- Status Badge -->
         <div class="event-status">
@@ -550,31 +513,8 @@
 
                     <div class="card-body">
                         <div class="row">
-                            <!-- Avatar Column -->
-                            <div class="col-md-2 text-center mb-3">
-                                <cfif len(case_image_url)>
-                                    <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="case-avatar-placeholder" style="display:none;">
-                                        <i class="fas fa-balance-scale"></i>
-                                    </div>
-                                    <div class="mt-3">
-                                        <strong class="text-primary">Case Image</strong>
-                                    </div>
-                                <cfelseif len(celebrity_name) AND len(celebrity_image)>
-                                    <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="celebrity-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="avatar-placeholder" style="display:none;">#left(celebrity_name, 2)#</div>
-                                    <div class="mt-2"><small class="text-muted">#celebrity_name#</small></div>
-                                <cfelseif len(celebrity_name)>
-                                    <div class="avatar-placeholder">#left(celebrity_name, 2)#</div>
-                                    <div class="mt-2"><small class="text-muted">#celebrity_name#</small></div>
-                                <cfelse>
-                                    <div class="avatar-placeholder"><i class="fas fa-gavel"></i></div>
-                                    <div class="mt-2"><small class="text-muted">Legal Case</small></div>
-                                </cfif>
-                            </div>
-
-                            <!-- Main Content Column -->
-                            <div class="col-md-7">
+                            <!-- Main Content Column - Full Width -->
+                            <div class="col-md-12">
                                 <div class="case-info">
                                     <h5 class="mb-2 text-dark fw-bold">#htmlEditFormat(case_name)#</h5>
                                     <div class="row">
@@ -630,7 +570,8 @@
                                 </div>
                             </div>
 
-                            <!-- Actions Column -->
+                            <!-- Actions Column - COMMENTED OUT -->
+                            <!--
                             <div class="col-md-3">
                                 <div class="action-buttons">
                                     <div class="btn-group-vertical w-100 mb-2" role="group" aria-label="Document Actions">
@@ -658,6 +599,7 @@
                                     </div>
                                 </div>
                             </div>
+                            -->
                         </div> <!-- row -->
                     </div> <!-- card-body -->
                 </div> <!-- card -->
@@ -735,6 +677,8 @@ $(document).ready(function() {
         }
     });
 
+    /* ACTION BUTTON JAVASCRIPT - COMMENTED OUT */
+    /*
     // Get PDF
     $('body').on('click', '.get-pdf-btn', function() {
         var button = $(this);
@@ -764,7 +708,9 @@ $(document).ready(function() {
             }
         });
     });
+    */
 
+    /*
     // Generate Summary
     $('body').on('click', '.generate-summary-btn', function() {
         var button = $(this);
@@ -793,7 +739,9 @@ $(document).ready(function() {
             }
         });
     });
+    */
 
+    /*
     // Generate TMZ Article (mock)
     $('body').on('click', '.generate-tmz-btn', function() {
         var button = $(this);
@@ -813,13 +761,14 @@ $(document).ready(function() {
             button.prop('disabled', false).html('<i class="fas fa-newspaper me-1"></i>TMZ Article');
         }, 1500);
     });
+    */
 });
 
 // Acknowledge single event
 function acknowledgeEvent(eventId) {
     // Show loading state
     const eventCard = $('#event-' + eventId);
-    eventCard.css('opacity', '0.7').find('.acknowledge-btn').prop('disabled', true);
+    eventCard.css('opacity', '0.7');
     
     $.ajax({
         url: 'ajax_acknowledgeEvent.cfm',
@@ -833,10 +782,6 @@ function acknowledgeEvent(eventId) {
                 
                 // Remove clickable behavior
                 eventCard.removeAttr('data-event-id style title').css('cursor', 'default');
-                
-                // Update acknowledge button
-                const ackBtn = eventCard.find('.acknowledge-btn');
-                ackBtn.addClass('acknowledged').html('<i class="fas fa-check"></i>').prop('onclick', null).prop('disabled', false);
                 
                 // Update status badge
                 eventCard.find('.event-status .badge').removeClass('status-new').addClass('status-acknowledged').text('ACKNOWLEDGED');
