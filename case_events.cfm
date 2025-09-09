@@ -307,6 +307,41 @@
             background: linear-gradient(45deg, #9e9e9e, #757575);
             color: white;
         }
+        
+        /* Priority Badge Styles */
+        .priority-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .priority-critical { 
+            background-color: #dc2626; 
+            color: white; 
+            font-weight: 700; 
+        }
+        .priority-high { 
+            background-color: #ea580c; 
+            color: white; 
+            font-weight: 600; 
+        }
+        .priority-medium { 
+            background-color: #d97706; 
+            color: white; 
+            font-weight: 500; 
+        }
+        .priority-low { 
+            background-color: #16a34a; 
+            color: white; 
+            font-weight: 400; 
+        }
+        .priority-unknown { 
+            background-color: #6b7280; 
+            color: white; 
+            font-weight: 400; 
+        }
         .filter-controls {
             background: white;
             border-radius: 10px;
@@ -695,7 +730,15 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <strong>Priority:</strong> #htmlEditFormat(priority)#
+                                        <cfset priorityClass = "">
+                                        <cfswitch expression="#lcase(trim(priority))#">
+                                            <cfcase value="critical"><cfset priorityClass = "priority-critical"></cfcase>
+                                            <cfcase value="high"><cfset priorityClass = "priority-high"></cfcase>
+                                            <cfcase value="medium"><cfset priorityClass = "priority-medium"></cfcase>
+                                            <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
+                                            <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
+                                        </cfswitch>
+                                        <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
                                         <cfif len(celebrity_name)>
                                             <span class="badge bg-info ms-2">
                                                 <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
