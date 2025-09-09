@@ -538,6 +538,7 @@
         c.case_name,
         c.case_url,
         c.case_image_url,
+        c.summarize_html,
         c.status AS case_status,
 
         d.pdf_title,
@@ -702,54 +703,65 @@
                 <cfoutput query="events" group="fk_cases">
                     <!-- CASE HEADER -->
                     <div class="case-header" role="heading" aria-level="3">
-                        <div class="d-flex align-items-center">
-                            <!-- Case Image/Avatar -->
-                            <div class="me-3">
-                                <cfif len(case_image_url)>
-                                    <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar-header" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="case-avatar-placeholder-header" style="display:none;">
-                                        <i class="fas fa-balance-scale"></i>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <!-- Case Image/Avatar -->
+                                    <div class="me-3">
+                                        <cfif len(case_image_url)>
+                                            <img src="#case_image_url#" loading="lazy" decoding="async" alt="#htmlEditFormat(case_name)#" class="case-avatar-header" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="case-avatar-placeholder-header" style="display:none;">
+                                                <i class="fas fa-balance-scale"></i>
+                                            </div>
+                                        <cfelseif len(celebrity_name) AND len(celebrity_image)>
+                                            <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="case-avatar-header" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="case-avatar-placeholder-header" style="display:none;">#left(celebrity_name, 2)#</div>
+                                        <cfelseif len(celebrity_name)>
+                                            <div class="case-avatar-placeholder-header">#left(celebrity_name, 2)#</div>
+                                        <cfelse>
+                                            <div class="case-avatar-placeholder-header"><i class="fas fa-gavel"></i></div>
+                                        </cfif>
                                     </div>
-                                <cfelseif len(celebrity_name) AND len(celebrity_image)>
-                                    <img src="#celebrity_image#" loading="lazy" decoding="async" alt="#htmlEditFormat(celebrity_name)#" class="case-avatar-header" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="case-avatar-placeholder-header" style="display:none;">#left(celebrity_name, 2)#</div>
-                                <cfelseif len(celebrity_name)>
-                                    <div class="case-avatar-placeholder-header">#left(celebrity_name, 2)#</div>
-                                <cfelse>
-                                    <div class="case-avatar-placeholder-header"><i class="fas fa-gavel"></i></div>
-                                </cfif>
-                            </div>
-                            
-                            <!-- Case Content -->
-                            <div class="flex-grow-1">
-                                <h4 class="mb-2">#htmlEditFormat(case_name)#</h4>
-                                <div class="row case-meta">
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="case_details.cfm?id=#fk_cases#" title="View Case Details" class="btn btn-outline-primary btn-sm">
-                                                    <i class="fa-solid fa-file-lines"></i>
-                                                </a>
-                                                <cfif len(case_url)>
-                                                    <a href="#case_url#" target="_blank" title="Open Official Court Page" class="btn btn-outline-secondary btn-sm">
-                                                        <i class="fa-solid fa-up-right-from-square"></i>
-                                                    </a>
-                                                </cfif>
+                                    
+                                    <!-- Case Content -->
+                                    <div class="flex-grow-1">
+                                        <h4 class="mb-2">#htmlEditFormat(case_name)#</h4>
+                                        <div class="row case-meta">
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 d-flex align-items-center justify-content-end">
+                                                <cfset priorityClass = "">
+                                                <cfswitch expression="#lcase(trim(priority))#">
+                                                    <cfcase value="critical"><cfset priorityClass = "priority-critical"></cfcase>
+                                                    <cfcase value="high"><cfset priorityClass = "priority-high"></cfcase>
+                                                    <cfcase value="medium"><cfset priorityClass = "priority-medium"></cfcase>
+                                                    <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
+                                                    <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
+                                                </cfswitch>
+                                                <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 d-flex align-items-center justify-content-end">
-                                        <cfset priorityClass = "">
-                                        <cfswitch expression="#lcase(trim(priority))#">
-                                            <cfcase value="critical"><cfset priorityClass = "priority-critical"></cfcase>
-                                            <cfcase value="high"><cfset priorityClass = "priority-high"></cfcase>
-                                            <cfcase value="medium"><cfset priorityClass = "priority-medium"></cfcase>
-                                            <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
-                                            <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
-                                        </cfswitch>
-                                        <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
-                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Case Action Buttons -->
+                            <div class="card-footer bg-light">
+                                <div class="btn-group" role="group">
+                                    <a href="case_details.cfm?id=#fk_cases#" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-file-lines me-1"></i>View Case Details
+                                    </a>
+                                    <cfif len(case_url)>
+                                        <a href="#case_url#" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fa-solid fa-up-right-from-square me-1"></i>Open Court Page
+                                        </a>
+                                    </cfif>
+                                    <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="##caseSummaryModal#fk_cases#">
+                                        <i class="fas fa-file-text me-1"></i>Case Summary
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -914,6 +926,53 @@
         </div>
     </div>
     </cfif>
+</cfoutput>
+
+<!-- Case Summary Modals -->
+<cfquery name="casesWithSummary" datasource="Reach">
+    SELECT DISTINCT c.id as fk_cases, c.case_name, c.case_number, c.summarize_html
+    FROM docketwatch.dbo.cases c
+    INNER JOIN docketwatch.dbo.case_events e ON c.id = e.fk_cases
+    WHERE c.status = 'Tracked'
+      AND c.case_number <> 'Unfiled'
+      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+      <cfif url.case_id NEQ "all">
+        AND c.id = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
+      </cfif>
+</cfquery>
+
+<cfoutput query="casesWithSummary">
+    <div class="modal fade" id="caseSummaryModal#fk_cases#" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-text me-2"></i>Case Summary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)
+                    </div>
+                    <hr>
+                    <cfif len(trim(summarize_html))>
+                        <div class="summary-content">#REReplace(summarize_html, "(\r\n|\n|\r)", "<br>", "all")#</div>
+                    <cfelse>
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-file-text fa-3x mb-3" style="opacity: 0.3;"></i>
+                            <p class="mb-0">No case summary available.</p>
+                            <small class="text-muted">Summary can be generated from the case details page.</small>
+                        </div>
+                    </cfif>
+                </div>
+                <div class="modal-footer">
+                    <a href="case_details.cfm?id=#fk_cases#" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>View Full Case Details
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </cfoutput>
 <cfscript>
 /* Build page URL with preserved filters - COMMENTED OUT since pagination removed */
