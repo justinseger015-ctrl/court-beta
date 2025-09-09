@@ -729,7 +729,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 d-flex align-items-center justify-content-end">
                                         <cfset priorityClass = "">
                                         <cfswitch expression="#lcase(trim(priority))#">
                                             <cfcase value="critical"><cfset priorityClass = "priority-critical"></cfcase>
@@ -738,12 +738,14 @@
                                             <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
                                             <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
                                         </cfswitch>
-                                        <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
-                                        <cfif len(celebrity_name)>
-                                            <span class="badge bg-info ms-2">
-                                                <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
-                                            </span>
-                                        </cfif>
+                                        <div>
+                                            <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
+                                            <cfif len(celebrity_name)>
+                                                <span class="badge bg-info ms-2">
+                                                    <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
+                                                </span>
+                                            </cfif>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -789,6 +791,7 @@
 
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3">
+                                                        <!--- Status Badge - Commented Out
                                                         <div>
                                                             <cfset statusClass = "">
                                                             <cfset statusText = "">
@@ -800,10 +803,13 @@
                                                             </cfswitch>
                                                             <span class="status-badge #statusClass#"><i class="fas fa-info-circle me-1"></i>#statusText#</span>
                                                         </div>
-                                                        <div><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
+                                                        --->
+                                                        <div style="color: ##2d3748; font-weight: 600; font-size: 0.95rem;"><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
+                                                        <!--- Acknowledged Date - Commented Out
                                                         <cfif acknowledged>
                                                             <div class="text-success"><i class="fas fa-check-circle me-1"></i>Acknowledged #dateFormat(acknowledged_at, "mm/dd/yyyy")#</div>
                                                         </cfif>
+                                                        --->
                                                     </div>
                                                 </div>
 
