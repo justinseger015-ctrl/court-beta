@@ -809,39 +809,13 @@
                                                     </div>
                                                 </div>
 
-                                                <!-- Event Action Buttons -->
-                                                <div class="event-actions mt-3">
-                                                    <div class="btn-group" role="group">
-                                                        <cfif len(pdf_path)>
-                                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
-                                                                <i class="fas fa-file-pdf me-1"></i>Get PDF
-                                                            </a>
-                                                        <cfelseif isDoc AND len(event_url)>
-                                                            <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
-                                                                <i class="fas fa-download me-1"></i>Get PDF
-                                                            </button>
-                                                        </cfif>
-                                                        <cfif len(summary_ai_html)>
-                                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
-                                                                <i class="fas fa-brain me-1"></i>View Summary
-                                                            </button>
-                                                        <cfelse>
-                                                            <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
-                                                                <i class="fas fa-robot me-1"></i>Generate Summary
-                                                            </button>
-                                                        </cfif>
-                                                        <cfif isDoc>
-                                                            <button class="btn btn-outline-danger btn-sm generate-article-btn" data-event-id="#id#">
-                                                                <i class="fas fa-newspaper me-1"></i>TMZ Article
-                                                            </button>
-                                                        </cfif>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                         
                                         <!-- Right Column - Acknowledge Area -->
                                         <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                          <!---
+                                          
                                             <cfif NOT acknowledged>
                                                 <div class="text-center">
                                                     <div class="text-muted mb-2">
@@ -855,43 +829,37 @@
                                                     <br><small>Acknowledged</small>
                                                 </div>
                                             </cfif>
+                                        --->
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Event Action Buttons -->
-                                <div class="event-actions mt-3">
+                                <div class="card-footer bg-light">
                                     <div class="btn-group" role="group">
-                                                        <cfif len(pdf_path)>
-                                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
-                                                                <i class="fas fa-file-pdf me-1"></i>Get PDF
-                                                            </a>
-                                                        <cfelseif isDoc AND len(event_url)>
-                                                            <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
-                                                                <i class="fas fa-download me-1"></i>Get PDF
-                                                            </button>
-                                                        </cfif>
-                                                        <cfif len(summary_ai_html)>
-                                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
-                                                                <i class="fas fa-brain me-1"></i>View Summary
-                                                            </button>
-                                                        <cfelse>
-                                                            <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
-                                                                <i class="fas fa-magic me-1"></i>Generate Summary
-                                                            </button>
-                                                        </cfif>
-                                                        <button class="btn btn-danger btn-sm generate-tmz-btn" data-event-id="#id#" data-case-name="#htmlEditFormat(case_name)#">
-                                                            <i class="fas fa-newspaper me-1"></i>TMZ Article
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Right Side Acknowledge Area -->
-                                        <div class="col-md-2 d-flex align-items-center justify-content-center">
-                                           
-                                        </div>
+                                        <cfif len(pdf_path)>
+                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
+                                                <i class="fas fa-file-pdf me-1"></i>Get PDF
+                                            </a>
+                                        <cfelseif isDoc AND len(event_url)>
+                                            <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                <i class="fas fa-download me-1"></i>Get PDF
+                                            </button>
+                                        </cfif>
+                                        <cfif len(summary_ai_html)>
+                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                <i class="fas fa-brain me-1"></i>View Summary
+                                            </button>
+                                        <cfelse>
+                                            <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
+                                                <i class="fas fa-robot me-1"></i>Generate Summary
+                                            </button>
+                                        </cfif>
+                                        <cfif isDoc>
+                                            <button class="btn btn-outline-danger btn-sm generate-article-btn" data-event-id="#id#">
+                                                <i class="fas fa-newspaper me-1"></i>TMZ Article
+                                            </button>
+                                        </cfif>
                                     </div>
                                 </div>
                             </div>
