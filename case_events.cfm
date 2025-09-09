@@ -180,7 +180,7 @@
             color: #6c757d;
         }
         .case-info {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: linear-gradient(135deg, #f8f9fa 100%, #e9ecef 0%);
             border-radius: 10px;
             padding: 1rem;
             margin-bottom: 1rem;
@@ -188,9 +188,10 @@
         
         /* Case Header Styles */
         .case-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: linear-gradient(135deg, #DEF5FF 100%, #485F77 0%);
             border-radius: 12px;
             padding: 1.5rem;
+            opacity: 0..95;
             margin-bottom: 2rem;
             border: 1px solid #dee2e6;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
