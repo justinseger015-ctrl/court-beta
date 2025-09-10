@@ -759,7 +759,7 @@
                                             <i class="fa-solid fa-up-right-from-square me-1"></i>Open Court Page
                                         </a>
                                     </cfif>
-                                    <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="##caseSummaryModal#fk_cases#">
+                                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="##caseSummaryModal#fk_cases#">
                                         <i class="fas fa-file-text me-1"></i>Case Summary
                                     </button>
                                 </div>
@@ -1290,6 +1290,13 @@ function showNotification(type, message) {
     }
 }
 </script>
+
+
+<!-- Bootstrap 5 JS (with Popper included) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+        crossorigin="anonymous"></script>
+
 
 </body>
 </html>
