@@ -730,6 +730,11 @@
                                             <div class="col-md-6">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
+                                                    <cfif len(celebrity_name)>
+                                                        <span class="badge bg-info">
+                                                            <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
+                                                        </span>
+                                                    </cfif>
                                                 </div>
                                             </div>
                                             <div class="col-md-6 d-flex align-items-center justify-content-end">
@@ -807,11 +812,6 @@
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3 align-items-center">
                                                         <div style="color: ##2d3748; font-weight: 600; font-size: 0.95rem;"><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
-                                                        <cfif len(celebrity_name)>
-                                                            <span class="badge bg-info">
-                                                                <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
-                                                            </span>
-                                                        </cfif>
                                                         <!--- Status Badge - Commented Out
                                                         <cfset statusClass = "">
                                                         <cfset statusText = "">
