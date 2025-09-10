@@ -518,6 +518,7 @@
     )
     SELECT 
         e.id,
+
         e.event_no,
         e.event_date,
         e.event_description,
@@ -546,7 +547,7 @@
         d.summary_ai_html,
         CASE 
             WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
-                THEN '/pdf/' + d.rel_path
+                THEN '/docs/' + d.rel_path
             WHEN d.doc_id IS NOT NULL 
                 THEN '/docs/cases/' + CAST(e.fk_cases AS varchar(20)) + '/E' + CAST(d.doc_id AS varchar(20)) + '.pdf'
             ELSE NULL
@@ -812,6 +813,8 @@
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3 align-items-center">
                                                         <div style="color: ##2d3748; font-weight: 600; font-size: 0.95rem;"><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
+                                                        <span>#id#</span>
+                                                        
                                                         <!--- Status Badge - Commented Out
                                                         <cfset statusClass = "">
                                                         <cfset statusText = "">
