@@ -498,12 +498,12 @@
     WITH celeb AS (
         SELECT 
             m.fk_case,
-            cel.name AS celebrity_name,
-            cel.image_url AS celebrity_image,
+            c.name AS celebrity_name,
+            c.image_url AS celebrity_image,
             m.probability_score AS match_probability,
             ROW_NUMBER() OVER (PARTITION BY m.fk_case ORDER BY m.ranking_score DESC) AS rn
         FROM docketwatch.dbo.case_celebrity_matches m
-        INNER JOIN docketwatch.dbo.celebrities cel ON cel.id = m.fk_celebrity
+        INNER JOIN docketwatch.dbo.celebrities c ON c.id = m.fk_celebrity
         WHERE m.match_status <> 'Removed'
     ),
     LatestPerCase AS (
