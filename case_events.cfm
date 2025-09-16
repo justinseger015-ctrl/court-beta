@@ -464,11 +464,19 @@
 <!-- Params and sanitization -->
 <cfparam name="url.case_id" default="all">
 <cfparam name="url.acknowledged" default="all">
+<cfparam name="url.days" default="1">
 <!--- Pagination removed since we're only showing current day events --->
 <!--- <cfparam name="url.page" default="1"> --->
 <!--- <cfparam name="url.pageSize" default="20"> --->
 
-<!--- Get cases that have events today for filter dropdown --->
+<!--- Validate days parameter --->
+<cfset url.days = val(url.days)>
+<cfif url.days LT 1 OR url.days GT 30><cfset url.days = 1></cfif>
+
+<!--- Calculate date range based on days parameter --->
+<cfset startDate = dateAdd("d", -(url.days - 1), now())>
+<cfset endDate = now()>
+<!--- Get cases that have events in the selected date range for filter dropdown --->
 <cfquery name="casesWithEvents" datasource="Reach">
     SELECT DISTINCT c.id, c.case_name, c.case_number, t.tool_name, COUNT(e.id) as event_count
     FROM docketwatch.dbo.cases c
@@ -476,7 +484,8 @@
     LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
     WHERE c.status = 'Tracked'
       AND c.case_number <> 'Unfiled'
-      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+      AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
+      AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
     GROUP BY c.id, c.case_name, c.case_number, t.tool_name
     ORDER BY c.case_name
 </cfquery>
@@ -514,7 +523,8 @@
         INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
         WHERE c.status = 'Tracked'
           AND c.case_number <> 'Unfiled'
-          AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+          AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
+          AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
         GROUP BY e.fk_cases
     ),
     DocumentCounts AS (
@@ -523,7 +533,8 @@
             COUNT(d.doc_uid) as doc_count
         FROM docketwatch.dbo.case_events ce
         LEFT JOIN docketwatch.dbo.documents d ON ce.id = d.fk_case_event
-        WHERE CAST(ce.created_at AS DATE) = CAST(GETDATE() AS DATE)
+        WHERE ce.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
+          AND ce.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
         GROUP BY ce.id
     )
     SELECT 
@@ -581,7 +592,8 @@
     LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
     LEFT JOIN DocumentCounts dc ON dc.event_id = e.id
     WHERE 1=1
-      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+      AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
+      AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
       <cfif url.case_id NEQ "all">
         AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
       </cfif>
@@ -602,7 +614,8 @@
     INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
     WHERE c.status = 'Tracked'
       AND c.case_number <> 'Unfiled'
-      AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
+      AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
+      AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
 </cfquery>
 
 <div class="container-fluid mt-4">
@@ -612,7 +625,19 @@
                 <i class="fas fa-bell me-2 text-primary"></i>
                 Case Events Alert Dashboard
             </h2>
-            <p class="text-muted mb-0">Monitor and manage case events in real-time</p>
+            <cfoutput>
+            <p class="text-muted mb-0">
+                <cfif url.days EQ 1>
+                    Monitor and manage case events from today
+                <cfelse>
+                    Monitor and manage case events from the last #url.days# days
+                </cfif>
+                <span class="small">
+                    (#dateFormat(startDate, "mmm d")# 
+                    <cfif url.days GT 1>- #dateFormat(endDate, "mmm d")#</cfif>)
+                </span>
+            </p>
+            </cfoutput>
         </div>
         <div>
             <button class="btn btn-outline-secondary" onclick="window.location.reload()">
@@ -666,6 +691,20 @@
                     <option value="all" <cfif url.acknowledged eq "all">selected</cfif>>All Events</option>
                     <option value="0" <cfif url.acknowledged eq "0">selected</cfif>>Needs Attention</option>
                     <option value="1" <cfif url.acknowledged eq "1">selected</cfif>>Acknowledged</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="daysFilter" class="form-label">
+                    <i class="fas fa-calendar me-1"></i>
+                    Date Range
+                </label>
+                <select id="daysFilter" class="form-select" onchange="updateFilters()">
+                    <option value="1" <cfif url.days eq 1>selected</cfif>>Today Only</option>
+                    <option value="2" <cfif url.days eq 2>selected</cfif>>Last 2 Days</option>
+                    <option value="3" <cfif url.days eq 3>selected</cfif>>Last 3 Days</option>
+                    <option value="7" <cfif url.days eq 7>selected</cfif>>Last 7 Days</option>
+                    <option value="14" <cfif url.days eq 14>selected</cfif>>Last 14 Days</option>
+                    <option value="30" <cfif url.days eq 30>selected</cfif>>Last 30 Days</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -1347,20 +1386,21 @@ function acknowledgeAll() {
 function updateFilters() {
     const case_id = $('#caseFilter').val();
     const acknowledged = $('#ackFilter').val();
+    const days = $('#daysFilter').val();
     let url = window.location.pathname + '?';
     const params = [];
     if (case_id !== 'all') params.push('case_id=' + encodeURIComponent(case_id));
     if (acknowledged !== 'all') params.push('acknowledged=' + encodeURIComponent(acknowledged));
-    const pageSize = $('#pageSize').val();
-    if (pageSize) params.push('pageSize=' + encodeURIComponent(pageSize));
-    params.push('page=1');
+    if (days !== '1') params.push('days=' + encodeURIComponent(days));
     window.location.href = url + params.join('&');
 }
 
 function doExport(){
   const case_id = $('#caseFilter').val();
   const acknowledged = $('#ackFilter').val();
-  const url = 'export_events.cfm?case_id=' + encodeURIComponent(case_id) + '&acknowledged=' + encodeURIComponent(acknowledged);
+  const days = $('#daysFilter').val();
+  let url = 'export_events.cfm?case_id=' + encodeURIComponent(case_id) + '&acknowledged=' + encodeURIComponent(acknowledged);
+  if (days !== '1') url += '&days=' + encodeURIComponent(days);
   window.location = url;
 }
 
@@ -1384,10 +1424,11 @@ function changePageSize() {
 function updateEventCounts() {
     const case_id = $('#caseFilter').val();
     const acknowledged = $('#ackFilter').val();
+    const days = $('#daysFilter').val();
     $.ajax({
         url: 'ajax_getEventCounts.cfm?bypass=1',
         method: 'GET',
-        data: { case_id: case_id, acknowledged: acknowledged },
+        data: { case_id: case_id, acknowledged: acknowledged, days: days },
         dataType: 'json',
         success: function(data) {
             $('.stat-card:nth-child(1) .stat-number').text(data.activeCases);
