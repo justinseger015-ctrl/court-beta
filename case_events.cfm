@@ -1013,7 +1013,7 @@
                     ELSE 0
                 END AS has_pdf
             FROM docketwatch.dbo.documents d
-            WHERE d.fk_case_event = #id#
+            WHERE d.fk_case_event = <cfqueryparam value="#id#" cfsqltype="cf_sql_varchar">
             ORDER BY 
                 CASE WHEN d.pdf_type IS NULL OR d.pdf_type <> 'Attachment' THEN 0 ELSE 1 END,
                 d.pdf_title
