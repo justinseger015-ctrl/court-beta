@@ -520,7 +520,7 @@
     DocumentCounts AS (
         SELECT 
             ce.id as event_id,
-            COUNT(d.id) as doc_count
+            COUNT(d.doc_uid) as doc_count
         FROM docketwatch.dbo.case_events ce
         LEFT JOIN docketwatch.dbo.documents d ON ce.id = d.fk_case_event
         WHERE CAST(ce.created_at AS DATE) = CAST(GETDATE() AS DATE)
@@ -993,7 +993,7 @@
         <!--- Query for documents related to this event --->
         <cfquery name="eventDocuments" datasource="Reach">
             SELECT 
-                d.id,
+                d.doc_uid,
                 d.pdf_title,
                 d.summary_ai,
                 d.summary_ai_html,
