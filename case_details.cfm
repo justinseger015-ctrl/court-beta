@@ -99,7 +99,13 @@ SELECT
     d.[summary_ai],
     d.[summary_ai_html],
     d.[search_text],
-    '/docs/cases/' + cast(e.fk_cases as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
+    CASE 
+        WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
+            THEN '/docs/' + REPLACE(d.rel_path,'\','/')
+        WHEN d.doc_id IS NOT NULL 
+            THEN REPLACE('/docs/cases/' + CAST(e.fk_cases AS varchar(20)) + '/E' + CAST(d.doc_id AS varchar(20)) + '.pdf', '\\', '/')
+        ELSE NULL
+    END AS pdf_path,
     'tbd' AS attachment_links
 
 FROM docketwatch.dbo.case_events e
@@ -120,7 +126,14 @@ SELECT
     d.[fk_case_event],
     d.[pdf_title],
     d.[doc_id],
-    '/docs/cases/' + cast(d.fk_case as varchar) + '/E' + cast(d.doc_id as varchar) + '.pdf' as pdf_path,
+    d.[rel_path],
+    CASE 
+        WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
+            THEN '/docs/' + REPLACE(d.rel_path,'\','/')
+        WHEN d.doc_id IS NOT NULL 
+            THEN REPLACE('/docs/cases/' + CAST(d.fk_case AS varchar(20)) + '/E' + CAST(d.doc_id AS varchar(20)) + '.pdf', '\', '/')
+        ELSE NULL
+    END AS pdf_path,
     d.[pdf_type]
 FROM docketwatch.dbo.documents d
 WHERE d.fk_case = <cfqueryparam value="#case_details.id#" cfsqltype="cf_sql_integer">
@@ -827,9 +840,15 @@ ORDER BY r.created_at DESC
                                         Date
                                     </th>
                                     <th scope="col">
-                                        <i class="fas fa-file-text me-1" aria-hidden="true"></i>
+                                        <i class="fas a fa-file-text me-1" aria-hidden="true"></i>
                                         Description
                                     </th>
+                                    <!--- PDF Path column (commented out for now, can be restored for debugging)
+                                    <th scope="col">
+                                        <i class="fas fa-route me-1" aria-hidden="true"></i>
+                                        PDF Path
+                                    </th>
+                                    --->
                                     <th scope="col" class="text-center">
                                         <i class="fas fa-download me-1" aria-hidden="true"></i>
                                         Actions
@@ -845,6 +864,31 @@ ORDER BY r.created_at DESC
                                             #dateFormat(event_date, 'mm/dd/yyyy')#
                                         </td>
                                         <td><strong>#event_description# </strong><cfif len(event_description) AND len(summarize)><BR></cfif>#summarize#<cfif len(summarize) EQ 0>#summary_ai#</cfif></td>
+                                        <!--- PDF Path column (commented out for now, can be restored for debugging)
+                                        <td style="max-width:260px; font-size:11px; word-break:break-all;">
+                                            <cfif len(pdf_path)>
+                                                <cfif pdf_path EQ "/docs/pending">
+                                                    <span class="badge bg-warning-subtle text-dark border border-warning" title="PDF generation pending">
+                                                        <i class="fas fa-clock me-1"></i>Pending
+                                                    </span>
+                                                <cfelse>
+                                                    <!--- Check if PDF file exists on network share --->
+                                                    <cfset pdfNetworkPath = application.fileSharePath & replace(pdf_path, "/", "\", "all")>
+                                                    <cfif fileExists(pdfNetworkPath)>
+                                                        <span class="badge bg-success-subtle text-dark border border-success" title="PDF file exists: #pdf_path#">
+                                                            <i class="fas fa-file-pdf me-1"></i>#pdf_path#
+                                                        </span>
+                                                    <cfelse>
+                                                        <span class="badge bg-danger-subtle text-dark border border-danger" title="PDF file not found: #pdfNetworkPath#">
+                                                            <i class="fas fa-exclamation-triangle me-1"></i>#pdf_path# (missing)
+                                                        </span>
+                                                    </cfif>
+                                                </cfif>
+                                            <cfelse>
+                                                <span class="text-muted">(none)</span>
+                                            </cfif>
+                                        </td>
+                                        --->
                                         <td class="text-center">
                                             <div class="pdf-actions" id="button-container-#dockets.id#">
                                                 <!--- Summary AI button --->
@@ -858,13 +902,39 @@ ORDER BY r.created_at DESC
                                                     </button>
                                                 </cfif>
                                                 <!--- Single PDF icon that opens comprehensive modal --->
-                                                <cfif len(dockets.pdf_path) OR len(dockets.summary_ai_html)>
-                                                    <button class="btn btn-sm btn-success btn-pdf"
+                                                <cfif len(dockets.pdf_path) AND dockets.pdf_path NEQ "/docs/pending">
+                                                    <!--- Check if file exists on network share before showing PDF button --->
+                                                    <cfset pdfNetworkPath = application.fileSharePath & replace(dockets.pdf_path, "/", "\", "all")>
+                                                    <cfif fileExists(pdfNetworkPath)>
+                                                        <button class="btn btn-sm btn-success btn-pdf"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="##documentModal#dockets.id#"
+                                                                title="View Document: #dockets.pdf_title#"
+                                                                aria-label="View Document: #dockets.pdf_title#">
+                                                            <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                                        </button>
+                                                    <cfelse>
+                                                        <button class="btn btn-sm btn-outline-danger btn-pdf" disabled
+                                                                title="PDF file not found: #dockets.pdf_path#"
+                                                                aria-label="PDF file missing">
+                                                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                                                        </button>
+                                                    </cfif>
+                                                <cfelseif dockets.pdf_path EQ "/docs/pending">
+                                                    <!--- Show pending status button --->
+                                                    <button class="btn btn-sm btn-outline-warning btn-pdf" disabled
+                                                            title="PDF generation in progress"
+                                                            aria-label="PDF generation pending">
+                                                        <i class="fas fa-clock" aria-hidden="true"></i>
+                                                    </button>
+                                                <cfelseif len(dockets.summary_ai_html)>
+                                                    <!--- Show summary-only modal if no PDF but has summary --->
+                                                    <button class="btn btn-sm btn-info btn-pdf"
                                                             data-bs-toggle="modal"
-                                                            data-bs-target="##documentModal#dockets.id#"
-                                                            title="View Document: #dockets.pdf_title#"
-                                                            aria-label="View Document: #dockets.pdf_title#">
-                                                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                                            data-bs-target="##summaryModal#dockets.id#"
+                                                            title="View AI Summary (no PDF available)"
+                                                            aria-label="View AI Summary">
+                                                        <i class="fas fa-brain" aria-hidden="true"></i>
                                                     </button>
                                                 <cfelseif dockets.isDoc EQ 1 AND len(dockets.event_url)>
                                                     <!--- Legacy PACER download for documents without PDF path --->

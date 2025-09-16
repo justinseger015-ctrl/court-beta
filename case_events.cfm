@@ -470,13 +470,14 @@
 
 <!--- Get cases that have events today for filter dropdown --->
 <cfquery name="casesWithEvents" datasource="Reach">
-    SELECT DISTINCT c.id, c.case_name, c.case_number, COUNT(e.id) as event_count
+    SELECT DISTINCT c.id, c.case_name, c.case_number, t.tool_name, COUNT(e.id) as event_count
     FROM docketwatch.dbo.cases c
     INNER JOIN docketwatch.dbo.case_events e ON c.id = e.fk_cases
+    LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
     WHERE c.status = 'Tracked'
       AND c.case_number <> 'Unfiled'
       AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
-    GROUP BY c.id, c.case_name, c.case_number
+    GROUP BY c.id, c.case_name, c.case_number, t.tool_name
     ORDER BY c.case_name
 </cfquery>
 
@@ -515,6 +516,15 @@
           AND c.case_number <> 'Unfiled'
           AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
         GROUP BY e.fk_cases
+    ),
+    DocumentCounts AS (
+        SELECT 
+            ce.id as event_id,
+            COUNT(d.id) as doc_count
+        FROM docketwatch.dbo.case_events ce
+        LEFT JOIN docketwatch.dbo.documents d ON ce.id = d.fk_case_event
+        WHERE CAST(ce.created_at AS DATE) = CAST(GETDATE() AS DATE)
+        GROUP BY ce.id
     )
     SELECT 
         e.id,
@@ -547,9 +557,9 @@
         d.summary_ai_html,
         CASE 
             WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
-                THEN '/docs/' + d.rel_path
+                THEN '/docs/' + REPLACE(d.rel_path,'\','/')
             WHEN d.doc_id IS NOT NULL 
-                THEN '/docs/cases/' + CAST(e.fk_cases AS varchar(20)) + '/E' + CAST(d.doc_id AS varchar(20)) + '.pdf'
+                THEN REPLACE('/docs/cases/' + CAST(e.fk_cases AS varchar(20)) + '/E' + CAST(d.doc_id AS varchar(20)) + '.pdf', '\', '/')
             ELSE NULL
         END AS pdf_path,
 
@@ -557,7 +567,9 @@
         celeb.celebrity_image,
         cp.name as priority,
         celeb.match_probability,
-        lpc.latest_event_created_at
+        lpc.latest_event_created_at,
+        t.tool_name as source_tool,
+        ISNULL(dc.doc_count, 0) as document_count
     FROM LatestPerCase lpc
     INNER JOIN docketwatch.dbo.cases c ON c.id = lpc.fk_cases
     INNER JOIN docketwatch.dbo.case_events e ON e.fk_cases = lpc.fk_cases
@@ -566,6 +578,8 @@
        AND (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
     LEFT JOIN celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
     LEFT JOIN docketwatch.dbo.case_priority cp ON cp.id = c.fk_priority
+    LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
+    LEFT JOIN DocumentCounts dc ON dc.event_id = e.id
     WHERE 1=1
       AND CAST(e.created_at AS DATE) = CAST(GETDATE() AS DATE)
       <cfif url.case_id NEQ "all">
@@ -731,6 +745,11 @@
                                             <div class="col-md-6">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span><strong>Case No.:</strong> #htmlEditFormat(case_number)#</span>
+                                                    <cfif len(source_tool)>
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-cog me-1"></i>#htmlEditFormat(source_tool)#
+                                                        </span>
+                                                    </cfif>
                                                     <cfif len(celebrity_name)>
                                                         <span class="badge bg-info">
                                                             <i class="fas fa-star me-1"></i>#htmlEditFormat(celebrity_name)#
@@ -862,10 +881,13 @@
                                 <!-- Event Action Buttons -->
                                 <div class="card-footer bg-light">
                                     <div class="btn-group" role="group">
-                                        <cfif len(pdf_path)>
-                                            <a href="#pdf_path#" target="_blank" class="btn btn-success btn-sm">
-                                                <i class="fas fa-file-pdf me-1"></i>Get PDF
-                                            </a>
+                                        <cfif document_count GT 0>
+                                            <button class="btn btn-success btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="##documentModal#id#"
+                                                    title="View #document_count# document<cfif document_count GT 1>s</cfif>">
+                                                <i class="fas fa-file-pdf me-1"></i>PDF - #document_count# doc<cfif document_count GT 1>s</cfif>
+                                            </button>
                                         <cfelseif isDoc AND len(event_url)>
                                             <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
                                                 <i class="fas fa-download me-1"></i>Get PDF
@@ -962,6 +984,122 @@
             </div>
         </div>
     </div>
+    </cfif>
+</cfoutput>
+
+<!-- Document Modals -->
+<cfoutput query="events">
+    <cfif document_count GT 0>
+        <!--- Query for documents related to this event --->
+        <cfquery name="eventDocuments" datasource="Reach">
+            SELECT 
+                d.id,
+                d.pdf_title,
+                d.summary_ai,
+                d.summary_ai_html,
+                d.pdf_type,
+                d.rel_path,
+                d.doc_id,
+                CASE 
+                    WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
+                        THEN '/docs/' + REPLACE(d.rel_path,'\','/')
+                    WHEN d.doc_id IS NOT NULL 
+                        THEN REPLACE('/docs/cases/' + CAST(#fk_cases# AS varchar(20)) + '/E' + CAST(d.doc_id AS varchar(20)) + '.pdf', '\', '/')
+                    ELSE NULL
+                END AS pdf_path,
+                CASE 
+                    WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
+                        THEN 1
+                    ELSE 0
+                END AS has_pdf
+            FROM docketwatch.dbo.documents d
+            WHERE d.fk_case_event = #id#
+            ORDER BY 
+                CASE WHEN d.pdf_type IS NULL OR d.pdf_type <> 'Attachment' THEN 0 ELSE 1 END,
+                d.pdf_title
+        </cfquery>
+        
+        <div class="modal fade" id="documentModal#id#" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-file-pdf me-2"></i>
+                            Documents for Event <cfif len(event_no) AND event_no NEQ 0>#event_no#</cfif>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)<br>
+                            <strong>Event:</strong> <cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#
+                        </div>
+                        <hr>
+                        
+                        <cfif eventDocuments.recordCount GT 0>
+                            <div class="row">
+                                <cfloop query="eventDocuments">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-file-pdf me-1 text-danger"></i>
+                                                    #htmlEditFormat(pdf_title)#
+                                                </h6>
+                                                <cfif len(pdf_type)>
+                                                    <span class="badge bg-secondary">#htmlEditFormat(pdf_type)#</span>
+                                                </cfif>
+                                            </div>
+                                            <div class="card-body">
+                                                <cfif len(summary_ai_html)>
+                                                    <div class="summary-content mb-3">
+                                                        #summary_ai_html#
+                                                    </div>
+                                                <cfelseif len(summary_ai)>
+                                                    <div class="summary-content mb-3">
+                                                        #htmlEditFormat(summary_ai)#
+                                                    </div>
+                                                <cfelse>
+                                                    <p class="text-muted">No summary available</p>
+                                                </cfif>
+                                            </div>
+                                            <div class="card-footer">
+                                                <cfif has_pdf AND len(pdf_path)>
+                                                    <!--- Check if file exists before showing download button --->
+                                                    <cfset pdfNetworkPath = application.fileSharePath & replace(pdf_path, "/", "\", "all")>
+                                                    <cfif fileExists(pdfNetworkPath)>
+                                                        <a href="#pdf_path#" target="_blank" class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-external-link-alt me-1"></i>Open PDF
+                                                        </a>
+                                                    <cfelse>
+                                                        <button class="btn btn-outline-danger btn-sm" disabled>
+                                                            <i class="fas fa-exclamation-triangle me-1"></i>PDF Missing
+                                                        </button>
+                                                    </cfif>
+                                                <cfelse>
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                        <i class="fas fa-file me-1"></i>No PDF Available
+                                                    </button>
+                                                </cfif>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </cfloop>
+                            </div>
+                        <cfelse>
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-file-alt fa-3x mb-3"></i>
+                                <h5>No Documents Found</h5>
+                                <p>This event has no associated documents.</p>
+                            </div>
+                        </cfif>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </cfif>
 </cfoutput>
 <cfscript>
