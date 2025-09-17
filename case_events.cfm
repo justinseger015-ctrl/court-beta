@@ -136,7 +136,7 @@
             background: linear-gradient(45deg, #00d2d3, #54a0ff);
             color: white;
         }
-        /* ACTION BUTTONS CSS - COMMENTED OUT
+        /* Action Buttons CSS */
         .action-buttons {
             display: flex;
             flex-direction: column;
@@ -159,7 +159,6 @@
             border-bottom-right-radius: 0.375rem;
             border-bottom: none;
         }
-        */
         .event-number-badge {
             display: inline-flex;
             align-items: center;
@@ -453,6 +452,40 @@
             .discovery-time .time {
                 font-size: 1.25rem;
             }
+        }
+        
+        /* Override Bootstrap's cyan info colors with dark blue */
+        .btn-info {
+            --bs-btn-color: #fff;
+            --bs-btn-bg: #1e3a8a;
+            --bs-btn-border-color: #1e3a8a;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #1e40af;
+            --bs-btn-hover-border-color: #1e40af;
+            --bs-btn-focus-shadow-rgb: 30, 58, 138;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #1d4ed8;
+            --bs-btn-active-border-color: #1d4ed8;
+            --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+            --bs-btn-disabled-color: #fff;
+            --bs-btn-disabled-bg: #1e3a8a;
+            --bs-btn-disabled-border-color: #1e3a8a;
+        }
+        
+        .btn-outline-info {
+            --bs-btn-color: #1e3a8a;
+            --bs-btn-border-color: #1e3a8a;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #1e3a8a;
+            --bs-btn-hover-border-color: #1e3a8a;
+            --bs-btn-focus-shadow-rgb: 30, 58, 138;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #1e3a8a;
+            --bs-btn-active-border-color: #1e3a8a;
+            --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+            --bs-btn-disabled-color: #1e3a8a;
+            --bs-btn-disabled-bg: transparent;
+            --bs-btn-disabled-border-color: #1e3a8a;
         }
     </style>
 
@@ -919,33 +952,38 @@
 
                                 <!-- Event Action Buttons -->
                                 <div class="card-footer bg-light">
-                                    <div class="btn-group" role="group">
-                                        <cfif document_count GT 0>
-                                            <button class="btn btn-success btn-sm" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="##documentModal#id#"
-                                                    title="View #document_count# document<cfif document_count GT 1>s</cfif>">
-                                                <i class="fas fa-file-pdf me-1"></i>PDF - #document_count# doc<cfif document_count GT 1>s</cfif>
-                                            </button>
-                                        <cfelseif isDoc AND len(event_url)>
-                                            <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
-                                                <i class="fas fa-download me-1"></i>Get PDF
-                                            </button>
-                                        </cfif>
-                                        <cfif len(summary_ai_html)>
-                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
-                                                <i class="fas fa-brain me-1"></i>View Summary
-                                            </button>
-                                        <cfelse>
-                                            <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
-                                                <i class="fas fa-robot me-1"></i>Generate Summary
-                                            </button>
-                                        </cfif>
-                                        <cfif isDoc>
-                                            <button class="btn btn-outline-danger btn-sm generate-article-btn" data-event-id="#id#">
-                                                <i class="fas fa-newspaper me-1"></i>TMZ Article
-                                            </button>
-                                        </cfif>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            Event #event_no# - isDoc:#isDoc# url:#len(event_url)# summary:#len(summary_ai_html)# docs:#document_count# source:#source_tool#
+                                        </small>
+                                        <div class="btn-group" role="group">
+                                            <cfif document_count GT 0>
+                                                <button class="btn btn-success btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="##documentModal#id#"
+                                                        title="View #document_count# document<cfif document_count GT 1>s</cfif>">
+                                                    <i class="fas fa-file-pdf me-1"></i>PDF - #document_count# doc<cfif document_count GT 1>s</cfif>
+                                                </button>
+                                            <cfelseif source_tool EQ "Pacer" AND document_count EQ 0>
+                                                <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                    <i class="fas fa-download me-1"></i>Generate PDF
+                                                </button>
+                                            </cfif>
+                                            <cfif len(summary_ai_html)>
+                                                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                    <i class="fas fa-brain me-1"></i>View Summary
+                                                </button>
+                                            <cfelse>
+                                                <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
+                                                    <i class="fas fa-robot me-1"></i>Generate Summary
+                                                </button>
+                                            </cfif>
+                                            <cfif isDoc>
+                                                <button class="btn btn-outline-danger btn-sm generate-article-btn" data-event-id="#id#">
+                                                    <i class="fas fa-newspaper me-1"></i>TMZ Article
+                                                </button>
+                                            </cfif>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1142,8 +1180,6 @@
     </cfif>
 </cfoutput>
 <cfscript>
-/* Build page URL with preserved filters - COMMENTED OUT since pagination removed */
-/*
 function buildPageUrl(newPage){
     var params = [];
     if (url.status NEQ "all") arrayAppend(params, "status=" & urlEncodedFormat(url.status));
@@ -1153,7 +1189,6 @@ function buildPageUrl(newPage){
     arrayAppend(params, "page=" & newPage);
     return getPageContext().getRequest().getRequestURI() & "?" & arrayToList(params, "&");
 }
-*/
 </cfscript>
 
 <script>
@@ -1177,8 +1212,6 @@ $(document).ready(function() {
         }
     });
 
-    /* ACTION BUTTON JAVASCRIPT - COMMENTED OUT */
-    /*
     // Get PDF
     $('body').on('click', '.get-pdf-btn', function() {
         var button = $(this);
@@ -1193,24 +1226,44 @@ $(document).ready(function() {
             method: 'POST',
             data: { docID: eventId, eventURL: eventUrl, caseID: caseId },
             dataType: 'json',
+            timeout: 60000, // 60 second timeout for PDF downloads
             success: function(response) {
                 if (response.STATUS === 'SUCCESS') {
                     button.replaceWith('<a href="' + response.FILEPATH + '" target="_blank" class="btn btn-success btn-action"><i class="fas fa-file-pdf me-1"></i>View PDF</a>');
                     showNotification('success', 'PDF downloaded successfully!');
+                    
+                    // Update the document count badge if visible
+                    var eventCard = $('#event-' + eventId);
+                    var pdfButton = eventCard.find('.btn[data-bs-target*="documentModal"]');
+                    if (pdfButton.length > 0) {
+                        // Refresh the page to show updated document count
+                        setTimeout(function() {
+                            showNotification('info', 'Refreshing page to show updated document...');
+                            window.location.reload();
+                        }, 2000);
+                    }
                 } else {
                     showNotification('error', 'Failed to download PDF: ' + (response.MESSAGE || 'Unknown error'));
                     button.prop('disabled', false).html('<i class="fas fa-download me-1"></i>Get PDF');
                 }
             },
-            error: function() {
-                showNotification('error', 'Network error occurred');
+            error: function(xhr, status, error) {
+                console.error('PDF Download Error:', {xhr: xhr, status: status, error: error});
+                var errorMessage = 'Network error occurred';
+                if (xhr.responseText) {
+                    try {
+                        var errorResponse = JSON.parse(xhr.responseText);
+                        errorMessage = errorResponse.MESSAGE || errorMessage;
+                    } catch (e) {
+                        errorMessage = xhr.responseText.substring(0, 100);
+                    }
+                }
+                showNotification('error', errorMessage);
                 button.prop('disabled', false).html('<i class="fas fa-download me-1"></i>Get PDF');
             }
         });
     });
-    */
 
-    /*
     // Generate Summary
     $('body').on('click', '.generate-summary-btn', function() {
         var button = $(this);
@@ -1239,9 +1292,7 @@ $(document).ready(function() {
             }
         });
     });
-    */
 
-    /*
     // Generate TMZ Article (mock)
     $('body').on('click', '.generate-tmz-btn', function() {
         var button = $(this);
@@ -1261,7 +1312,6 @@ $(document).ready(function() {
             button.prop('disabled', false).html('<i class="fas fa-newspaper me-1"></i>TMZ Article');
         }, 1500);
     });
-    */
 });
 
 // Acknowledge single event

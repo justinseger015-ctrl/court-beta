@@ -1,10 +1,4 @@
-<cfsetting showdebugoutput="false">
-
-<!---
-    This script handles the AJAX request from the case details page to download a PDF from PACER.
-    It validates incoming parameters, securely calls a Python script to do the actual download,
-    updates the database with the result, and returns a JSON response to the browser.
---->
+<cfcontent type="application/json" />
 
 <cfparam name="form.docID" type="string">
 <cfparam name="form.eventURL" type="string">
@@ -16,71 +10,69 @@
     FILEPATH = ""
 }>
 
-<cftry>
-    <!--- Define full, absolute paths for the Python executable and your script --->
-    <cfset pythonExecutable = "C:\Program Files\Python312\python.exe">
-    <cfset pythonScriptPath = "#application.fileSharePath#python\download_pacer_pdf.py">
-    <!---
-        Define the folder where PDFs will be saved and create a consistent filename.
-        Ensure this folder exists and the ColdFusion user has write permissions to it.
-    --->
-    <cfset pdfSaveFolder = "#application.fileSharePath#python\pacer_docs\">
-    <cfset pdfFilename = "case_#form.caseID#_doc_#form.docID#.pdf">
-    <cfset fullPdfPath = pdfSaveFolder & pdfFilename>
-    <cfset webAccessiblePath = "/pacer_docs/#pdfFilename#"> <!--- Assuming this network path is mapped to a web-accessible directory --->
+<!--- Check if this is a valid case event --->
+<cfquery name="checkEvent" datasource="Reach">
+    SELECT 
+        ce.id as event_id,
+        ce.event_no,
+        ce.event_description,
+        ce.event_url,
+        d.doc_uid,
+        d.rel_path,
+        d.doc_id,
+        c.case_number,
+        c.case_name,
+        t.tool_name
+    FROM docketwatch.dbo.case_events ce
+    LEFT JOIN docketwatch.dbo.documents d ON ce.id = d.fk_case_event
+    INNER JOIN docketwatch.dbo.cases c ON ce.fk_cases = c.id
+    LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
+    WHERE ce.id = <cfqueryparam value="#form.docID#" cfsqltype="cf_sql_varchar">
+    ORDER BY d.pdf_type ASC
+</cfquery>
 
-    <!---
-        Build the command line arguments.
-        THE FIX: The python script path MUST be the first argument.
-    --->
-    <cfset scriptArgs = [pythonScriptPath, form.eventURL, fullPdfPath]>
-
-    <!--- Execute the Python script --->
-    <cfexecute
-        name="#pythonExecutable#"
-        arguments="#scriptArgs#"
-        variable="pythonOutput"
-        timeout="9999"
-        errorVariable="pythonError"
-    />
-
-    <cfif len(trim(pythonError))>
-        <!--- Catches errors from the Python execution environment itself --->
-        <cfset response.MESSAGE = "Python execution error: #HtmlEditFormat(pythonError)#">
-    <cfelse>
-        <!--- The Python script should print a JSON string on success/failure --->
-        <cftry>
-            <cfset pythonResponse = DeserializeJSON(pythonOutput)>
-
-            <cfif pythonResponse.status EQ "success">
-                <cfset response.STATUS = "SUCCESS">
-                <cfset response.MESSAGE = "PDF downloaded successfully.">
-                <cfset response.FILEPATH = webAccessiblePath>
-
-                <!--- Update the database to mark the document as downloaded and save the local filename. --->
-                <cfquery datasource="your_dsn_name">
-                    UPDATE docketwatch.dbo.case_events
-                    SET
-                        isDownloaded = 1,
-                        local_pdf_filename = <cfqueryparam value="#pdfFilename#" cfsqltype="cf_sql_varchar">
-                    WHERE id = <cfqueryparam value="#form.docID#" cfsqltype="cf_sql_integer"> <!--- Assuming your PK is named 'id' --->
-                </cfquery>
-
-            <cfelse>
-                <!--- The script ran, but reported a failure (e.g., auth failed, link broken) --->
-                <cfset response.MESSAGE = "Python script failed: #HtmlEditFormat(pythonResponse.message)#">
-            </cfif>
-            <cfcatch type="json">
-                 <cfset response.MESSAGE = "Failed to parse JSON response from Python script. Output: #HtmlEditFormat(pythonOutput)#">
-            </cfcatch>
-        </cftry>
+<cfif checkEvent.recordCount EQ 0>
+    <cfset response.MESSAGE = "Event not found. Searched for event ID: #form.docID#">
+<cfelseif checkEvent.tool_name NEQ "Pacer">
+    <cfset response.MESSAGE = "This feature only works with Pacer events. Found tool: #checkEvent.tool_name#">
+<cfelse>
+    <!--- Define paths --->
+    <cfset vbsLauncherPath = "u:\docketwatch\python\launch_pdf_processor.vbs">
+    
+    <!--- Create case-specific folder structure --->
+    <cfset pdfSaveFolder = "#ExpandPath('.')#\docs\cases\#form.caseID#\">
+    <cfif NOT DirectoryExists(pdfSaveFolder)>
+        <cfdirectory action="create" directory="#pdfSaveFolder#" mode="755">
     </cfif>
+    
+    <!--- Create filename based on event number --->
+    <cfset pdfFilename = "E#checkEvent.event_no#.pdf">
+    <cfset fullPdfPath = pdfSaveFolder & pdfFilename>
+    <cfset webAccessiblePath = "/docs/cases/#form.caseID#/#pdfFilename#">
 
-    <cfcatch type="any">
-        <cfset response.MESSAGE = "A ColdFusion error occurred: #HtmlEditFormat(cfcatch.Message)#">
-    </cfcatch>
-</cftry>
+    <!--- Get event URL --->
+    <cfset eventURL = "">
+    <cfif len(form.eventURL)>
+        <cfset eventURL = form.eventURL>
+    <cfelseif len(checkEvent.event_url)>
+        <cfset eventURL = checkEvent.event_url>
+    <cfelse>
+        <cfset response.MESSAGE = "No event URL available for PDF download.">
+    </cfif>
+    
+    <cfif len(eventURL)>
+        <!--- Execute the VBScript launcher that runs async --->
+        <cfexecute
+            name="cscript.exe"
+            arguments="//NoLogo #vbsLauncherPath# #form.docID#"
+            timeout="2"
+        />
 
-<!--- Return the final JSON response to the browser's AJAX call --->
-<cfcontent type="application/json">
+        <!--- Return immediate success - processing started --->
+        <cfset response.STATUS = "PROCESSING">
+        <cfset response.MESSAGE = "PDF download process started. Please check back in a few moments.">
+        <cfset response.FILEPATH = webAccessiblePath>
+    </cfif>
+</cfif>
+
 <cfoutput>#SerializeJSON(response)#</cfoutput>
