@@ -43,27 +43,15 @@
         <cfdirectory action="create" directory="#diskFolderWeb#">
     </cfif>
 
-    <!-- environment for Chrome under CF service -->
-    <cfset env = {
-        "TMP"        = "C:\Users\TMZCOL~1\AppData\Local\Temp",
-        "TEMP"       = "C:\Users\TMZCOL~1\AppData\Local\Temp",
-        "USERPROFILE"= "C:\Users\TMZCOL~1",
-        "HOME"       = "C:\Users\TMZCOL~1",
-        "PATH"       = GetSystemEnvironment().PATH
-    }>
-
-    <!-- run the worker: prefer python directly instead of .bat -->
-    <cfset pyExe   = "C:\Python312\python.exe">
-    <cfset script  = "U:\docketwatch\python\extract_pacer_pdf_file.py">
-    <!-- pass only the event id; the script should read DB for URL -->
-    <cfset args    = '"#script#" --event-id "#form.docID#" --case-id "#caseIdNum#" --save-dir "#diskFolderWeb#"'>
+    <!-- run the worker: use BAT file instead of Python directly -->
+    <cfset batFile = "U:\docketwatch\court-beta\pdf_download_processor.bat">
+    <cfset args    = '"#form.docID#"'>
     <cfset outText = ""><cfset errText = "">
 
-    <cfexecute name="#pyExe#"
+    <cfexecute name="#batFile#"
                arguments="#args#"
                variable="outText"
                errorVariable="errText"
-               environment="#env#"
                timeout="900">
     </cfexecute>
 

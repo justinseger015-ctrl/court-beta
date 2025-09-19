@@ -1048,11 +1048,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <strong>Case:</strong> #htmlEditFormat(case_name)# (#htmlEditFormat(case_number)#)<br>
-                        <strong>Event:</strong> <cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#
-                    </div>
-                    <hr>
                     <div class="summary-content">#summary_ai_html#</div>
                 </div>
                 <div class="modal-footer">
@@ -1074,6 +1069,7 @@
                 d.pdf_title,
                 d.summary_ai,
                 d.summary_ai_html,
+                d.event_summary,
                 d.pdf_type,
                 d.rel_path,
                 d.doc_id,
@@ -1128,7 +1124,19 @@
                                                 </cfif>
                                             </div>
                                             <div class="card-body">
-                                                <cfif len(summary_ai_html)>
+                                                <cfif len(event_summary)>
+                                                    <div class="event-summary-content mb-3">
+                                                        <strong>Event Summary:</strong><br>
+                                                        #htmlEditFormat(event_summary)#
+                                                    </div>
+                                                    <cfif len(summary_ai_html) OR len(summary_ai)>
+                                                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="##summaryModal#doc_uid#">
+                                                            <i class="fas fa-eye me-1"></i>View Full Summary
+                                                        </button>
+                                                    </cfif>
+                                                <cfelseif len(summary_ai_html)>
                                                     <div class="summary-content mb-3">
                                                         #summary_ai_html#
                                                     </div>
@@ -1158,6 +1166,37 @@
                                                         <i class="fas fa-file me-1"></i>No PDF Available
                                                     </button>
                                                 </cfif>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!--- Full Summary Modal for this document --->
+                                    <div class="modal fade" id="summaryModal#doc_uid#" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-file-text me-2"></i>
+                                                        Full Summary - #htmlEditFormat(pdf_title)#
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <cfif len(summary_ai_html)>
+                                                        <div class="summary-content">
+                                                            #summary_ai_html#
+                                                        </div>
+                                                    <cfelseif len(summary_ai)>
+                                                        <div class="summary-content">
+                                                            #htmlEditFormat(summary_ai)#
+                                                        </div>
+                                                    <cfelse>
+                                                        <p class="text-muted">No full summary available</p>
+                                                    </cfif>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

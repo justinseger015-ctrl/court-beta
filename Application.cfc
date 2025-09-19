@@ -20,11 +20,11 @@
             
             // Set environment variables based on server name
             if (serverName contains "docketwatch") {
-                application.serverDomain = "docketwatch.tmz.local";
-                application.fileSharePath = "\\10.146.176.84\general\DOCKETWATCH\";
+                application.serverDomain = "docketwatch.tmz.tv";
+                application.fileSharePath = "\\10.146.176.84\general\docketwatch\";
                 application.appType = "docketwatch";
             } else {
-                application.serverDomain = "tmztools.tmz.local";
+                application.serverDomain = "docketwatch.tmz.tv";
                 application.fileSharePath = "\\10.146.176.84\general\TMZTOOLS\wwwroot\";
                 application.appType = "tmztools";
             }
