@@ -599,6 +599,7 @@
         d.pdf_title,
         d.summary_ai,
         d.summary_ai_html,
+        d.event_summary,
         CASE 
             WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
                 THEN '/docs/' + REPLACE(d.rel_path,'\','/')
@@ -900,6 +901,12 @@
                                                 <div class="event-description">
                                                     <strong><cfif len(event_no) AND event_no NEQ 0>No. #event_no# - </cfif>#htmlEditFormat(event_description)#</strong>
                                                 </div>
+                                                
+                                                <cfif len(trim(event_summary))>
+                                                    <div class="event-summary mt-2" style="font-size: 1.1rem; color: ##2d3748; line-height: 1.4;">
+                                                        #htmlEditFormat(event_summary)#
+                                                    </div>
+                                                </cfif>
 
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3 align-items-center">
