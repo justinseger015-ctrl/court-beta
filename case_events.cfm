@@ -592,6 +592,14 @@
         WHERE ce.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
           AND ce.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
         GROUP BY ce.id
+    ),
+    DocOne AS (
+        SELECT 
+            d.fk_case_event,
+            MAX(d.doc_uid) AS doc_uid
+        FROM docketwatch.dbo.documents d
+        WHERE (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
+        GROUP BY d.fk_case_event
     )
     SELECT 
         e.id,
@@ -641,9 +649,8 @@
     FROM LatestPerCase lpc
     INNER JOIN docketwatch.dbo.cases c ON c.id = lpc.fk_cases
     INNER JOIN docketwatch.dbo.case_events e ON e.fk_cases = lpc.fk_cases
-    LEFT JOIN docketwatch.dbo.documents d 
-        ON e.id = d.fk_case_event 
-       AND (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
+    LEFT JOIN DocOne do ON do.fk_case_event = e.id
+    LEFT JOIN docketwatch.dbo.documents d ON d.doc_uid = do.doc_uid
     LEFT JOIN celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
     LEFT JOIN docketwatch.dbo.case_priority cp ON cp.id = c.fk_priority
     LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
@@ -890,7 +897,6 @@
 
                     <!-- EVENTS FOR THIS CASE -->
                     <cfoutput>
-                        <cfif DateDiff("d", created_at, now()) EQ 0>
                         <div class="event-panel-container">
                             <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
                                  id="event-#id#" 
@@ -999,7 +1005,6 @@
                                 </div>
                             </div>
                         </div>
-                        </cfif>
                     </cfoutput>
 
                     <!-- Generate Case Summary Modal for this case -->
@@ -1051,7 +1056,7 @@
 
 <!-- Summary Modals -->
 <cfoutput query="events">
-    <cfif DateDiff("d", created_at, now()) EQ 0 AND len(summary_ai_html)>
+    <cfif len(summary_ai_html)>
     <div class="modal fade" id="summaryModal#id#" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -1073,7 +1078,7 @@
 
 <!-- Document Modals -->
 <cfoutput query="events">
-    <cfif DateDiff("d", created_at, now()) EQ 0 AND document_count GT 0>
+    <cfif document_count GT 0>
         <!--- Query for documents related to this event --->
         <cfquery name="eventDocuments" datasource="Reach">
             SELECT 
