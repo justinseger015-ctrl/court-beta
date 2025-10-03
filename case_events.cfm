@@ -487,6 +487,29 @@
             --bs-btn-disabled-bg: transparent;
             --bs-btn-disabled-border-color: #1e3a8a;
         }
+
+        /* Square button styles */
+        .btn-square {
+            border-radius: 0.375rem !important;
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-square i {
+            font-size: 1.1rem;
+        }
+
+        /* Action buttons container */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
     </style>
 
 </head>
@@ -867,6 +890,7 @@
 
                     <!-- EVENTS FOR THIS CASE -->
                     <cfoutput>
+                        <cfif DateDiff("d", created_at, now()) EQ 0>
                         <div class="event-panel-container">
                             <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
                                  id="event-#id#" 
@@ -887,11 +911,14 @@
 
                                 <div class="card-body p-0">
                                     <div class="row g-0">
-                                        <!-- Discovery Time Column -->
+                                        <!-- Event Date Column -->
                                         <div class="col-md-2">
                                             <div class="discovery-time">
-                                                <div class="time">#timeFormat(created_at, "h:mm tt")#</div>
-                                                <div class="label">Discovered</div>
+                                                <div class="time">#dateFormat(event_date, "mm/dd")#</div>
+                                                <div class="label">Event Date</div>
+                                                <div class="discovered-time" style="font-size: 0.7rem; margin-top: 0.5rem; opacity: 0.8;">
+                                                    Discovered: #timeFormat(created_at, "h:mm tt")#
+                                                </div>
                                             </div>
                                         </div>
                                         
@@ -910,8 +937,10 @@
 
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3 align-items-center">
-                                                        <div style="color: ##2d3748; font-weight: 600; font-size: 0.95rem;"><i class="fas fa-calendar me-1"></i><strong>Event Date:</strong> #dateFormat(event_date, "mm/dd/yyyy")#</div>
                                                         <span>#id#</span>
+                                                        <small class="text-muted">
+                                                            Event #event_no# - isDoc:#isDoc# url:#len(event_url)# summary:#len(summary_ai_html)# docs:#document_count# source:#source_tool#
+                                                        </small>
                                                         
                                                         <!--- Status Badge - Commented Out
                                                         <cfset statusClass = "">
@@ -935,66 +964,42 @@
                                             </div>
                                         </div>
                                         
-                                        <!-- Right Column - Acknowledge Area -->
+                                        <!-- Action Buttons Column -->
                                         <div class="col-md-2 d-flex align-items-center justify-content-center">
-                                          <!---
-                                          
-                                            <cfif NOT acknowledged>
-                                                <div class="text-center">
-                                                    <div class="text-muted mb-2">
-                                                        <i class="fas fa-hand-pointer fa-2x"></i>
-                                                    </div>
-                                                    <small class="text-muted">Click to Acknowledge</small>
-                                                </div>
-                                            <cfelse>
-                                                <div class="text-success text-center">
-                                                    <i class="fas fa-check-circle fa-2x mb-1"></i>
-                                                    <br><small>Acknowledged</small>
-                                                </div>
-                                            </cfif>
-                                        --->
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Event Action Buttons -->
-                                <div class="card-footer bg-light">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
-                                            Event #event_no# - isDoc:#isDoc# url:#len(event_url)# summary:#len(summary_ai_html)# docs:#document_count# source:#source_tool#
-                                        </small>
-                                        <div class="btn-group" role="group">
-                                            <cfif document_count GT 0>
-                                                <button class="btn btn-success btn-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="##documentModal#id#"
-                                                        title="View #document_count# document<cfif document_count GT 1>s</cfif>">
-                                                    <i class="fas fa-file-pdf me-1"></i>PDF - #document_count# doc<cfif document_count GT 1>s</cfif>
-                                                </button>
-                                            <cfelseif source_tool EQ "Pacer" AND document_count EQ 0>
-                                                <button class="btn btn-primary btn-sm get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
-                                                    <i class="fas fa-download me-1"></i>Generate PDF
-                                                </button>
-                                            </cfif>
-                                            <cfif len(summary_ai_html)>
-                                                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
-                                                    <i class="fas fa-brain me-1"></i>View Summary
-                                                </button>
-                                            <cfelse>
-                                                <button class="btn btn-outline-info btn-sm generate-summary-btn" data-event-id="#id#">
-                                                    <i class="fas fa-robot me-1"></i>Generate Summary
-                                                </button>
-                                            </cfif>
-                                            <cfif isDoc>
-                                                <button class="btn btn-outline-danger btn-sm generate-article-btn" data-event-id="#id#">
-                                                    <i class="fas fa-newspaper me-1"></i>TMZ Article
-                                                </button>
-                                            </cfif>
+                                            <div class="action-buttons d-flex flex-column gap-2 align-items-center">
+                                                <cfif document_count GT 0>
+                                                    <button class="btn btn-success btn-sm btn-square" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="##documentModal#id#"
+                                                            title="View #document_count# document<cfif document_count GT 1>s</cfif>">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </button>
+                                                <cfelseif source_tool EQ "Pacer" AND document_count EQ 0>
+                                                    <button class="btn btn-danger btn-sm btn-square get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                </cfif>
+                                                <cfif len(summary_ai_html)>
+                                                    <button class="btn btn-info btn-sm btn-square" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
+                                                        <i class="fas fa-brain"></i>
+                                                    </button>
+                                                <cfelse>
+                                                    <button class="btn btn-outline-info btn-sm btn-square generate-summary-btn" data-event-id="#id#">
+                                                        <i class="fas fa-robot"></i>
+                                                    </button>
+                                                </cfif>
+                                                <cfif isDoc>
+                                                    <button class="btn btn-outline-danger btn-sm btn-square generate-article-btn" data-event-id="#id#">
+                                                        <i class="fas fa-newspaper"></i>
+                                                    </button>
+                                                </cfif>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        </cfif>
                     </cfoutput>
 
                     <!-- Generate Case Summary Modal for this case -->
@@ -1046,7 +1051,7 @@
 
 <!-- Summary Modals -->
 <cfoutput query="events">
-    <cfif len(summary_ai_html)>
+    <cfif DateDiff("d", created_at, now()) EQ 0 AND len(summary_ai_html)>
     <div class="modal fade" id="summaryModal#id#" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -1068,7 +1073,7 @@
 
 <!-- Document Modals -->
 <cfoutput query="events">
-    <cfif document_count GT 0>
+    <cfif DateDiff("d", created_at, now()) EQ 0 AND document_count GT 0>
         <!--- Query for documents related to this event --->
         <cfquery name="eventDocuments" datasource="Reach">
             SELECT 
