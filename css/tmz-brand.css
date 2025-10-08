@@ -425,7 +425,7 @@
 .case-header {
     background: linear-gradient(135deg, var(--tmz-black) 0%, var(--tmz-dark-gray) 100%);
     color: var(--tmz-white);
-    padding: 2rem 0;
+    padding: 0 !important;
     margin-bottom: 2rem;
     border-radius: 0.5rem;
 }

@@ -10,12 +10,39 @@
             --tmz-red: #9d3433;
             --tmz-dark-gray: #2b2b2b;
         }
-        /* Alert Card Styling */
+        
+        /* Ensure white background for the entire page */
+        body {
+            background-color: #ffffff !important;
+        }
+        
+        /* Main content area specific to case events - white background */
+        .content-main {
+            background-color: #ffffff !important;
+        }
+        
+        /* Ensure navbar keeps its black background and proper styling */
+        nav.navbar.navbar-dark.bg-dark {
+            background-color: #000000 !important;
+        }
+        
+        nav.navbar.navbar-dark .navbar-nav .nav-link {
+            color: #ffffff !important;
+        }
+        
+        nav.navbar.navbar-dark .navbar-brand {
+            color: #9d3433 !important;
+        }
+        
+        /* Alert Card Styling - White background for events */
         .event-alert {
+            background: white;
             border: 1px solid #dee2e6;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .event-alert.unacknowledged {
             animation: pulse-glow 2s infinite;
@@ -185,15 +212,63 @@
             margin-bottom: 1rem;
         }
         
-        /* Case Header Styles */
-        .case-header {
-            background: linear-gradient(135deg, #DEF5FF 100%, #485F77 0%);
+        /* Case Wrapper - Default (no priority or unknown) */
+        .case-wrapper {
+            background: #f8f9fa;
             border-radius: 12px;
-            padding: 1.5rem;
-            opacity: 0..95;
-            margin-bottom: 2rem;
             border: 1px solid #dee2e6;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Critical Priority - Red */
+        .case-wrapper.priority-critical {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+        }
+        
+        /* High Priority - Orange */
+        .case-wrapper.priority-high {
+            background: #ffedd5;
+            border: 1px solid #ea580c;
+        }
+        
+        /* Medium Priority - Yellow */
+        .case-wrapper.priority-medium {
+            background: #fef3c7;
+            border: 1px solid #d97706;
+        }
+        
+        /* Low Priority - Green */
+        .case-wrapper.priority-low {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+        }
+        
+        /* Unknown Priority - Gray */
+        .case-wrapper.priority-unknown {
+            background: #f3f4f6;
+            border: 1px solid #6b7280;
+        }
+        
+        /* Case Header Styles - White background */
+        .case-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .case-header .card {
+            background: white;
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .case-header .card-body {
+            border: none;
+        }
+        
+        .case-header .card-footer {
+            border: none;
         }
         
         .case-header h4 {
@@ -229,12 +304,16 @@
             border: 2px solid #dee2e6;
         }
         
-        /* Event Panel Indentation */
+        /* Event Panel Indentation - Now inside case card */
         .event-panel-container {
-            margin-left: 3.5rem;
+            margin-left: 0;
             margin-bottom: 1rem;
             position: relative;
-            padding-left: 1rem;
+        }
+        
+        /* Last event panel has no bottom margin */
+        .event-panel-container:last-child {
+            margin-bottom: 0;
         }
         
         /* Discovery Time Display */
@@ -658,6 +737,7 @@
     WHERE 1=1
       AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
       AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
+      AND e.event_date >= <cfqueryparam value="#dateFormat(dateAdd('d', -7, now()), 'yyyy-mm-dd')#" cfsqltype="cf_sql_date">
       <cfif url.case_id NEQ "all">
         AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
       </cfif>
@@ -680,9 +760,16 @@
       AND c.case_number <> 'Unfiled'
       AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
       AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
+      AND e.event_date >= <cfqueryparam value="#dateFormat(dateAdd('d', -7, now()), 'yyyy-mm-dd')#" cfsqltype="cf_sql_date">
+      <cfif url.case_id NEQ "all">
+        AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
+      </cfif>
+      <cfif url.acknowledged NEQ "all">
+        AND ISNULL(e.acknowledged, 0) = <cfqueryparam value="#url.acknowledged#" cfsqltype="cf_sql_bit">
+      </cfif>
 </cfquery>
 
-<div class="container-fluid mt-4">
+<div class="container-fluid content-main mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-0">
@@ -819,10 +906,23 @@
             <div class="col-12">
                 <!-- Group events by case -->
                 <cfoutput query="events" group="fk_cases">
-                    <!-- CASE HEADER -->
-                    <div class="case-header" role="heading" aria-level="3">
-                        <div class="card">
-                            <div class="card-body">
+                    <!--- Determine priority class for case wrapper --->
+                    <cfset priorityClass = "">
+                    <cfswitch expression="#lcase(trim(priority))#">
+                        <cfcase value="critical"><cfset priorityClass = "priority-critical"></cfcase>
+                        <cfcase value="high"><cfset priorityClass = "priority-high"></cfcase>
+                        <cfcase value="medium"><cfset priorityClass = "priority-medium"></cfcase>
+                        <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
+                        <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
+                    </cfswitch>
+                    
+                    <!-- COLOR-CODED WRAPPER CONTAINER -->
+                    <div class="case-wrapper #priorityClass#">
+                        <!-- CASE HEADER -->
+                        <div class="case-header" role="heading" aria-level="3">
+                            <div class="card">
+                                <!-- Case Header Section -->
+                                <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <!-- Case Image/Avatar -->
                                     <div class="me-3">
@@ -861,14 +961,6 @@
                                                 </div>
                                             </div>
                                             <div class="col-md-6 d-flex align-items-center justify-content-end">
-                                                <cfset priorityClass = "">
-                                                <cfswitch expression="#lcase(trim(priority))#">
-                                                    <cfcase value="critical"><cfset priorityClass = "priority-critical"></cfcase>
-                                                    <cfcase value="high"><cfset priorityClass = "priority-high"></cfcase>
-                                                    <cfcase value="medium"><cfset priorityClass = "priority-medium"></cfcase>
-                                                    <cfcase value="low"><cfset priorityClass = "priority-low"></cfcase>
-                                                    <cfdefaultcase><cfset priorityClass = "priority-unknown"></cfdefaultcase>
-                                                </cfswitch>
                                                 <span class="priority-badge #priorityClass#">#htmlEditFormat(priority)#</span>
                                             </div>
                                         </div>
@@ -893,18 +985,18 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- EVENTS FOR THIS CASE -->
-                    <cfoutput>
-                        <div class="event-panel-container">
-                            <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
-                                 id="event-#id#" 
-                                 <cfif NOT acknowledged>
-                                 data-event-id="#id#" 
-                                 style="cursor: pointer;" 
-                                 title="Click to acknowledge this event"
-                                 </cfif>>
+                        </div>
+                        
+                        <!-- EVENTS FOR THIS CASE - OUTSIDE CASE CARD BUT INSIDE WRAPPER -->
+                        <cfoutput>
+                                    <div class="event-panel-container mb-3">
+                                        <div class="card event-alert #iif(acknowledged, de('acknowledged'), de('unacknowledged'))#" 
+                                             id="event-#id#" 
+                                             <cfif NOT acknowledged>
+                                             data-event-id="#id#" 
+                                             style="cursor: pointer;" 
+                                             title="Click to acknowledge this event"
+                                             </cfif>>
 
                                 <!--- Event Status Badge 
                                 <div class="event-status">
@@ -943,8 +1035,8 @@
 
                                                 <div class="event-meta mt-3">
                                                     <div class="d-flex flex-wrap gap-3 align-items-center">
-                                                        <span>#id#</span>
-                                                        <small class="text-muted">
+                                                        <span style="color: white;">#id#</span>
+                                                        <small style="color: white;">
                                                             Event #event_no# - isDoc:#isDoc# url:#len(event_url)# summary:#len(summary_ai_html)# docs:#document_count# source:#source_tool#
                                                         </small>
                                                         
@@ -980,32 +1072,40 @@
                                                             title="View #document_count# document<cfif document_count GT 1>s</cfif>">
                                                         <i class="fas fa-file-pdf"></i>
                                                     </button>
+                                                <!--- PDF Download button commented out - auto-downloading now
                                                 <cfelseif source_tool EQ "Pacer" AND document_count EQ 0>
                                                     <button class="btn btn-danger btn-sm btn-square get-pdf-btn" data-event-id="#id#" data-event-url="#event_url#" data-case-id="#fk_cases#">
                                                         <i class="fas fa-download"></i>
                                                     </button>
+                                                --->
                                                 </cfif>
                                                 <cfif len(summary_ai_html)>
                                                     <button class="btn btn-info btn-sm btn-square" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
                                                         <i class="fas fa-brain"></i>
                                                     </button>
+                                                <!--- Generate Summary button commented out - auto-summarizing now
                                                 <cfelse>
                                                     <button class="btn btn-outline-info btn-sm btn-square generate-summary-btn" data-event-id="#id#">
                                                         <i class="fas fa-robot"></i>
                                                     </button>
+                                                --->
                                                 </cfif>
+                                                <!--- Generate Article button commented out for now
                                                 <cfif isDoc>
                                                     <button class="btn btn-outline-danger btn-sm btn-square generate-article-btn" data-event-id="#id#">
                                                         <i class="fas fa-newspaper"></i>
                                                     </button>
                                                 </cfif>
+                                                --->
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </cfoutput>
+                                        </div>
+                                    </div>
+                                </cfoutput>
+                    </div>
+                    <!-- Close case-wrapper -->
 
                     <!-- Generate Case Summary Modal for this case -->
                     <div class="modal fade" id="caseSummaryModal#fk_cases#" tabindex="-1" aria-hidden="true">

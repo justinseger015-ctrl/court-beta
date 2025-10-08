@@ -1,5 +1,5 @@
 <!--- Navigation Bar --->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm" style="background-color: #000000 !important;">
     <div class="container-fluid">
         <!--- App Title with Logo --->
         <a class="navbar-brand fw-bold" href="./index.cfm">
