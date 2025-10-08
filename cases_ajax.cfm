@@ -103,7 +103,16 @@ AND celeb_data.fk_celebrity is NULL
 </cfif>
 
 <cfif len(trim(url.owner))>
-    AND t.owners LIKE <cfqueryparam value="%#url.owner#%" cfsqltype="cf_sql_varchar">
+    <!--- Handle multiple owners (comma-separated) --->
+    <cfset ownerList = listToArray(url.owner, ",")>
+    <cfif arrayLen(ownerList) GT 0>
+        AND (
+            <cfloop array="#ownerList#" index="owner" item="ownerValue">
+                t.owners LIKE <cfqueryparam value="%#trim(ownerValue)#%" cfsqltype="cf_sql_varchar">
+                <cfif owner NEQ arrayLen(ownerList)>OR</cfif>
+            </cfloop>
+        )
+    </cfif>
 </cfif>
 
 <cfif len(trim(url.state))>

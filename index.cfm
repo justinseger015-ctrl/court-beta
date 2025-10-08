@@ -157,6 +157,28 @@ const allColumnKeys = [
             border-radius: 0.375rem;
             font-weight: 500;
         }
+        
+        /* Owner filter button group styling */
+        #ownerFilterGroup {
+            gap: 0.5rem;
+        }
+        
+        #ownerFilterGroup .btn {
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        
+        #ownerFilterGroup .btn-check:checked + .btn {
+            background-color: #0ea5e9;
+            border-color: #0ea5e9;
+            color: white;
+        }
+        
+        #ownerFilterGroup .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
         .priority-critical { color: #dc2626; font-weight: 700; }  /* Red - Critical */
         .priority-high { color: #ea580c; font-weight: 600; }      /* Orange - High */
         .priority-medium { color: #d97706; font-weight: 500; }    /* Amber/Yellow - Medium */
@@ -199,15 +221,17 @@ const allColumnKeys = [
         <div class="card-body">
             <div class="row g-3 align-items-end filter-row">
                 
-                <!--- Owner Filter --->
-                <div class="col-auto">
-                    <label for="ownerFilter" class="form-label small text-muted mb-1">Owner</label>
-                    <select id="ownerFilter" class="form-select form-select-sm" aria-label="Filter by case owner">
-                        <option value="">All Owners</option>
+                <!--- Owner Filter - Toggle Buttons --->
+                <div class="col-12">
+                    <label class="form-label small text-muted mb-2">Case Owners (select one or more)</label>
+                    <div id="ownerFilterGroup" class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Filter by case owners">
                         <cfoutput query="owners">
-                            <option value="#value#" <cfif value EQ currentUser>selected</cfif>>#display#</option>
+                            <input type="checkbox" class="btn-check owner-filter-btn" id="owner_#value#" value="#value#" autocomplete="off" <cfif value EQ currentUser>checked</cfif>>
+                            <label class="btn btn-outline-primary" for="owner_#value#">
+                                <i class="fas fa-user me-1"></i>#display#
+                            </label>
                         </cfoutput>
-                    </select>
+                    </div>
                 </div>
 
                 <!--- Tool Filter --->
@@ -521,11 +545,20 @@ const LocalStorageManager = {
 
 
 <script>
+// Helper function to get selected owners as comma-separated string
+function getSelectedOwners() {
+    const selected = [];
+    $('.owner-filter-btn:checked').each(function() {
+        selected.push($(this).val());
+    });
+    return selected.join(',');
+}
+
 function reloadDropdownsAsync() {
     var filters = {
         status: $('#statusFilter').val(),
         tool: $('#toolFilter').val(),
-        owner: $('#ownerFilter').val(),
+        owner: getSelectedOwners(),
         state: $('#stateFilter').val(),
         county: $('#county_id').val(),
         courthouse: $('#courthouseFilter').val(),
@@ -648,7 +681,7 @@ function initializeCasesTable() {
                 d.status     = $('#statusFilter').val();
                 d.county     = $('#county_id').val();
                 d.tool       = $('#toolFilter').val();
-                d.owner      = $('#ownerFilter').val();
+                d.owner      = getSelectedOwners();
                 d.state      = $('#stateFilter').val();
                 d.courthouse = $('#courthouseFilter').val();
                 d.celebrity  = $('#celebrityFilter').val();
@@ -751,20 +784,39 @@ columns: [
  * ===============================
  */
 $(document).ready(function () {
+    // Restore owner selections from localStorage on page load
+    const savedOwners = LocalStorageManager.get('owner');
+    if (savedOwners) {
+        const ownerArray = savedOwners.split(',');
+        ownerArray.forEach(function(owner) {
+            $('#owner_' + owner).prop('checked', true);
+        });
+    }
+    
     // Initialize page: Load all dropdown filters and set up table
     reloadDropdownsAsync().then(function() {
         // Initialize DataTable after filters are loaded
         initializeCasesTable();
 
+        // Setup owner filter button change handler
+        $('.owner-filter-btn').on('change', function() {
+            const selectedOwners = getSelectedOwners();
+            LocalStorageManager.set('owner', selectedOwners);
+            
+            // Reload dependent dropdowns and refresh table
+            reloadDropdownsAsync().then(function() {
+                $('#casesTable').DataTable().ajax.reload();
+            });
+        });
+
         // Setup unified filter change handlers for all dropdowns
-        $('#toolFilter, #county_id, #courthouseFilter, #celebrityFilter, #ownerFilter, #stateFilter, #statusFilter').on('change', function () {
+        $('#toolFilter, #county_id, #courthouseFilter, #celebrityFilter, #stateFilter, #statusFilter').on('change', function () {
             const id = $(this).attr('id');
             const val = $(this).val();
             
             // Map filter IDs to localStorage keys
             const storageMap = {
                 'toolFilter': 'tool',
-                'ownerFilter': 'owner',
                 'courthouseFilter': 'courthouse',
                 'county_id': 'county',
                 'stateFilter': 'state',
@@ -806,7 +858,8 @@ $(document).ready(function () {
         // Clear all filters functionality
         $('#clearFilters').on('click', function() {
             LocalStorageManager.clearAll();
-            $('#toolFilter, #ownerFilter, #stateFilter, #county_id, #courthouseFilter, #celebrityFilter').val('');
+            $('#toolFilter, #stateFilter, #county_id, #courthouseFilter, #celebrityFilter').val('');
+            $('.owner-filter-btn').prop('checked', false);
             $('#documentSearch').val('');
             reloadDropdownsAsync().then(function() {
                 $('#casesTable').DataTable().ajax.reload();
@@ -845,7 +898,7 @@ $(document).ready(function () {
 
         // Bind action button update events
         $(document).on('change', '.row-checkbox', updateActionButtons);
-        $('#statusFilter, #toolFilter, #ownerFilter, #stateFilter, #county_id, #courthouseFilter, #celebrityFilter')
+        $('#statusFilter, #toolFilter, #stateFilter, #county_id, #courthouseFilter, #celebrityFilter, .owner-filter-btn')
             .on('change', updateActionButtons);
         $('#casesTable').on('draw.dt', updateActionButtons);
 
