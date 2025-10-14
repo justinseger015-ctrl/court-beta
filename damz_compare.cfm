@@ -187,6 +187,9 @@
                     <p class="text-muted">Asset ID: #URL.fk_asset#</p>
                 </div>
                 <div>
+                    <a href="damz_prompt_editor.cfm" class="btn btn-secondary me-2">
+                        Edit Prompt Rules
+                    </a>
                     <button type="button" class="btn btn-success me-2" onclick="loadNextRecord()">
                         Next Record
                     </button>
