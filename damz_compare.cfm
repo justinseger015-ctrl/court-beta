@@ -115,6 +115,7 @@
     LEFT JOIN docketwatch.dbo.damz_test_version_model vm ON vm.version = t.version
     LEFT JOIN docketwatch.dbo.gemini_models gm ON gm.id = vm.fk_model
     WHERE t.fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#URL.fk_asset#">
+      AND t.version <> 3
     ORDER BY t.version ASC
 </cfquery>
 
