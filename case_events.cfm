@@ -428,6 +428,28 @@
             margin-bottom: 2rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
+        /* Owner filter button group styling */
+        #ownerFilterGroup {
+            gap: 0.5rem;
+        }
+        
+        #ownerFilterGroup .btn {
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        
+        #ownerFilterGroup .btn-check:checked + .btn {
+            background-color: #0ea5e9;
+            border-color: #0ea5e9;
+            color: white;
+        }
+        
+        #ownerFilterGroup .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
         .stats-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -596,10 +618,26 @@
 
 <cfinclude template="navbar.cfm">
 
+<!--- Get current authenticated user --->
+<cfset currentuser = getAuthUser()>
+
+<!--- Query to get list of users for ownership filter --->
+<cfquery name="owners" datasource="Reach">
+    SELECT 
+        username AS value,
+        firstname + ' ' + lastname AS display
+    FROM docketwatch.dbo.users
+    WHERE userRole = 'User'
+    ORDER BY 
+        CASE WHEN username = <cfqueryparam value="#currentUser#" cfsqltype="cf_sql_varchar"> THEN 0 ELSE 1 END,
+        firstname, lastname
+</cfquery>
+
 <!-- Params and sanitization -->
 <cfparam name="url.case_id" default="all">
 <cfparam name="url.acknowledged" default="all">
 <cfparam name="url.days" default="1">
+<cfparam name="url.owner" default="">
 <!--- Pagination removed since we're only showing current day events --->
 <!--- <cfparam name="url.page" default="1"> --->
 <!--- <cfparam name="url.pageSize" default="20"> --->
@@ -621,6 +659,18 @@
       AND c.case_number <> 'Unfiled'
       AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
       AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
+      <cfif len(trim(url.owner))>
+        <!--- Handle multiple owners (comma-separated) --->
+        <cfset ownerList = listToArray(url.owner, ",")>
+        <cfif arrayLen(ownerList) GT 0>
+            AND (
+                <cfloop array="#ownerList#" index="i" item="ownerValue">
+                    t.owners LIKE <cfqueryparam value="%#trim(ownerValue)#%" cfsqltype="cf_sql_varchar">
+                    <cfif i NEQ arrayLen(ownerList)>OR</cfif>
+                </cfloop>
+            )
+        </cfif>
+      </cfif>
     GROUP BY c.id, c.case_name, c.case_number, t.tool_name
     ORDER BY c.case_name
 </cfquery>
@@ -738,6 +788,18 @@
       AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
       AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
       AND e.event_date >= <cfqueryparam value="#dateFormat(dateAdd('d', -7, now()), 'yyyy-mm-dd')#" cfsqltype="cf_sql_date">
+      <cfif len(trim(url.owner))>
+        <!--- Handle multiple owners (comma-separated) --->
+        <cfset ownerList = listToArray(url.owner, ",")>
+        <cfif arrayLen(ownerList) GT 0>
+            AND (
+                <cfloop array="#ownerList#" index="i" item="ownerValue">
+                    t.owners LIKE <cfqueryparam value="%#trim(ownerValue)#%" cfsqltype="cf_sql_varchar">
+                    <cfif i NEQ arrayLen(ownerList)>OR</cfif>
+                </cfloop>
+            )
+        </cfif>
+      </cfif>
       <cfif url.case_id NEQ "all">
         AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
       </cfif>
@@ -756,11 +818,24 @@
         SUM(CASE WHEN ISNULL(acknowledged, 0) = 1 THEN 1 ELSE 0 END) as acknowledged
     FROM docketwatch.dbo.case_events e
     INNER JOIN docketwatch.dbo.cases c ON c.id = e.fk_cases
+    LEFT JOIN docketwatch.dbo.tools t ON t.id = c.fk_tool
     WHERE c.status = 'Tracked'
       AND c.case_number <> 'Unfiled'
       AND e.created_at >= <cfqueryparam value="#dateFormat(startDate, 'yyyy-mm-dd')# 00:00:00" cfsqltype="cf_sql_timestamp">
       AND e.created_at <= <cfqueryparam value="#dateFormat(endDate, 'yyyy-mm-dd')# 23:59:59" cfsqltype="cf_sql_timestamp">
       AND e.event_date >= <cfqueryparam value="#dateFormat(dateAdd('d', -7, now()), 'yyyy-mm-dd')#" cfsqltype="cf_sql_date">
+      <cfif len(trim(url.owner))>
+        <!--- Handle multiple owners (comma-separated) --->
+        <cfset ownerList = listToArray(url.owner, ",")>
+        <cfif arrayLen(ownerList) GT 0>
+            AND (
+                <cfloop array="#ownerList#" index="i" item="ownerValue">
+                    t.owners LIKE <cfqueryparam value="%#trim(ownerValue)#%" cfsqltype="cf_sql_varchar">
+                    <cfif i NEQ arrayLen(ownerList)>OR</cfif>
+                </cfloop>
+            )
+        </cfif>
+      </cfif>
       <cfif url.case_id NEQ "all">
         AND e.fk_cases = <cfqueryparam value="#url.case_id#" cfsqltype="cf_sql_integer">
       </cfif>
@@ -821,6 +896,17 @@
 
     <div class="filter-controls">
         <div class="row align-items-center">
+            <div class="col-md-12 mb-3">
+                <label class="form-label small text-muted mb-2">Case Owners (select one or more)</label>
+                <div id="ownerFilterGroup" class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Filter by case owners">
+                    <cfoutput query="owners">
+                        <input type="checkbox" class="btn-check owner-filter-btn" id="owner_#value#" value="#value#" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="owner_#value#">
+                            <i class="fas fa-user me-1"></i>#display#
+                        </label>
+                    </cfoutput>
+                </div>
+            </div>
             <div class="col-md-3">
                 <label for="caseFilter" class="form-label">
                     <i class="fas fa-filter me-1"></i>
@@ -1348,7 +1434,53 @@ function buildPageUrl(newPage){
 </cfscript>
 
 <script>
+// Helper function to get selected owners as comma-separated string
+function getSelectedOwners() {
+    const selected = [];
+    $('.owner-filter-btn:checked').each(function() {
+        selected.push($(this).val());
+    });
+    return selected.join(',');
+}
+
+// Centralized localStorage management for filter persistence
+const LocalStorageManager = {
+    keys: {
+        owner: 'case_events_owner'
+    },
+    
+    set(key, value) {
+        if (this.keys[key]) {
+            localStorage.setItem(this.keys[key], value);
+        }
+    },
+    
+    get(key) {
+        return this.keys[key] ? localStorage.getItem(this.keys[key]) : null;
+    },
+    
+    clearAll() {
+        Object.values(this.keys).forEach(key => localStorage.removeItem(key));
+    }
+};
+
 $(document).ready(function() {
+    // Restore owner selections from localStorage on page load
+    const savedOwners = LocalStorageManager.get('owner');
+    if (savedOwners) {
+        const ownerArray = savedOwners.split(',');
+        ownerArray.forEach(function(owner) {
+            $('#owner_' + owner).prop('checked', true);
+        });
+    }
+    
+    // Setup owner filter button change handler
+    $('.owner-filter-btn').on('change', function() {
+        const selectedOwners = getSelectedOwners();
+        LocalStorageManager.set('owner', selectedOwners);
+        updateFilters();
+    });
+    
     // Initialize floating acknowledge button
     updateEventCounts();
     
@@ -1593,11 +1725,13 @@ function updateFilters() {
     const case_id = $('#caseFilter').val();
     const acknowledged = $('#ackFilter').val();
     const days = $('#daysFilter').val();
+    const owner = getSelectedOwners();
     let url = window.location.pathname + '?';
     const params = [];
     if (case_id !== 'all') params.push('case_id=' + encodeURIComponent(case_id));
     if (acknowledged !== 'all') params.push('acknowledged=' + encodeURIComponent(acknowledged));
     if (days !== '1') params.push('days=' + encodeURIComponent(days));
+    if (owner !== '') params.push('owner=' + encodeURIComponent(owner));
     window.location.href = url + params.join('&');
 }
 
@@ -1605,8 +1739,10 @@ function doExport(){
   const case_id = $('#caseFilter').val();
   const acknowledged = $('#ackFilter').val();
   const days = $('#daysFilter').val();
+  const owner = getSelectedOwners();
   let url = 'export_events.cfm?case_id=' + encodeURIComponent(case_id) + '&acknowledged=' + encodeURIComponent(acknowledged);
   if (days !== '1') url += '&days=' + encodeURIComponent(days);
+  if (owner !== '') url += '&owner=' + encodeURIComponent(owner);
   window.location = url;
 }
 
@@ -1631,10 +1767,11 @@ function updateEventCounts() {
     const case_id = $('#caseFilter').val();
     const acknowledged = $('#ackFilter').val();
     const days = $('#daysFilter').val();
+    const owner = getSelectedOwners();
     $.ajax({
         url: 'ajax_getEventCounts.cfm?bypass=1',
         method: 'GET',
-        data: { case_id: case_id, acknowledged: acknowledged, days: days },
+        data: { case_id: case_id, acknowledged: acknowledged, days: days, owner: owner },
         dataType: 'json',
         success: function(data) {
             $('.stat-card:nth-child(1) .stat-number').text(data.activeCases);

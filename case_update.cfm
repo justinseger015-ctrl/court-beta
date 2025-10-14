@@ -58,7 +58,7 @@ ORDER BY o.court_name
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><cfoutput>Update Case - #getCase.case_number#</cfoutput></title>
+  <title><cfif case_mode EQ "new">New Case Form<cfelse><cfoutput>Update Case - #getCase.case_number#</cfoutput></cfif></title>
   <cfinclude template="head.cfm">
 </head>
 <body>
@@ -71,12 +71,16 @@ ORDER BY o.court_name
     <div class="card shadow-sm mb-4 filter-card">
       <div class="card-header">
         <h6 class="mb-0 d-flex align-items-center">
-          <i class="fas fa-edit me-2"></i>Update Case - <cfoutput>#getCase.case_number#</cfoutput>
+          <cfif case_mode EQ "new">
+            <i class="fas fa-plus me-2"></i>New Case Form
+          <cfelse>
+            <i class="fas fa-edit me-2"></i>Update Case - <cfoutput>#getCase.case_number#</cfoutput>
+          </cfif>
           <div class="ms-auto d-flex gap-2">
             <cfoutput>
-            <a href="case_details.cfm?id=#getCase.id#" 
+            <a href="<cfif case_mode EQ 'new'>index.cfm<cfelse>case_details.cfm?id=#getCase.id#</cfif>" 
                class="btn btn-outline-secondary btn-sm"
-               aria-label="Cancel and return to case details">
+               aria-label="Cancel and return">
               <i class="fas fa-times me-1" aria-hidden="true"></i>
               Cancel
             </a>
@@ -92,7 +96,7 @@ ORDER BY o.court_name
       <div class="card-header">
         <h6 class="mb-0">
           <i class="fas fa-file-alt me-2"></i>
-          Case Update Form
+          <cfif case_mode EQ "new">New Case Form<cfelse>Case Update Form</cfif>
         </h6>
       </div>
       <div class="card-body">
@@ -121,7 +125,7 @@ ORDER BY o.court_name
                          id="case_number" 
                          name="case_number" 
                          value="#getCase.case_number#"
-                         required>
+                         >
                   </cfoutput>
                 </div>
               </div>
@@ -137,7 +141,7 @@ ORDER BY o.court_name
                          id="case_name" 
                          name="case_name" 
                          value="#getCase.case_name#"
-                         required>
+                         >
                   </cfoutput>
                 </div>
               </div>
@@ -299,14 +303,14 @@ ORDER BY o.court_name
           <div class="border-top pt-3 mt-4">
             <div class="d-flex justify-content-end gap-2">
               <cfoutput>
-                <a href="case_details.cfm?id=#getCase.id#" class="btn btn-outline-secondary">
+                <a href="<cfif case_mode EQ 'new'>index.cfm<cfelse>case_details.cfm?id=#getCase.id#</cfif>" class="btn btn-outline-secondary">
                   <i class="fas fa-times me-1" aria-hidden="true"></i>
                   Cancel
                 </a>
               </cfoutput>
               <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save me-1" aria-hidden="true"></i>
-                Update Case
+                <i class="fas fa-<cfif case_mode EQ 'new'>plus<cfelse>save</cfif> me-1" aria-hidden="true"></i>
+                <cfif case_mode EQ "new">Add Case<cfelse>Update Case</cfif>
               </button>
             </div>
           </div>
