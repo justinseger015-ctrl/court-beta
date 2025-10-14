@@ -1,26 +1,8 @@
-
-
-
 <!DOCTYPE html>
-
-
-
-
-
-
 <html>
 <head>
     <title>DAMZ Asset Compare</title>
-   
-
-        <cfquery datasource="Reach">
-            INSERT INTO docketwatch.dbo.damz_test_version_model (version, fk_model, prompt_notes)
-            VALUES (
-                <cfqueryparam cfsqltype="cf_sql_integer" value="#nextVersion#">,
-                <cfqueryparam cfsqltype="cf_sql_integer" value="#selectedModel#">,
-                <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#promptNotes#" null="#NOT len(trim(promptNotes))#">
-            )
-        </cfquery> href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .text-truncate-hover {
             max-width: 300px;
