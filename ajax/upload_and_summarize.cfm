@@ -57,7 +57,8 @@
     <cflog file="summarize_upload" text="Python stderr: #pyError#">
     
     <!--- Check if output looks like JSON --->
-    <cfif NOT (trim(pyOutput) startsWith "{") AND NOT (trim(pyOutput) startsWith "[")>
+    <cfset trimmedOutput = trim(pyOutput)>
+    <cfif NOT (left(trimmedOutput, 1) EQ "{") AND NOT (left(trimmedOutput, 1) EQ "[")>
         <!--- Python returned non-JSON output (likely an error page or HTML) --->
         <cflog file="summarize_upload" text="Python returned non-JSON: #left(pyOutput, 500)#">
         <cfset errorResponse = {
