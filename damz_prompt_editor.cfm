@@ -101,7 +101,11 @@
                     <p class="text-muted">Edit AI prompt instruction files for the comprehensive processor</p>
                 </div>
                 <div>
-                    <a href="damz_compare.cfm" class="btn btn-secondary">Back to Compare</a>
+                    <cfif structKeyExists(session, "damz_current_asset") AND len(trim(session.damz_current_asset))>
+                        <a href="damz_compare.cfm" class="btn btn-secondary">Back to Compare</a>
+                    <cfelse>
+                        <a href="damz_compare.cfm" class="btn btn-secondary">Back to Compare</a>
+                    </cfif>
                 </div>
             </div>
 

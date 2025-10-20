@@ -29,14 +29,27 @@
 </head>
 <body>
 
-<!--- Parameter validation --->
-<cfparam name="URL.fk_asset" default="">
+<!--- Parameter validation with session support --->
+<cfparam name="URL.fk_asset" default="EBB41D65-A6BF-409E-A2DB-6B1D2B1E01B3">
 <cfset isValidGuid = false>
+<cfset currentAsset = "">
+
+<!--- Check if URL has an asset --->
 <cfif len(trim(URL.fk_asset))>
     <!--- Check if it matches GUID pattern (8-4-4-4-12 characters) --->
     <cfset guidPattern = "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$">
     <cfif REFind(guidPattern, trim(URL.fk_asset))>
         <cfset isValidGuid = true>
+        <cfset currentAsset = trim(URL.fk_asset)>
+        <!--- Store in session --->
+        <cfset session.damz_current_asset = currentAsset>
+    </cfif>
+<cfelseif structKeyExists(session, "damz_current_asset") AND len(trim(session.damz_current_asset))>
+    <!--- Use session asset if no URL parameter --->
+    <cfset guidPattern = "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$">
+    <cfif REFind(guidPattern, trim(session.damz_current_asset))>
+        <cfset isValidGuid = true>
+        <cfset currentAsset = trim(session.damz_current_asset)>
     </cfif>
 </cfif>
 
@@ -45,7 +58,7 @@
     <div class="container mt-4">
         <div class="alert alert-danger">
             <h4>Invalid Asset ID</h4>
-            <p>Please provide a valid fk_asset GUID in the URL.</p>
+            <p>Please provide a valid fk_asset GUID in the URL or ensure one is stored in your session.</p>
             <p class="text-muted">Received: #htmlEditFormat(URL.fk_asset)#</p>
         </div>
     </div>
@@ -76,7 +89,7 @@
         </cfquery>
         
         <!--- Build command arguments --->
-        <cfset scriptArgs = [pythonScriptPath, "--fk_asset", URL.fk_asset]>
+        <cfset scriptArgs = [pythonScriptPath, "--fk_asset", currentAsset]>
         
         <!--- Execute the Python script --->
         <cftry>
@@ -105,7 +118,7 @@
 <cfquery name="Q_asset_v0" datasource="Reach">
     SELECT TOP 1 * 
     FROM docketwatch.dbo.damz_test
-    WHERE fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#URL.fk_asset#">
+    WHERE fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#currentAsset#">
       AND version = 0
 </cfquery>
 
@@ -114,7 +127,7 @@
     FROM docketwatch.dbo.damz_test t
     LEFT JOIN docketwatch.dbo.damz_test_version_model vm ON vm.version = t.version
     LEFT JOIN docketwatch.dbo.gemini_models gm ON gm.id = vm.fk_model
-    WHERE t.fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#URL.fk_asset#">
+    WHERE t.fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#currentAsset#">
       AND t.version <> 3
     ORDER BY t.version ASC
 </cfquery>
@@ -130,14 +143,14 @@
     SELECT u.path + i.path AS full_path
     FROM damz.dbo.asset_image i
     JOIN damz.dbo.storage_unit u ON u.id = i.fk_storage_unit
-    WHERE i.type = 'THUMBNAIL' AND i.fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#URL.fk_asset#">
+    WHERE i.type = 'THUMBNAIL' AND i.fk_asset = <cfqueryparam cfsqltype="cf_sql_varchar" value="#currentAsset#">
 </cfquery>
 
 <cfquery name="Q_next_record" datasource="Reach">
     SELECT TOP 1 fk_asset
     FROM docketwatch.dbo.damz_test
     WHERE version = 0 
-      AND fk_asset > <cfqueryparam cfsqltype="cf_sql_varchar" value="#URL.fk_asset#">
+      AND fk_asset > <cfqueryparam cfsqltype="cf_sql_varchar" value="#currentAsset#">
     ORDER BY fk_asset ASC
 </cfquery>
 
@@ -184,7 +197,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h1>DAMZ Asset Compare</h1>
-                    <p class="text-muted">Asset ID: #URL.fk_asset#</p>
+                    <p class="text-muted">Asset ID: #currentAsset#</p>
                 </div>
                 <div>
                     <a href="damz_prompt_editor.cfm" class="btn btn-secondary me-2">
@@ -343,9 +356,9 @@
                 <h5 class="modal-title" id="runTestModalLabel">Run Test</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="damz_compare.cfm?fk_asset=#htmlEditFormat(URL.fk_asset)#">
+            <form method="post" action="damz_compare.cfm?fk_asset=#htmlEditFormat(currentAsset)#">
                 <div class="modal-body">
-                    <input type="hidden" name="fk_asset" value="#htmlEditFormat(URL.fk_asset)#">
+                    <input type="hidden" name="fk_asset" value="#htmlEditFormat(currentAsset)#">
                     
                     <div class="mb-3">
                         <label for="modal_fk_model" class="form-label">Model</label>

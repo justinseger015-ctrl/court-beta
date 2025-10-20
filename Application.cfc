@@ -46,8 +46,8 @@
     <cffunction name="onRequestStart" returnType="boolean">
         <cfargument name="request" required="true">
 
-        <!--- Skip authentication for logout page and AJAX requests --->
-        <cfif arguments.request contains "logout.cfm" OR arguments.request contains "ajax_">
+    <!--- Skip authentication for logout page and AJAX requests --->
+    <cfif arguments.request contains "logout.cfm" OR arguments.request contains "ajax_" OR arguments.request contains "/ajax/">
             <!--- For logout, handle session cleanup --->
             <cfif arguments.request contains "logout.cfm">
                 <!--- Clear all session variables --->

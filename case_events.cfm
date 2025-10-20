@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8" /> 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Case Events - Alert Dashboard</title>
     <cfinclude template="head.cfm">
@@ -725,10 +726,15 @@
     DocOne AS (
         SELECT 
             d.fk_case_event,
-            MAX(d.doc_uid) AS doc_uid
+            d.doc_uid,
+            ROW_NUMBER() OVER (
+                PARTITION BY d.fk_case_event 
+                ORDER BY 
+                    CASE WHEN d.event_summary IS NOT NULL AND LEN(d.event_summary) > 0 THEN 0 ELSE 1 END,
+                    CASE WHEN d.pdf_type IS NULL OR d.pdf_type <> 'Attachment' THEN 0 ELSE 1 END,
+                    d.doc_uid DESC
+            ) AS rn
         FROM docketwatch.dbo.documents d
-        WHERE (d.pdf_type IS NULL OR d.pdf_type <> 'Attachment')
-        GROUP BY d.fk_case_event
     )
     SELECT 
         e.id,
@@ -759,7 +765,6 @@
         d.pdf_title,
         d.summary_ai,
         d.summary_ai_html,
-        d.event_summary,
         CASE 
             WHEN d.rel_path IS NOT NULL AND d.rel_path <> '' 
                 THEN '/docs/' + REPLACE(d.rel_path,'\','/')
@@ -773,12 +778,18 @@
         cp.name as priority,
         celeb.match_probability,
         lpc.latest_event_created_at,
-        t.tool_name as source_tool,
-        ISNULL(dc.doc_count, 0) as document_count
+    t.tool_name as source_tool,
+    ISNULL(dc.doc_count, 0) as document_count,
+    docketwatch.dbo.ufn_HasTodaysArticle(c.id, CAST(GETDATE() AS DATE)) AS has_article_today,
+    d.doc_uid AS primary_doc_uid,
+    d.event_summary,
+    d.newsworthiness,
+    d.newsworthiness_reason,
+    d.whats_next
     FROM LatestPerCase lpc
     INNER JOIN docketwatch.dbo.cases c ON c.id = lpc.fk_cases
     INNER JOIN docketwatch.dbo.case_events e ON e.fk_cases = lpc.fk_cases
-    LEFT JOIN DocOne do ON do.fk_case_event = e.id
+    LEFT JOIN DocOne do ON do.fk_case_event = e.id AND do.rn = 1
     LEFT JOIN docketwatch.dbo.documents d ON d.doc_uid = do.doc_uid
     LEFT JOIN celeb ON celeb.fk_case = e.fk_cases AND celeb.rn = 1
     LEFT JOIN docketwatch.dbo.case_priority cp ON cp.id = c.fk_priority
@@ -1056,6 +1067,11 @@
                             
                             <!-- Case Action Buttons -->
                             <div class="card-footer bg-light">
+                                <cfif has_article_today EQ 1>
+                                    <cfset articleBtnClass = "btn btn-primary btn-sm">
+                                <cfelse>
+                                    <cfset articleBtnClass = "btn btn-outline-secondary btn-sm">
+                                </cfif>
                                 <div class="btn-group" role="group">
                                     <a href="case_details.cfm?id=#fk_cases#" class="btn btn-outline-primary btn-sm">
                                         <i class="fa-solid fa-file-lines me-1"></i>View Case Details
@@ -1067,6 +1083,16 @@
                                     </cfif>
                                     <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="##caseSummaryModal#fk_cases#">
                                         <i class="fas fa-file-text me-1"></i>Case Summary
+                                    </button>
+                                    <button type="button"
+                                            class="#articleBtnClass# view-article-btn"
+                                            data-case-id="#fk_cases#"
+                                            data-has-article="#has_article_today#"
+                                            data-case-name="#htmlEditFormat(case_name)#">
+                                        <i class="fa-solid fa-newspaper me-1"></i>View Today's Article
+                                        <cfif has_article_today EQ 1>
+                                            <span class="badge bg-warning text-dark ms-2">Available</span>
+                                        </cfif>
                                     </button>
                                 </div>
                             </div>
@@ -1165,16 +1191,11 @@
                                                     </button>
                                                 --->
                                                 </cfif>
-                                                <cfif len(summary_ai_html)>
+                                                <cfset hasSummaryContent = len(trim(event_summary & "")) OR len(trim(newsworthiness & "")) OR len(trim(newsworthiness_reason & "")) OR len(trim(whats_next & "")) OR len(trim(primary_doc_uid & ""))>
+                                                <cfif hasSummaryContent>
                                                     <button class="btn btn-info btn-sm btn-square" data-bs-toggle="modal" data-bs-target="##summaryModal#id#">
                                                         <i class="fas fa-brain"></i>
                                                     </button>
-                                                <!--- Generate Summary button commented out - auto-summarizing now
-                                                <cfelse>
-                                                    <button class="btn btn-outline-info btn-sm btn-square generate-summary-btn" data-event-id="#id#">
-                                                        <i class="fas fa-robot"></i>
-                                                    </button>
-                                                --->
                                                 </cfif>
                                                 <!--- Generate Article button commented out for now
                                                 <cfif isDoc>
@@ -1242,23 +1263,92 @@
 
 <!-- Summary Modals -->
 <cfoutput query="events">
-    <cfif len(summary_ai_html)>
-    <div class="modal fade" id="summaryModal#id#" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-brain me-2"></i>AI Summary - Event #event_no#</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="summary-content">#summary_ai_html#</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <cfset hasSummaryContent = len(trim(event_summary & "")) OR len(trim(newsworthiness & "")) OR len(trim(newsworthiness_reason & "")) OR len(trim(whats_next & "")) OR len(trim(primary_doc_uid & ""))>
+    <cfif hasSummaryContent>
+        <cfset summaryText = replace(trim(event_summary & ""), chr(194), "", "all")>
+        <cfset summaryText = replace(summaryText, chr(226) & chr(128) & chr(148), "-", "all")>
+        <cfset newsworthinessValue = replace(trim(newsworthiness & ""), chr(194), "", "all")>
+        <cfset newsReason = replace(trim(newsworthiness_reason & ""), chr(194), "", "all")>
+        <cfset whatsNextText = replace(trim(whats_next & ""), chr(194), "", "all")>
+        <cfset primaryDocUid = trim(primary_doc_uid & "")>
+
+        <cfif len(primaryDocUid)>
+            <cfquery name="keyDetails" datasource="Reach">
+                SELECT key_title, key_detail
+                FROM docketwatch.dbo.document_key_details WITH (NOLOCK)
+                WHERE fk_document_uid = <cfqueryparam cfsqltype="cf_sql_varchar" value="#primaryDocUid#">
+                ORDER BY sort_order DESC, created_at DESC
+            </cfquery>
+        <cfelse>
+            <cfset keyDetails = QueryNew("key_title,key_detail")>
+        </cfif>
+
+        <div class="modal fade" id="summaryModal#id#" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-brain me-2"></i>Case Update - Event #event_no#</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <cfif len(summaryText)>
+                            <div class="mb-4">
+                                <h6 class="text-uppercase text-muted small mb-2">Event Summary</h6>
+                                <p class="mb-0">#REReplace(htmlEditFormat(summaryText), "(\r\n|\n|\r)", "<br>", "all")#</p>
+                            </div>
+                        </cfif>
+
+                        <cfif keyDetails.recordCount GT 0>
+                            <div class="mb-2">
+                                <h6 class="text-uppercase text-muted small mb-2">Key Details</h6>
+                                <ul class="mb-0 ps-3">
+                                    <cfloop query="keyDetails">
+                                        <cfset detailTitle = replace(trim(key_title & ""), chr(194), "", "all")>
+                                        <cfset detailBody = replace(trim(key_detail & ""), chr(194), "", "all")>
+                                        <cfset detailBody = replace(detailBody, chr(226) & chr(128) & chr(148), "-", "all")>
+                                        <cfif len(detailTitle) OR len(detailBody)>
+                                            <li class="mb-2">
+                                                <cfif len(detailTitle)>
+                                                    <strong>#htmlEditFormat(detailTitle)#:</strong>
+                                                </cfif>
+                                                <span>#REReplace(htmlEditFormat(detailBody), "(\r\n|\n|\r)", "<br>", "all")#</span>
+                                            </li>
+                                        </cfif>
+                                    </cfloop>
+                                </ul>
+                            </div>
+                        </cfif>
+
+                        <cfif len(newsworthinessValue)>
+                            <div class="mb-3">
+                                <h6 class="text-uppercase text-muted small mb-1">Newsworthiness</h6>
+                                <p class="mb-1"><strong>#htmlEditFormat(newsworthinessValue)#</strong></p>
+                                <cfif len(newsReason)>
+                                    <p class="mb-0">#REReplace(htmlEditFormat(newsReason), "(\r\n|\n|\r)", "<br>", "all")#</p>
+                                </cfif>
+                            </div>
+                        </cfif>
+
+                        <cfif len(whatsNextText)>
+                            <div class="mb-4">
+                                <h6 class="text-uppercase text-muted small mb-1">What&rsquo;s Next</h6>
+                                <p class="mb-0">#REReplace(htmlEditFormat(whatsNextText), "(\r\n|\n|\r)", "<br>", "all")#</p>
+                            </div>
+                        </cfif>
+
+                        <cfif NOT len(summaryText) AND NOT len(newsworthinessValue) AND NOT len(newsReason) AND NOT len(whatsNextText) AND keyDetails.recordCount EQ 0>
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-info-circle fa-2x mb-3" style="opacity:0.4;"></i>
+                                <p class="mb-0">No summary data available for this event.</p>
+                            </div>
+                        </cfif>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     </cfif>
 </cfoutput>
 
@@ -1333,11 +1423,11 @@
                                                         #htmlEditFormat(event_summary)#
                                                     </div>
                                                     <cfif len(summary_ai_html) OR len(summary_ai)>
-                                                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                                    <!---    <button type="button" class="btn btn-outline-info btn-sm" 
                                                                 data-bs-toggle="modal" 
                                                                 data-bs-target="##summaryModal#doc_uid#">
                                                             <i class="fas fa-eye me-1"></i>View Full Summary
-                                                        </button>
+                                                        </button> --->
                                                     </cfif>
                                                 <cfelseif len(summary_ai_html)>
                                                     <div class="summary-content mb-3">
@@ -1800,27 +1890,180 @@ function updateFloatingAckButton(unackCount) {
 
 // Notifications
 function showNotification(type, message) {
-    if (typeof Swal !== 'undefined') {
-        const icons = { success: 'success', error: 'error', info: 'info', question: 'question' };
-        Swal.fire({
-            icon: icons[type] || 'info',
-            title: message,
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    } else {
-        alert(message);
-    }
+        if (typeof Swal !== 'undefined') {
+                const icons = { success: 'success', error: 'error', info: 'info', question: 'question' };
+                Swal.fire({
+                        icon: icons[type] || 'info',
+                        title: message,
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                });
+        } else {
+                alert(message);
+        }
 }
 </script>
+
+<!-- Article Modal -->
+<div class="modal fade" id="articleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="articleModalTitle">Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="articleModalBody">
+                <div id="articleLoading">Loading...</div>
+                <div id="articleContent" class="d-none">
+                    <h3 id="articleHeadline"></h3>
+                    <h6 id="articleSubhead" class="text-muted"></h6>
+                    <img id="articleImage" class="img-fluid mb-3" style="display:none;" alt="article image">
+                    <div id="articleBody"></div>
+                </div>
+                <div id="articleEmpty" class="d-none">No article for today.</div>
+                <div id="articleError" class="d-none text-danger">Error loading article.</div>
+            </div>
+                    <div class="modal-footer d-flex align-items-center justify-content-between">
+                        <div class="text-muted" id="articleVersion"></div>
+                        <div class="d-flex align-items-center gap-3">
+                            <small class="text-muted" id="articleUpdatedAt"></small>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- Bootstrap 5 JS (with Popper included) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-        crossorigin="anonymous"></script>
+                integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+                crossorigin="anonymous"></script>
+
+<script>
+(function(){
+    const modalEl = document.getElementById('articleModal');
+    if (!modalEl) {
+        return;
+    }
+
+    const articleButtons = document.querySelectorAll('.view-article-btn');
+    if (!articleButtons.length) {
+        return;
+    }
+
+    const bsModal = new bootstrap.Modal(modalEl);
+    const stateNodes = {
+        loading: document.getElementById('articleLoading'),
+        content: document.getElementById('articleContent'),
+        empty: document.getElementById('articleEmpty'),
+        error: document.getElementById('articleError')
+    };
+
+    const headlineNode = document.getElementById('articleHeadline');
+    const subheadNode = document.getElementById('articleSubhead');
+    const bodyNode = document.getElementById('articleBody');
+    const imageNode = document.getElementById('articleImage');
+    const updatedNode = document.getElementById('articleUpdatedAt');
+    const versionNode = document.getElementById('articleVersion');
+    const titleNode = document.getElementById('articleModalTitle');
+
+    function showState(state){
+        Object.keys(stateNodes).forEach(function(key){
+            stateNodes[key].classList.add('d-none');
+        });
+
+        if (stateNodes[state]){
+            stateNodes[state].classList.remove('d-none');
+        }
+    }
+
+    function resetContent(){
+        headlineNode.textContent = '';
+        subheadNode.textContent = '';
+        bodyNode.innerHTML = '';
+        updatedNode.textContent = '';
+        versionNode.textContent = '';
+        imageNode.style.display = 'none';
+        imageNode.removeAttribute('src');
+        imageNode.removeAttribute('alt');
+    }
+
+    articleButtons.forEach(function(btn){
+        btn.addEventListener('click', function(){
+            const caseId = this.getAttribute('data-case-id');
+            const caseName = this.getAttribute('data-case-name') || 'Case';
+
+            titleNode.textContent = caseName + " - Today's Article";
+            resetContent();
+            showState('loading');
+            bsModal.show();
+
+            fetch('ajax/article_get.cfm?case_id=' + encodeURIComponent(caseId) + '&bypass=1', {
+                credentials: 'same-origin'
+            })
+            .then(function(resp){
+                if (!resp.ok){
+                    throw new Error('Network response was not ok');
+                }
+                return resp.json();
+            })
+            .then(function(data){
+                if (!data.ok){
+                    showState('error');
+                    return;
+                }
+
+                if (!data.found){
+                    showState('empty');
+                    return;
+                }
+
+                const article = data.data || {};
+                headlineNode.textContent = article.headline || '(No headline)';
+                subheadNode.textContent = article.subhead || '';
+                bodyNode.innerHTML = article.body_html || '';
+
+                if (article.updated_at){
+                    updatedNode.textContent = 'Updated ' + article.updated_at;
+                } else {
+                    updatedNode.textContent = '';
+                }
+
+                if (article.image_url){
+                    imageNode.src = article.image_url;
+                    imageNode.alt = article.headline || 'Article image';
+                    imageNode.style.display = 'block';
+                } else {
+                    imageNode.style.display = 'none';
+                }
+
+                let versionText = '';
+                if (article.version !== undefined && article.version !== null){
+                    versionText = 'Version ' + article.version;
+                }
+                if (article.article_date){
+                    const dateObj = new Date(article.article_date);
+                    if (!isNaN(dateObj.getTime())){
+                        const dateFormatted = dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                        versionText = versionText ? (versionText + ' - ' + dateFormatted) : dateFormatted;
+                    } else {
+                        versionText = versionText ? (versionText + ' - ' + article.article_date) : article.article_date;
+                    }
+                }
+                versionNode.textContent = versionText;
+
+                showState('content');
+            })
+            .catch(function(){
+                showState('error');
+            });
+        });
+    });
+})();
+</script>
 
 
 </body>
