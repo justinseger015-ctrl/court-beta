@@ -1,0 +1,158 @@
+	
+Name
+Type
+Dimensions (e.g. location)
+Value
+Current usage percentage
+Current usage
+Adjustable 
+GenerateContent free tier input token count limit per model per day	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per day	Quota	model : gemini-2.5-pro-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : computer-use-preview	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-1.0-pro	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-1.5-flash-8b-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-1.5-flash-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-1.5-pro	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-1.5-pro-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-2.5-flash-preview-image	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-2.5-pro-exp	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gemini-2.5-pro-tts	0		
+0%
+0	Yes		
+GenerateContent free tier input token count limit per model per minute	Quota	model : gqi-cst-ft9d3c	0		
+0%
+0	Yes		
+GenerateContent input token count limit per model per minute	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+GenerateContent input token count limit per model per minute	Quota	model : gqi-cst-ft9d3c	0		
+0%
+0	Yes		
+GenerateContent input token count limit per model per minute for a project in the paid tier 2	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+GenerateContent input token count limit per model per minute for a project in the paid tier 2	Quota	model : gqi-cst-ft9d3c	0		
+0%
+0	Yes		
+GenerateContent input token count limit per model per minute for a project in the paid tier 3	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+GenerateContent input token count limit per model per minute for a project in the paid tier 3	Quota	model : gqi-cst-ft9d3c	0		
+0%
+0	Yes		
+GenerateContent requests per day with Search functionality enabled (free tier).	Quota	model : gemini-1.5	0		
+0%
+0	Yes		
+Predict long running requests per project (free tier)	Quota	model : veo-2.0-generate-001	0		
+0%
+0	Yes		
+Predict long running requests per project (free tier)	Quota	model : veo-2.0-generate-exp	0		
+0%
+0	Yes		
+Predict long running requests per project in paid tier 1 project	Quota	model : veo-3.0-fast-generate	0		
+0%
+0	Yes		
+Predict long running requests per project in paid tier 1 project	Quota	model : veo-3.0-fast-generate-preview	0		
+0%
+0	Yes		
+Predict long running requests per project in paid tier 1 project	Quota	model : veo-3.0-generate	0		
+0%
+0	Yes		
+Predict long running requests per project in paid tier 1 project	Quota	model : veo-3.0-generate-preview	0		
+0%
+0	Yes		
+Request limit per model per day for a project	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : computer-use-preview	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-1.0-pro	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-1.5-flash-8b-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-1.5-flash-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-1.5-pro	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-1.5-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-2.5-flash-preview-image	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-2.5-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the free tier	Quota	model : gemini-2.5-pro-tts	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the paid tier 2	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per day for a project in the paid tier 3	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : computer-use-preview	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-1.0-pro	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-1.5-flash-8b-exp	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-1.5-flash-exp	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-1.5-pro	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-1.5-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-2.0-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-2.5-flash-preview-image	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-2.5-pro-exp	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gemini-2.5-pro-tts	0		
+0%
+0	Yes		
+Request limit per model per minute for a project in the free tier	Quota	model : gqi-cst-ft9d3c	0		
+0%
+0	Ye
