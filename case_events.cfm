@@ -820,60 +820,6 @@
     ORDER BY lpc.latest_event_created_at DESC, e.created_at DESC
 </cfquery>
 
-<!--- DEBUG: Check what documents exist for event 286 --->
-<cfquery name="debugDocs" datasource="Reach">
-    SELECT 
-        ce.id as event_id,
-        ce.event_no,
-        d.doc_uid,
-        d.pdf_type,
-        d.pdf_title,
-        CASE WHEN d.event_summary IS NOT NULL AND LEN(d.event_summary) > 0 THEN 1 ELSE 0 END as has_summary,
-        LEN(ISNULL(d.event_summary, '')) as summary_len,
-        LEN(ISNULL(d.newsworthiness, '')) as news_len,
-        LEN(ISNULL(d.newsworthiness_reason, '')) as reason_len,
-        LEN(ISNULL(d.whats_next, '')) as next_len,
-        d.event_summary,
-        d.newsworthiness,
-        d.newsworthiness_reason,
-        d.whats_next
-    FROM docketwatch.dbo.case_events ce
-    INNER JOIN docketwatch.dbo.documents d ON d.fk_case_event = ce.id
-    WHERE ce.event_no = 286
-    ORDER BY 
-        CASE WHEN d.event_summary IS NOT NULL AND LEN(d.event_summary) > 0 THEN 0 ELSE 1 END,
-        CASE WHEN d.pdf_type IS NULL OR d.pdf_type <> 'Attachment' THEN 0 ELSE 1 END,
-        d.doc_uid DESC
-</cfquery>
-
-<cfif debugDocs.recordCount GT 0>
-    <div style="background: ##ffcccc; border: 3px solid ##cc0000; padding: 20px; margin: 20px;">
-        <h2>DEBUG: All Documents for Event 286</h2>
-        <p><strong>Total Documents Found:</strong> #debugDocs.recordCount#</p>
-        <cfoutput query="debugDocs">
-            <div style="background: ##ffffff; border: 1px solid ##999; padding: 10px; margin: 10px 0;">
-                <p><strong>Doc UID:</strong> #doc_uid#</p>
-                <p><strong>PDF Type:</strong> #pdf_type#</p>
-                <p><strong>PDF Title:</strong> #pdf_title#</p>
-                <p><strong>Has Summary:</strong> #has_summary#</p>
-                <p><strong>Field Lengths:</strong> Summary=#summary_len#, News=#news_len#, Reason=#reason_len#, Next=#next_len#</p>
-                <cfif summary_len GT 0>
-                    <p><strong>Event Summary:</strong> #htmlEditFormat(left(event_summary, 300))#...</p>
-                </cfif>
-                <cfif news_len GT 0>
-                    <p><strong>Newsworthiness:</strong> #htmlEditFormat(newsworthiness)#</p>
-                </cfif>
-                <cfif reason_len GT 0>
-                    <p><strong>Reason:</strong> #htmlEditFormat(left(newsworthiness_reason, 300))#...</p>
-                </cfif>
-                <cfif next_len GT 0>
-                    <p><strong>What's Next:</strong> #htmlEditFormat(left(whats_next, 300))#...</p>
-                </cfif>
-            </div>
-        </cfoutput>
-    </div>
-</cfif>
-
 <!-- Statistics (Tracked only) -->
 <cfquery name="stats" datasource="Reach">
     SELECT 
@@ -1325,19 +1271,6 @@
         <cfset newsReason = replace(trim(newsworthiness_reason & ""), chr(194), "", "all")>
         <cfset whatsNextText = replace(trim(whats_next & ""), chr(194), "", "all")>
         <cfset primaryDocUid = trim(primary_doc_uid & "")>
-
-        <!--- DEBUG OUTPUT FOR EVENT 286 --->
-        <cfif event_no EQ 286>
-            <div style="background: ##ffffcc; border: 2px solid ##ff0000; padding: 15px; margin: 20px;">
-                <h3>DEBUG: Event 286 Data</h3>
-                <p><strong>Event ID:</strong> #id#</p>
-                <p><strong>Primary Doc UID:</strong> #primaryDocUid#</p>
-                <p><strong>Event Summary Length:</strong> #len(summaryText)# | <strong>Value:</strong> #htmlEditFormat(left(summaryText, 200))#...</p>
-                <p><strong>Newsworthiness:</strong> "#newsworthinessValue#"</p>
-                <p><strong>Newsworthiness Reason Length:</strong> #len(newsReason)# | <strong>Value:</strong> #htmlEditFormat(left(newsReason, 200))#...</p>
-                <p><strong>Whats Next Length:</strong> #len(whatsNextText)# | <strong>Value:</strong> #htmlEditFormat(left(whatsNextText, 200))#...</p>
-            </div>
-        </cfif>
 
         <cfif len(primaryDocUid)>
             <cfquery name="keyDetails" datasource="Reach">

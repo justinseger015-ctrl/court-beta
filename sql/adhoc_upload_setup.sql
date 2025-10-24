@@ -51,7 +51,7 @@ GO
 DECLARE @placeholder_case_id INT;
 SELECT @placeholder_case_id = id FROM [dbo].[cases] WHERE case_number = 'ADHOC-UPLOADS-2025';
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[case_events] WHERE fk_cases = @placeholder_case_id AND event_no = -999999)
+IF NOT EXISTS (SELECT 1 FROM [dbo].[case_events] WHERE fk_cases = @placeholder_case_id AND event_no = 0)
 BEGIN
     INSERT INTO [dbo].[case_events]
         ([id]
@@ -75,7 +75,7 @@ BEGIN
         ,@placeholder_case_id
         ,GETDATE()
         ,'placeholder'
-    ,-999999
+        ,0
         ,1  -- Mark as document event
         ,1  -- Mark as emailed to avoid notifications
         ,1  -- Mark as acknowledged to avoid processing
@@ -116,7 +116,7 @@ BEGIN
         FROM [dbo].[cases] c
         JOIN [dbo].[case_events] ce ON ce.fk_cases = c.id
         WHERE c.case_number = 'ADHOC-UPLOADS-2025'
-            AND ce.event_no = -999999;
+            AND ce.event_no = 0;
 END
 GO
 
