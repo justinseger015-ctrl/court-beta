@@ -9,16 +9,22 @@
     <cfset payload = deserializeJSON(requestBody)>
     
     <!--- Get current user (from session or CGI) --->
-    <cfset userName = "">
-    <cfif structKeyExists(session, "username")>
-        <cfset userName = session.username>
-    <cfelseif structKeyExists(cgi, "remote_user") AND len(trim(cgi.remote_user))>
-        <cfset userName = cgi.remote_user>
-    <cfelseif structKeyExists(cgi, "auth_user") AND len(trim(cgi.auth_user))>
-        <cfset userName = cgi.auth_user>
-    <cfelse>
-        <cfset userName = "anonymous">
-    </cfif>
+    <cfset userName = "anonymous">
+    
+    <cftry>
+        <!--- Try to get from session scope if it exists --->
+        <cfif isDefined("session") AND structKeyExists(session, "username") AND len(trim(session.username))>
+            <cfset userName = session.username>
+        <cfelseif structKeyExists(cgi, "remote_user") AND len(trim(cgi.remote_user))>
+            <cfset userName = cgi.remote_user>
+        <cfelseif structKeyExists(cgi, "auth_user") AND len(trim(cgi.auth_user))>
+            <cfset userName = cgi.auth_user>
+        </cfif>
+        <cfcatch type="any">
+            <!--- If session access fails, just use anonymous --->
+            <cfset userName = "anonymous">
+        </cfcatch>
+    </cftry>
     
     <!--- Validate required fields --->
     <cfif NOT structKeyExists(payload, "success")>
