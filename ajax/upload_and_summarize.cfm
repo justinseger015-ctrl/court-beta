@@ -119,6 +119,16 @@
     <!--- Use all-zeros GUID for ad-hoc uploads: 00000000-0000-0000-0000-000000000000 --->
     <cfset newDocUid = createUUID()>
     
+    <!--- Log all values being inserted for debugging --->
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - doc_uid: #newDocUid#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - pdf_title: Ad-Hoc Upload: #savedFileName#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - rel_path: uploads/#savedFileName#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - ocr_text length: #structKeyExists(data, 'ocr_text') ? len(data.ocr_text) : 0#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - summary_text length: #structKeyExists(data, 'summary_text') ? len(data.summary_text) : 0#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - summary_html length: #structKeyExists(data, 'summary_html') ? len(data.summary_html) : 0#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - fields JSON length: #structKeyExists(data, 'fields') ? len(serializeJSON(data.fields)) : 0#">
+    <cflog file="summarize_upload" type="information" text="INSERT VALUES - file_size: #uploadResult.fileSize ?: 'N/A'#">
+    
     <cftry>
         <cfquery datasource="Reach">
             INSERT INTO docketwatch.dbo.documents (
@@ -164,6 +174,17 @@
             <cfset data.db_error_sql = cfcatch.sql ?: "">
             <cfset data.db_error_sqlstate = cfcatch.sqlState ?: "">
             <cfset data.db_error_native = cfcatch.nativeErrorCode ?: "">
+            <cfset data.db_insert_params = {
+                "doc_uid": newDocUid,
+                "fk_case_event": "00000000-0000-0000-0000-000000000000",
+                "pdf_title": "Ad-Hoc Upload: #savedFileName#",
+                "rel_path": "uploads/#savedFileName#",
+                "ocr_text_length": structKeyExists(data, 'ocr_text') ? len(data.ocr_text) : 0,
+                "summary_text_length": structKeyExists(data, 'summary_text') ? len(data.summary_text) : 0,
+                "summary_html_length": structKeyExists(data, 'summary_html') ? len(data.summary_html) : 0,
+                "fields_json_length": structKeyExists(data, 'fields') ? len(serializeJSON(data.fields)) : 0,
+                "file_size": uploadResult.fileSize ?: 0
+            }>
         </cfcatch>
     </cftry>
     

@@ -858,6 +858,9 @@ runBtn.onclick = async () => {
         console.log('db_error_detail:', data.db_error_detail);
         console.log('db_error_sqlstate:', data.db_error_sqlstate);
         console.log('db_error_native:', data.db_error_native);
+        if (data.db_insert_params) {
+            console.log('INSERT PARAMS:', data.db_insert_params);
+        }
         console.log('Has fields?', data.fields ? 'Yes' : 'No');
         console.log('Has errors?', data.errors ? 'Yes' : 'No');
         if (data.db_error) {
@@ -867,6 +870,9 @@ runBtn.onclick = async () => {
             console.error('NATIVE CODE:', data.db_error_native);
             if (data.db_error_sql) {
                 console.error('SQL:', data.db_error_sql);
+            }
+            if (data.db_insert_params) {
+                console.error('INSERT PARAMS:', data.db_insert_params);
             }
             alert('Database insertion failed: ' + data.db_error + '\n\nDetails: ' + (data.db_error_detail || 'N/A') + '\n\nCheck console for full error.');
         }
