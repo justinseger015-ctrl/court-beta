@@ -925,103 +925,281 @@ function buildStructuredDetails(data) {
     const container = document.getElementById('structuredDetails');
     const fields = data.fields || {};
     let html = '';
+    let sectionCount = 0;
     
-    // Document Information
-    html += '<div class="detail-section">';
-    html += '<h6><i class="fas fa-file-alt me-2"></i>Document Information</h6>';
-    if (fields.doc_type) {
-        html += `<div class="detail-row"><div class="detail-label">Type:</div><div class="detail-value">${escapeHtml(fields.doc_type)}</div></div>`;
+    // Helper function to add a section
+    function addSection(title, icon, content) {
+        if (content) {
+            sectionCount++;
+            html += `<div class="detail-section">`;
+            html += `<h6><i class="fas fa-${icon} me-2"></i>${title}</h6>`;
+            html += content;
+            html += '</div>';
+        }
     }
-    if (fields.filing_date_iso) {
-        html += `<div class="detail-row"><div class="detail-label">Filing Date:</div><div class="detail-value">${escapeHtml(fields.filing_date_iso)}</div></div>`;
-    }
-    if (fields.court_status) {
-        html += `<div class="detail-row"><div class="detail-label">Status:</div><div class="detail-value">${escapeHtml(fields.court_status)}</div></div>`;
-    }
-    if (fields.adjudication_mode) {
-        html += `<div class="detail-row"><div class="detail-label">Mode:</div><div class="detail-value">${escapeHtml(fields.adjudication_mode)}</div></div>`;
-    }
-    html += '</div>';
     
-    // Parties
+    // Helper function to add a row
+    function addRow(label, value) {
+        if (value !== null && value !== undefined && value !== '') {
+            return `<div class="detail-row"><div class="detail-label">${label}:</div><div class="detail-value">${escapeHtml(String(value))}</div></div>`;
+        }
+        return '';
+    }
+    
+    // Helper function to add a list
+    function addList(items) {
+        if (items && Array.isArray(items) && items.length > 0) {
+            let listHtml = '<ul class="detail-list">';
+            items.forEach(item => {
+                listHtml += `<li>${escapeHtml(String(item))}</li>`;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+        return '';
+    }
+    
+    // 1. Filing Action Summary
+    let filingContent = '';
+    if (fields.filing_action_summary) {
+        filingContent += `<div class="detail-value mb-2"><strong>${escapeHtml(fields.filing_action_summary)}</strong></div>`;
+    }
+    filingContent += addRow('Document Type', fields.doc_type);
+    filingContent += addRow('Filing Date', fields.filing_date_iso);
+    filingContent += addRow('Case Number', fields.case_number);
+    filingContent += addRow('Court', fields.court);
+    filingContent += addRow('Jurisdiction', fields.jurisdiction);
+    filingContent += addRow('Status', fields.court_status);
+    filingContent += addRow('Adjudication Mode', fields.adjudication_mode);
+    filingContent += addRow('Docket Number', fields.docket_number);
+    addSection('Filing Information', 'file-alt', filingContent);
+    
+    // 2. Newsworthiness
+    let newsContent = '';
+    if (fields.newsworthiness) {
+        const newsClass = fields.newsworthiness === 'HIGH' ? 'text-danger fw-bold' : 
+                         fields.newsworthiness === 'MEDIUM' ? 'text-warning fw-bold' : 'text-muted';
+        newsContent += `<div class="detail-row"><div class="detail-label">Rating:</div><div class="detail-value"><span class="${newsClass}">${escapeHtml(fields.newsworthiness)}</span></div></div>`;
+    }
+    if (fields.newsworthiness_reason) {
+        newsContent += `<div class="detail-value mt-2">${escapeHtml(fields.newsworthiness_reason)}</div>`;
+    }
+    addSection('Newsworthiness', 'star', newsContent);
+    
+    // 3. Parties
+    let partiesContent = '';
     if (fields.parties) {
-        html += '<div class="detail-section">';
-        html += '<h6><i class="fas fa-users me-2"></i>Parties</h6>';
-        if (fields.parties.plaintiff) {
-            html += `<div class="detail-row"><div class="detail-label">Plaintiff:</div><div class="detail-value">${escapeHtml(fields.parties.plaintiff)}</div></div>`;
-        }
-        if (fields.parties.defendant) {
-            html += `<div class="detail-row"><div class="detail-label">Defendant:</div><div class="detail-value">${escapeHtml(fields.parties.defendant)}</div></div>`;
-        }
+        partiesContent += addRow('Plaintiff', fields.parties.plaintiff);
+        partiesContent += addRow('Defendant', fields.parties.defendant);
+        partiesContent += addRow('Petitioner', fields.parties.petitioner);
+        partiesContent += addRow('Respondent', fields.parties.respondent);
+        partiesContent += addRow('Appellant', fields.parties.appellant);
+        partiesContent += addRow('Appellee', fields.parties.appellee);
         if (fields.parties.others && fields.parties.others.length > 0) {
-            html += `<div class="detail-row"><div class="detail-label">Other Parties:</div><div class="detail-value">${escapeHtml(fields.parties.others.join(', '))}</div></div>`;
+            partiesContent += `<div class="detail-row"><div class="detail-label">Other Parties:</div><div class="detail-value">${escapeHtml(fields.parties.others.join(', '))}</div></div>`;
         }
-        html += '</div>';
     }
+    addSection('Parties', 'users', partiesContent);
     
-    // Orders (if any)
+    // 4. Attorneys & Counsel
+    let attorneyContent = '';
+    if (fields.attorneys) {
+        if (fields.attorneys.plaintiff && Array.isArray(fields.attorneys.plaintiff) && fields.attorneys.plaintiff.length > 0) {
+            attorneyContent += '<div class="detail-row"><div class="detail-label">Plaintiff Counsel:</div><div class="detail-value">';
+            attorneyContent += escapeHtml(fields.attorneys.plaintiff.join('; '));
+            attorneyContent += '</div></div>';
+        }
+        if (fields.attorneys.defendant && Array.isArray(fields.attorneys.defendant) && fields.attorneys.defendant.length > 0) {
+            attorneyContent += '<div class="detail-row"><div class="detail-label">Defendant Counsel:</div><div class="detail-value">';
+            attorneyContent += escapeHtml(fields.attorneys.defendant.join('; '));
+            attorneyContent += '</div></div>';
+        }
+    }
+    if (fields.attorney_names && Array.isArray(fields.attorney_names) && fields.attorney_names.length > 0) {
+        attorneyContent += '<div class="detail-row"><div class="detail-label">Attorneys:</div><div class="detail-value">';
+        attorneyContent += escapeHtml(fields.attorney_names.join(', '));
+        attorneyContent += '</div></div>';
+    }
+    addSection('Attorneys & Counsel', 'briefcase', attorneyContent);
+    
+    // 5. Judges & Court Officials
+    let judgeContent = '';
+    judgeContent += addRow('Judge', fields.judge);
+    judgeContent += addRow('Judge Assigned', fields.judge_assigned);
+    judgeContent += addRow('Magistrate Judge', fields.magistrate_judge);
+    if (fields.judicial_officers && Array.isArray(fields.judicial_officers) && fields.judicial_officers.length > 0) {
+        judgeContent += `<div class="detail-row"><div class="detail-label">Judicial Officers:</div><div class="detail-value">${escapeHtml(fields.judicial_officers.join(', '))}</div></div>`;
+    }
+    addSection('Judges & Court Officials', 'user-tie', judgeContent);
+    
+    // 6. Counts/Charges/Allegations
+    let countsContent = '';
+    if (fields.counts_alleged && fields.counts_alleged.length > 0) {
+        countsContent += '<div class="mb-2"><strong>Counts Alleged:</strong></div>';
+        countsContent += addList(fields.counts_alleged);
+    }
+    if (fields.charges && fields.charges.length > 0) {
+        countsContent += '<div class="mb-2 mt-2"><strong>Charges:</strong></div>';
+        countsContent += addList(fields.charges);
+    }
+    if (fields.allegations && fields.allegations.length > 0) {
+        countsContent += '<div class="mb-2 mt-2"><strong>Allegations:</strong></div>';
+        countsContent += addList(fields.allegations);
+    }
+    if (fields.claims && fields.claims.length > 0) {
+        countsContent += '<div class="mb-2 mt-2"><strong>Claims:</strong></div>';
+        countsContent += addList(fields.claims);
+    }
+    addSection('Counts & Allegations', 'list-ol', countsContent);
+    
+    // 7. Court Orders & Rulings
+    let ordersContent = '';
     if (fields.orders && fields.orders.length > 0) {
-        html += '<div class="detail-section">';
-        html += '<h6><i class="fas fa-gavel me-2"></i>Court Orders</h6>';
-        html += '<ul class="detail-list">';
-        fields.orders.forEach(order => {
-            html += `<li>${escapeHtml(order)}</li>`;
-        });
-        html += '</ul></div>';
+        ordersContent += addList(fields.orders);
     }
+    if (fields.rulings && fields.rulings.length > 0) {
+        ordersContent += '<div class="mb-2 mt-2"><strong>Rulings:</strong></div>';
+        ordersContent += addList(fields.rulings);
+    }
+    if (fields.holdings && fields.holdings.length > 0) {
+        ordersContent += '<div class="mb-2 mt-2"><strong>Holdings:</strong></div>';
+        ordersContent += addList(fields.holdings);
+    }
+    addSection('Court Orders & Rulings', 'gavel', ordersContent);
     
-    // Financial Terms
+    // 8. Financial Terms
+    let financialContent = '';
     if (fields.financial_terms && fields.financial_terms.length > 0) {
-        html += '<div class="detail-section">';
-        html += '<h6><i class="fas fa-dollar-sign me-2"></i>Financial Terms</h6>';
-        html += '<ul class="detail-list">';
-        fields.financial_terms.forEach(term => {
-            html += `<li>${escapeHtml(term)}</li>`;
-        });
-        html += '</ul></div>';
+        financialContent += addList(fields.financial_terms);
     }
+    financialContent += addRow('Amount in Controversy', fields.amount_in_controversy);
+    financialContent += addRow('Damages Sought', fields.damages_sought);
+    financialContent += addRow('Settlement Amount', fields.settlement_amount);
+    financialContent += addRow('Judgment Amount', fields.judgment_amount);
+    addSection('Financial Terms', 'dollar-sign', financialContent);
     
-    // Sentencing (if applicable)
-    if (fields.sentence && (fields.sentence.imprisonment_months > 0 || 
-        fields.sentence.fine_usd > 0 || 
-        fields.sentence.restitution_usd > 0)) {
-        html += '<div class="detail-section">';
-        html += '<h6><i class="fas fa-balance-scale me-2"></i>Sentencing</h6>';
+    // 9. Sentencing (if applicable)
+    let sentenceContent = '';
+    if (fields.sentence && typeof fields.sentence === 'object') {
         if (fields.sentence.imprisonment_months > 0) {
-            html += `<div class="detail-row"><div class="detail-label">Imprisonment:</div><div class="detail-value">${fields.sentence.imprisonment_months} months</div></div>`;
+            sentenceContent += addRow('Imprisonment', `${fields.sentence.imprisonment_months} months`);
         }
         if (fields.sentence.supervised_release_years > 0) {
-            html += `<div class="detail-row"><div class="detail-label">Supervised Release:</div><div class="detail-value">${fields.sentence.supervised_release_years} years</div></div>`;
+            sentenceContent += addRow('Supervised Release', `${fields.sentence.supervised_release_years} years`);
+        }
+        if (fields.sentence.probation_years > 0) {
+            sentenceContent += addRow('Probation', `${fields.sentence.probation_years} years`);
         }
         if (fields.sentence.fine_usd > 0) {
-            html += `<div class="detail-row"><div class="detail-label">Fine:</div><div class="detail-value">$${fields.sentence.fine_usd.toLocaleString()}</div></div>`;
+            sentenceContent += addRow('Fine', `$${fields.sentence.fine_usd.toLocaleString()}`);
         }
         if (fields.sentence.restitution_usd > 0) {
-            html += `<div class="detail-row"><div class="detail-label">Restitution:</div><div class="detail-value">$${fields.sentence.restitution_usd.toLocaleString()}</div></div>`;
+            sentenceContent += addRow('Restitution', `$${fields.sentence.restitution_usd.toLocaleString()}`);
         }
-        html += '</div>';
+        if (fields.sentence.community_service_hours > 0) {
+            sentenceContent += addRow('Community Service', `${fields.sentence.community_service_hours} hours`);
+        }
     }
+    addSection('Sentencing', 'balance-scale', sentenceContent);
     
-    // Next Actions
+    // 10. Relief Sought
+    let reliefContent = '';
+    if (fields.relief_sought && fields.relief_sought.length > 0) {
+        reliefContent += addList(fields.relief_sought);
+    }
+    if (fields.remedies && fields.remedies.length > 0) {
+        reliefContent += '<div class="mb-2 mt-2"><strong>Remedies:</strong></div>';
+        reliefContent += addList(fields.remedies);
+    }
+    addSection('Relief Sought', 'hands-helping', reliefContent);
+    
+    // 11. Deadlines & Important Dates
+    let datesContent = '';
+    datesContent += addRow('Trial Date', fields.trial_date);
+    datesContent += addRow('Hearing Date', fields.hearing_date);
+    datesContent += addRow('Response Due Date', fields.response_due_date);
+    datesContent += addRow('Motion Deadline', fields.motion_deadline);
+    datesContent += addRow('Discovery Deadline', fields.discovery_deadline);
+    datesContent += addRow('Settlement Conference', fields.settlement_conference_date);
+    if (fields.deadlines && fields.deadlines.length > 0) {
+        datesContent += '<div class="mb-2 mt-2"><strong>Other Deadlines:</strong></div>';
+        datesContent += addList(fields.deadlines);
+    }
+    addSection('Deadlines & Dates', 'calendar-alt', datesContent);
+    
+    // 12. Motions
+    let motionsContent = '';
+    if (fields.motions && fields.motions.length > 0) {
+        motionsContent += addList(fields.motions);
+    }
+    motionsContent += addRow('Motion Type', fields.motion_type);
+    motionsContent += addRow('Motion Status', fields.motion_status);
+    addSection('Motions', 'file-contract', motionsContent);
+    
+    // 13. Evidence & Exhibits
+    let evidenceContent = '';
+    if (fields.exhibits && fields.exhibits.length > 0) {
+        evidenceContent += '<div class="mb-2"><strong>Exhibits:</strong></div>';
+        evidenceContent += addList(fields.exhibits);
+    }
+    if (fields.evidence && fields.evidence.length > 0) {
+        evidenceContent += '<div class="mb-2 mt-2"><strong>Evidence:</strong></div>';
+        evidenceContent += addList(fields.evidence);
+    }
+    evidenceContent += addRow('Number of Exhibits', fields.exhibit_count);
+    addSection('Evidence & Exhibits', 'folder-open', evidenceContent);
+    
+    // 14. Procedural History
+    let procedureContent = '';
+    if (fields.procedural_history && fields.procedural_history.length > 0) {
+        procedureContent += addList(fields.procedural_history);
+    }
+    procedureContent += addRow('Prior Case Number', fields.prior_case_number);
+    procedureContent += addRow('Appeal Status', fields.appeal_status);
+    procedureContent += addRow('Case Stage', fields.case_stage);
+    addSection('Procedural History', 'history', procedureContent);
+    
+    // 15. Next Actions & Developments
+    let actionsContent = '';
     if (fields.next_actions && fields.next_actions.length > 0) {
-        html += '<div class="detail-section">';
-        html += '<h6><i class="fas fa-arrow-right me-2"></i>Next Actions</h6>';
-        html += '<ul class="detail-list">';
-        fields.next_actions.forEach(action => {
-            html += `<li>${escapeHtml(action)}</li>`;
-        });
-        html += '</ul></div>';
+        actionsContent += addList(fields.next_actions);
     }
-    
-    // Counts/Charges
-    if (fields.counts_alleged && fields.counts_alleged.length > 0) {
-        html += '<div class="detail-section">';
-        html += '<h6><i class="fas fa-list-ol me-2"></i>Counts Alleged</h6>';
-        html += `<div class="detail-value">${fields.counts_alleged.join(', ')}</div>`;
-        html += '</div>';
+    if (fields.pending_matters && fields.pending_matters.length > 0) {
+        actionsContent += '<div class="mb-2 mt-2"><strong>Pending Matters:</strong></div>';
+        actionsContent += addList(fields.pending_matters);
     }
+    addSection('Next Actions', 'arrow-right', actionsContent);
     
-    if (html === '') {
+    // 16. Legal Issues & Citations
+    let legalContent = '';
+    if (fields.legal_issues && fields.legal_issues.length > 0) {
+        legalContent += '<div class="mb-2"><strong>Legal Issues:</strong></div>';
+        legalContent += addList(fields.legal_issues);
+    }
+    if (fields.statutes_cited && fields.statutes_cited.length > 0) {
+        legalContent += '<div class="mb-2 mt-2"><strong>Statutes Cited:</strong></div>';
+        legalContent += addList(fields.statutes_cited);
+    }
+    if (fields.case_citations && fields.case_citations.length > 0) {
+        legalContent += '<div class="mb-2 mt-2"><strong>Case Citations:</strong></div>';
+        legalContent += addList(fields.case_citations);
+    }
+    addSection('Legal Issues & Citations', 'book', legalContent);
+    
+    // 17. Additional Notes
+    let notesContent = '';
+    notesContent += addRow('Case Summary', fields.case_summary);
+    notesContent += addRow('Key Facts', fields.key_facts);
+    notesContent += addRow('Notable', fields.notable);
+    notesContent += addRow('Public Interest', fields.public_interest);
+    if (fields.notes && Array.isArray(fields.notes) && fields.notes.length > 0) {
+        notesContent += '<div class="mb-2 mt-2"><strong>Notes:</strong></div>';
+        notesContent += addList(fields.notes);
+    }
+    addSection('Additional Information', 'info-circle', notesContent);
+    
+    // If no sections were added, show a message
+    if (sectionCount === 0) {
         html = '<p class="text-muted">No structured data available.</p>';
     }
     

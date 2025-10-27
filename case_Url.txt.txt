@@ -1,1 +1,0 @@
-https://www.lacourt.org/casesummary/ui/index.aspx?casetype=familylaw&casenumber={case_number}

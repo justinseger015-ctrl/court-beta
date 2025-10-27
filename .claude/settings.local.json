@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//u/docketwatch/court-beta-cleanup-backup-20251027/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

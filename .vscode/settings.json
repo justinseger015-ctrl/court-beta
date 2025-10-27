@@ -1,0 +1,11 @@
+{
+  "github.copilot.enable": { "*": true, "plaintext": true, "markdown": true, "scminput": false },
+  "anthropic.defaultModel": "claude-3.5-sonnet-latest",
+  "anthropic.maxOutputTokens": 4096,
+  "anthropic.temperature": 0.3,
+  "anthropic.contextWindowHint": "code",
+  "anthropic.autoShowResponseInChat": true,
+  "anthropic.cachePrompts": true,
+  "editor.inlineSuggest.enabled": true,
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
+}

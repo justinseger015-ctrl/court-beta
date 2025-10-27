@@ -4,8 +4,7 @@
 <cftry>
     <cfset scriptName = "summarize_upload">
     <cfset uploadDir = "U:\docketwatch\uploads\">
-    <cfset pythonExe = "C:\Program Files\Python312\python.exe">
-    <cfset pythonScript = "U:\docketwatch\python\summarize_upload_cli.py">
+    <cfset batchFile = "U:\docketwatch\court-beta\ajax\upload_and_summarize.bat">
     
     <!--- Ensure upload directory exists --->
     <cfif NOT directoryExists(uploadDir)>
@@ -37,19 +36,18 @@
     <!--- Get extra instructions if provided --->
     <cfset extraInstructions = form.extra ?: "">
     
-    <!--- Build Python command arguments as array --->
-    <cfset scriptArgs = [pythonScript, "--in", absPath]>
+    <!--- Build batch file arguments --->
+    <cfset batchArgs = [absPath]>
     <cfif len(trim(extraInstructions))>
-        <cfset arrayAppend(scriptArgs, "--extra")>
-        <cfset arrayAppend(scriptArgs, extraInstructions)>
+        <cfset arrayAppend(batchArgs, extraInstructions)>
     </cfif>
     
-    <!--- Execute Python script --->
-    <cflog file="summarize_upload" type="information" text="Executing Python: #pythonExe# with args: #arrayToList(scriptArgs, ' ')#">
+    <!--- Execute batch file --->
+    <cflog file="summarize_upload" type="information" text="Executing batch: #batchFile# with args: #arrayToList(batchArgs, ' ')#">
     <cflog file="summarize_upload" type="information" text="File: #savedFileName# (SHA-256: #left(sha256, 16)#...)">
     
-    <cfexecute name="#pythonExe#"
-               arguments="#scriptArgs#"
+    <cfexecute name="#batchFile#"
+               arguments="#batchArgs#"
                timeout="300"
                variable="pyOutput"
                errorVariable="pyError">
