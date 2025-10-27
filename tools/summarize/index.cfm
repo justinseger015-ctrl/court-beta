@@ -501,7 +501,7 @@ details summary:hover {
 }
 
 .detail-list li:before {
-    content: "→";
+    content: "\2192";
     position: absolute;
     left: 0;
     color: #0d6efd;
