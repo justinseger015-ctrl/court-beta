@@ -65,7 +65,7 @@
     <!--- Log stderr details if present --->
     <cfif len(trim(pyError)) GT 0>
         <cflog file="summarize_upload_errors" type="warning" text="Python stderr output: #pyError#">
-    </cfif>>
+    </cfif>
     
     <!--- Strip HTML comments from output (in case they leak through) --->
     <cfset cleanedOutput = reReplace(pyOutput, "<!--.*?-->", "", "ALL")>

@@ -712,6 +712,10 @@ runBtn.onclick = async () => {
         // Stop progress simulation
         stopProgressSimulation(true);
 
+        console.log('Response data:', data);
+        console.log('doc_uid:', data.doc_uid);
+        console.log('db_error:', data.db_error);
+
         if (data.error) {
             throw new Error(data.error);
         }
