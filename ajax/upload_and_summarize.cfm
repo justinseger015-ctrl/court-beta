@@ -45,6 +45,9 @@
     </cfif>
     
     <!--- Execute Python script --->
+    <cflog file="summarize_upload" type="information" text="Executing Python: #pythonExe# with args: #arrayToList(scriptArgs, ' ')#">
+    <cflog file="summarize_upload" type="information" text="File: #savedFileName# (SHA-256: #left(sha256, 16)#...)">
+    
     <cfexecute name="#pythonExe#"
                arguments="#scriptArgs#"
                timeout="300"
@@ -53,8 +56,18 @@
     </cfexecute>
     
     <!--- Log raw output for debugging --->
-    <cflog file="summarize_upload" text="Python stdout length: #len(pyOutput)#">
-    <cflog file="summarize_upload" text="Python stderr: #pyError#">
+    <cflog file="summarize_upload" type="information" text="Python stdout length: #len(pyOutput)#">
+    <cflog file="summarize_upload" type="information" text="Python stderr: #pyError#">
+    
+    <!--- Log first 500 chars of output for inspection --->
+    <cfif len(pyOutput) GT 0>
+        <cflog file="summarize_upload" type="information" text="Python stdout preview: #left(pyOutput, 500)#">
+    </cfif>
+    
+    <!--- Log stderr details if present --->
+    <cfif len(trim(pyError)) GT 0>
+        <cflog file="summarize_upload_errors" type="warning" text="Python stderr output: #pyError#">
+    </cfif>>
     
     <!--- Strip HTML comments from output (in case they leak through) --->
     <cfset cleanedOutput = reReplace(pyOutput, "<!--.*?-->", "", "ALL")>
@@ -64,7 +77,8 @@
     <cfset trimmedOutput = trim(trimmedOutput)>
     <cfif NOT (left(trimmedOutput, 1) EQ "{") AND NOT (left(trimmedOutput, 1) EQ "[")>
         <!--- Python returned non-JSON output (likely an error page or HTML) --->
-        <cflog file="summarize_upload" text="Python returned non-JSON: #left(pyOutput, 500)#">
+        <cflog file="summarize_upload_errors" type="error" text="Python returned non-JSON output. First 500 chars: #left(pyOutput, 500)#">
+        <cflog file="summarize_upload_errors" type="error" text="Full stderr: #pyError#">
         <cfset errorResponse = {
             "error": "Python script failed to return valid JSON",
             "python_stdout": left(pyOutput, 2000),
@@ -79,10 +93,12 @@
     <!--- Parse Python JSON output (using cleaned output) --->
     <cftry>
         <cfset data = deserializeJSON(trimmedOutput)>
+        <cflog file="summarize_upload" type="information" text="Successfully parsed JSON response">
         
         <cfcatch type="any">
             <!--- If JSON parsing fails, return error with raw output for debugging --->
-            <cflog file="summarize_upload" text="JSON parse error: #cfcatch.message#">
+            <cflog file="summarize_upload_errors" type="error" text="JSON parse error: #cfcatch.message#">
+            <cflog file="summarize_upload_errors" type="error" text="Raw output causing error: #left(trimmedOutput, 1000)#">
             <cfset errorResponse = {
                 "error": "Failed to parse Python output as JSON",
                 "parse_error": cfcatch.message,
@@ -137,10 +153,11 @@
         
         <!--- Set the doc_uid in response --->
         <cfset data.doc_uid = newDocUid>
-        <cflog file="summarize_upload" text="Created document record: #newDocUid#">
+        <cflog file="summarize_upload" type="information" text="Created document record: #newDocUid# for file: #savedFileName#">
         
         <cfcatch type="database">
-            <cflog file="summarize_upload" text="Database INSERT error: #cfcatch.message# - #cfcatch.detail#">
+            <cflog file="summarize_upload_errors" type="error" text="Database INSERT error: #cfcatch.message# - #cfcatch.detail#">
+            <cflog file="summarize_upload_errors" type="error" text="SQL State: #cfcatch.sqlState ?: 'N/A'#, Native Error: #cfcatch.nativeErrorCode ?: 'N/A'#">
             <!--- Don't fail the whole request, just log it --->
             <cfset data.doc_uid = "">
             <cfset data.db_error = cfcatch.message>
@@ -161,10 +178,10 @@
                 WHERE doc_uid = CAST(<cfqueryparam cfsqltype="cf_sql_varchar" value="#data.doc_uid#"> AS UNIQUEIDENTIFIER)
             </cfquery>
             
-            <cflog file="summarize_upload" text="Updated structured fields for doc_uid: #data.doc_uid#">
+            <cflog file="summarize_upload" type="information" text="Updated structured fields for doc_uid: #data.doc_uid#">
             
             <cfcatch type="database">
-                <cflog file="summarize_upload" text="Database UPDATE error: #cfcatch.message# - #cfcatch.detail#">
+                <cflog file="summarize_upload_errors" type="error" text="Database UPDATE error: #cfcatch.message# - #cfcatch.detail#">
                 <!--- Don't fail the whole request --->
             </cfcatch>
         </cftry>
@@ -172,7 +189,22 @@
     
     <!--- Log errors if any occurred during processing --->
     <cfif structKeyExists(data, "errors") AND isArray(data.errors) AND arrayLen(data.errors) GT 0>
-        <cflog file="summarize_upload" text="Processing errors for doc #data.doc_uid#: #arrayToList(data.errors, '; ')#">
+        <cflog file="summarize_upload" type="error" text="Processing errors for doc #data.doc_uid#: #arrayToList(data.errors, '; ')#">
+        
+        <!--- Log detailed error information for debugging --->
+        <cfloop array="#data.errors#" index="err">
+            <cflog file="summarize_upload_errors" type="error" text="Error detail: #err#">
+        </cfloop>
+        
+        <!--- Log entire response for debugging when errors occur --->
+        <cflog file="summarize_upload_errors" type="error" text="Full response with errors: #serializeJSON(data)#">
+    </cfif>
+    
+    <!--- Log successful processing with key metrics --->
+    <cfif NOT structKeyExists(data, "errors") OR arrayLen(data.errors) EQ 0>
+        <cfset hasFields = structKeyExists(data, "fields") AND isStruct(data.fields)>
+        <cfset fieldCount = hasFields ? structCount(data.fields) : 0>
+        <cflog file="summarize_upload" type="information" text="Successful processing for doc #data.doc_uid#. Fields extracted: #fieldCount#. Model: #data.model_name ?: 'unknown'#">
     </cfif>
     
     <!--- Clean up uploaded file after processing (optional - comment out to keep files) --->
@@ -183,7 +215,8 @@
     
     <cfcatch type="any">
         <!--- Log error --->
-        <cflog file="summarize_upload" text="Error: #cfcatch.message# - #cfcatch.detail#">
+        <cflog file="summarize_upload_errors" type="error" text="Unhandled error: #cfcatch.message# - #cfcatch.detail#">
+        <cflog file="summarize_upload_errors" type="error" text="Error type: #cfcatch.type#, Tag context: #cfcatch.tagContext[1].template ?: 'unknown'# line #cfcatch.tagContext[1].line ?: 'unknown'#">
         
         <!--- Return error response --->
         <cfheader statuscode="500" statustext="Internal Server Error">

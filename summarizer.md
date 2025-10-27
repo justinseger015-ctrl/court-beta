@@ -200,7 +200,7 @@ Adapt the uploaded script to support CLI args `--in` and `--extra`. Pipeline:
 ```json
 {
   "doc_uid": "GUID-or-null",
-  "model_name": "gemini-2.5-pro",
+  "model_name": "gemini-2.5-flash",
   "summary_text": "string",
   "summary_html": "<p>...</p>",
   "ocr_text": "string",
@@ -235,7 +235,7 @@ text = extract_text_or_ocr(args.infile)  # prefer embedded text, else OCR; do cl
 summary, fields, html = two_step_summarize(text, extra=args.extra)  # model: 2.5-pro
 
 out = dict(
-  doc_uid=None, model_name="gemini-2.5-pro",
+  doc_uid=None, model_name="gemini-2.5-flash",
   summary_text=summary, summary_html=html,
   ocr_text=text, fields=fields, errors=[], processing_ms=int((time.time()-t0)*1000)
 )
@@ -276,7 +276,7 @@ VALUES (<cfqueryparam cfsqltype="cf_sql_varchar" value="#p.doc_uid#">,
 
 # 9) Two-step summarize rules (Copilot prompt block)
 
-* Model: gemini-2.5-pro for verify step, gemini-1.5/2.5-flash for extract if cost-sensitive.
+* Model: gemini-2.5-flash for verify step, gemini-1.5/2.5-flash for extract if cost-sensitive.
 * Temperature 0.6. Max tokens ~1000. Use domain guardrails.
 * Step A output must be strict JSON with fields listed in section 6.
 * Step B must cite only Step A fields. If a field is missing, say “not specified in the document.” No guesses. If conflicts found, prefer exact text quotes from OCR with page/line indices.
