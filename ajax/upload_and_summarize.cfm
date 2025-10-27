@@ -131,6 +131,7 @@
         <cfquery name="insertDoc" datasource="Reach">
             INSERT INTO docketwatch.dbo.documents (
                 doc_uid,
+                doc_id,
                 fk_case_event,
                 fk_tool,
                 pdf_title,
@@ -146,6 +147,7 @@
             OUTPUT INSERTED.doc_uid
             VALUES (
                 NEWID(),
+                'ADHOC-' + CONVERT(VARCHAR(50), NEWID()),
                 '00000000-0000-0000-0000-000000000000',
                 2,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="Ad-Hoc Upload: #savedFileName#">,
