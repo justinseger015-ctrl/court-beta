@@ -22,7 +22,7 @@
 <!--- Simple Navigation Bar --->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="../index.cfm">
+        <a class="navbar-brand fw-bold" href="/court-beta/index.cfm">
             <i class="fas fa-gavel me-2 text-warning"></i>DocketWatch
         </a>
         <span class="navbar-text text-light">
@@ -234,6 +234,29 @@
                         <div id="qcStatus" class="mt-3 d-none"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- Error Modal --->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">
+                    <i class="fas fa-exclamation-circle me-2"></i>Error
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="errorModalBody">
+                An error occurred.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="retryButton" style="display: none;">
+                    <i class="fas fa-redo me-2"></i>Try Again
+                </button>
             </div>
         </div>
     </div>
@@ -543,6 +566,7 @@ details summary:hover {
 
 <script>
 let currentData = null;
+let errorModal = null;
 
 const dz = document.getElementById('uploader');
 const fileInput = document.getElementById('file');
@@ -550,6 +574,29 @@ const runBtn = document.getElementById('run');
 const fileInfo = document.getElementById('fileInfo');
 const fileName = document.getElementById('fileName');
 const fileSize = document.getElementById('fileSize');
+
+// Initialize error modal on page load
+document.addEventListener('DOMContentLoaded', () => {
+    errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+});
+
+// Helper function to show errors in modal
+function showError(message, showRetry = false) {
+    document.getElementById('errorModalBody').textContent = message;
+    const retryBtn = document.getElementById('retryButton');
+    retryBtn.style.display = showRetry ? 'inline-block' : 'none';
+    if (errorModal) {
+        errorModal.show();
+    }
+}
+
+// Retry button handler
+document.getElementById('retryButton').onclick = () => {
+    if (errorModal) {
+        errorModal.hide();
+    }
+    document.getElementById('run').click();
+};
 
 // File selection handling
 fileInput.addEventListener('change', () => {
