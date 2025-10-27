@@ -855,11 +855,20 @@ runBtn.onclick = async () => {
         console.log('Full response data:', data);
         console.log('doc_uid:', data.doc_uid);
         console.log('db_error:', data.db_error);
+        console.log('db_error_detail:', data.db_error_detail);
+        console.log('db_error_sqlstate:', data.db_error_sqlstate);
+        console.log('db_error_native:', data.db_error_native);
         console.log('Has fields?', data.fields ? 'Yes' : 'No');
         console.log('Has errors?', data.errors ? 'Yes' : 'No');
         if (data.db_error) {
             console.error('DATABASE ERROR:', data.db_error);
-            alert('Database insertion failed: ' + data.db_error);
+            console.error('ERROR DETAIL:', data.db_error_detail);
+            console.error('SQL STATE:', data.db_error_sqlstate);
+            console.error('NATIVE CODE:', data.db_error_native);
+            if (data.db_error_sql) {
+                console.error('SQL:', data.db_error_sql);
+            }
+            alert('Database insertion failed: ' + data.db_error + '\n\nDetails: ' + (data.db_error_detail || 'N/A') + '\n\nCheck console for full error.');
         }
         console.log('===========================');
 

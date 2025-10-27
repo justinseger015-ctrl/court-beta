@@ -116,7 +116,7 @@
     <cfset data.upload_time = now()>
     
     <!--- INSERT document record into database --->
-    <!--- Use ad-hoc placeholder case event: E906C250-7BBB-4D8E-BB1B-C5E1AB10BCE6 --->
+    <!--- Use all-zeros GUID for ad-hoc uploads: 00000000-0000-0000-0000-000000000000 --->
     <cfset newDocUid = createUUID()>
     
     <cftry>
@@ -135,8 +135,8 @@
                 file_size
             )
             VALUES (
-                CAST(<cfqueryparam cfsqltype="cf_sql_varchar" value="#newDocUid#"> AS UNIQUEIDENTIFIER),
-                CAST('E906C250-7BBB-4D8E-BB1B-C5E1AB10BCE6' AS UNIQUEIDENTIFIER),
+                '#newDocUid#',
+                '00000000-0000-0000-0000-000000000000',
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="Ad-Hoc Upload: #savedFileName#">,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="uploads/#savedFileName#">,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#structKeyExists(data, 'ocr_text') ? data.ocr_text : ''#" null="#!structKeyExists(data, 'ocr_text') OR !len(trim(data.ocr_text))#">,
@@ -156,9 +156,14 @@
         <cfcatch type="database">
             <cflog file="summarize_upload_errors" type="error" text="Database INSERT error: #cfcatch.message# - #cfcatch.detail#">
             <cflog file="summarize_upload_errors" type="error" text="SQL State: #cfcatch.sqlState ?: 'N/A'#, Native Error: #cfcatch.nativeErrorCode ?: 'N/A'#">
+            <cflog file="summarize_upload_errors" type="error" text="SQL String: #cfcatch.sql ?: 'N/A'#">
             <!--- Don't fail the whole request, just log it --->
             <cfset data.doc_uid = "">
             <cfset data.db_error = cfcatch.message>
+            <cfset data.db_error_detail = cfcatch.detail>
+            <cfset data.db_error_sql = cfcatch.sql ?: "">
+            <cfset data.db_error_sqlstate = cfcatch.sqlState ?: "">
+            <cfset data.db_error_native = cfcatch.nativeErrorCode ?: "">
         </cfcatch>
     </cftry>
     
@@ -173,7 +178,7 @@
                     event_summary = <cfqueryparam cfsqltype="cf_sql_varchar" value="#structKeyExists(fields, 'filing_action_summary') ? left(fields.filing_action_summary, 500) : ''#" null="#!structKeyExists(fields, 'filing_action_summary') OR !len(trim(fields.filing_action_summary))#">,
                     newsworthiness = <cfqueryparam cfsqltype="cf_sql_varchar" value="#structKeyExists(fields, 'newsworthiness') ? fields.newsworthiness : ''#" null="#!structKeyExists(fields, 'newsworthiness') OR !len(trim(fields.newsworthiness))#">,
                     newsworthiness_reason = <cfqueryparam cfsqltype="cf_sql_varchar" value="#structKeyExists(fields, 'newsworthiness_reason') ? left(fields.newsworthiness_reason, 200) : ''#" null="#!structKeyExists(fields, 'newsworthiness_reason') OR !len(trim(fields.newsworthiness_reason))#">
-                WHERE doc_uid = CAST(<cfqueryparam cfsqltype="cf_sql_varchar" value="#data.doc_uid#"> AS UNIQUEIDENTIFIER)
+                WHERE doc_uid = '#data.doc_uid#'
             </cfquery>
             
             <cflog file="summarize_upload" type="information" text="Updated structured fields for doc_uid: #data.doc_uid#">
