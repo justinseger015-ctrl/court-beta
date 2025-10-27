@@ -132,6 +132,7 @@
             INSERT INTO docketwatch.dbo.documents (
                 doc_uid,
                 fk_case_event,
+                fk_tool,
                 pdf_title,
                 rel_path,
                 ocr_text,
@@ -146,6 +147,7 @@
             VALUES (
                 NEWID(),
                 '00000000-0000-0000-0000-000000000000',
+                2,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="Ad-Hoc Upload: #savedFileName#">,
                 <cfqueryparam cfsqltype="cf_sql_varchar" value="uploads/#savedFileName#">,
                 <cfqueryparam cfsqltype="cf_sql_longvarchar" value="#structKeyExists(data, 'ocr_text') ? data.ocr_text : ''#" null="#!structKeyExists(data, 'ocr_text') OR !len(trim(data.ocr_text))#">,
