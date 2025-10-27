@@ -46,11 +46,11 @@
                     <h5 class="mb-0">1. Upload Document</h5>
                 </div>
                 <div class="card-body">
-                    <div id="uploader" class="upload-zone">
-                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                    <div id="uploader" class="upload-zone" role="button" tabindex="0" aria-label="Upload PDF document. Click or drag and drop to select file. Maximum file size: 25 MB">
+                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted" aria-hidden="true"></i>
                         <p class="mb-2"><strong>Drag PDF here or click to select</strong></p>
                         <p class="text-muted small">Maximum file size: 25 MB</p>
-                        <input id="file" type="file" accept="application/pdf" hidden>
+                        <input id="file" type="file" accept="application/pdf" hidden aria-label="PDF file upload input">
                     </div>
                     <div id="fileInfo" class="mt-3 d-none">
                         <div class="alert alert-info mb-0">
@@ -68,9 +68,10 @@
                 </div>
                 <div class="card-body">
                     <label for="extra" class="form-label">Extra instructions (optional)</label>
-                    <textarea id="extra" class="form-control" rows="4" placeholder="Add any specific instructions for the AI summarization (e.g., 'Focus on sentencing details' or 'Highlight any financial terms')"></textarea>
-                    <button id="run" class="btn btn-primary btn-lg w-100 mt-3" disabled>
-                        <i class="fas fa-brain me-2"></i>Generate AI Summary
+                    <textarea id="extra" class="form-control" rows="4" placeholder="Add any specific instructions for the AI summarization (e.g., 'Focus on sentencing details' or 'Highlight any financial terms')" aria-describedby="extraHelpText"></textarea>
+                    <div id="extraHelpText" class="form-text visually-hidden">Optional field to provide additional context or focus areas for AI summary generation</div>
+                    <button id="run" class="btn btn-primary btn-lg w-100 mt-3" disabled aria-label="Generate AI Summary">
+                        <i class="fas fa-brain me-2" aria-hidden="true"></i>Generate AI Summary
                     </button>
                 </div>
             </div>
@@ -218,17 +219,18 @@
                     </div>
                     <div class="card-body">
                         <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="success" role="switch">
+                            <input class="form-check-input" type="checkbox" id="success" role="switch" aria-label="Mark summary as correct and complete">
                             <label class="form-check-label" for="success">
                                 <strong>Summary is correct and complete</strong>
                             </label>
                         </div>
-                        
+
                         <label for="notes" class="form-label">QC Notes</label>
-                        <textarea id="notes" class="form-control" rows="4" placeholder="What was wrong or missing? Any hallucinations or inaccuracies?"></textarea>
-                        
-                        <button id="saveQc" class="btn btn-success w-100 mt-3">
-                            <i class="fas fa-save me-2"></i>Save QC Feedback
+                        <textarea id="notes" class="form-control" rows="4" placeholder="What was wrong or missing? Any hallucinations or inaccuracies?" aria-describedby="notesHelpText"></textarea>
+                        <div id="notesHelpText" class="form-text visually-hidden">Provide detailed feedback on any errors, missing information, or hallucinations in the AI-generated summary</div>
+
+                        <button id="saveQc" class="btn btn-success w-100 mt-3" aria-label="Save quality control feedback">
+                            <i class="fas fa-save me-2" aria-hidden="true"></i>Save QC Feedback
                         </button>
                         
                         <div id="qcStatus" class="mt-3 d-none"></div>
@@ -278,9 +280,62 @@
     background-color: #e7f1ff;
 }
 
+.upload-zone:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+}
+
 .upload-zone.dragover {
     border-color: #000;
     background-color: #d0e7ff;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .upload-zone {
+        padding: 32px 16px;
+    }
+
+    .upload-zone i {
+        font-size: 2rem !important;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .detail-label {
+        flex: 0 0 120px;
+        font-size: 0.85rem;
+    }
+
+    .detail-value {
+        font-size: 0.9rem;
+    }
+
+    .card-header h5 {
+        font-size: 1rem;
+    }
+
+    .progress-stage {
+        padding: 0.75rem;
+    }
+
+    .stage-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .stage-info h6 {
+        font-size: 0.85rem;
+    }
+
+    .stage-info small {
+        font-size: 0.75rem;
+    }
 }
 
 .summary-content {
@@ -607,6 +662,14 @@ fileInput.addEventListener('change', () => {
 
 dz.addEventListener('click', () => fileInput.click());
 
+// Keyboard accessibility for upload zone
+dz.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+    }
+});
+
 dz.addEventListener('dragover', e => {
     e.preventDefault();
     dz.classList.add('dragover');
@@ -626,11 +689,35 @@ dz.addEventListener('drop', e => {
 });
 
 function updateFileInfo(file) {
+    // Validate file type
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        showError('Please select a valid PDF file. Only PDF documents are supported.');
+        fileInput.value = '';
+        return false;
+    }
+
+    // Validate file size (25 MB limit)
+    const MAX_SIZE = 25 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        showError(`File size (${sizeMB} MB) exceeds the maximum allowed size of 25 MB. Please select a smaller file.`);
+        fileInput.value = '';
+        return false;
+    }
+
+    // Validate file is not empty
+    if (file.size === 0) {
+        showError('The selected file is empty. Please select a valid PDF document.');
+        fileInput.value = '';
+        return false;
+    }
+
     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
     fileName.textContent = file.name;
     fileSize.textContent = `(${sizeMB} MB)`;
     fileInfo.classList.remove('d-none');
     runBtn.disabled = false;
+    return true;
 }
 
 function formatBytes(bytes) {
@@ -730,13 +817,13 @@ function stopProgressSimulation(success = true) {
 runBtn.onclick = async () => {
     const f = fileInput.files[0];
     if (!f) {
-        alert('Please select a PDF file');
+        showError('Please select a PDF file before generating a summary.');
         return;
     }
 
-    // Validate file size (25 MB limit)
+    // Re-validate file size (25 MB limit) in case of direct button manipulation
     if (f.size > 25 * 1024 * 1024) {
-        alert('File size exceeds 25 MB limit');
+        showError('File size exceeds the 25 MB limit. Please select a smaller file.');
         return;
     }
 
@@ -744,6 +831,10 @@ runBtn.onclick = async () => {
     document.getElementById('result').classList.add('d-none');
     document.getElementById('processingStatus').classList.remove('d-none');
     runBtn.disabled = true;
+
+    // Update button to show processing state
+    const originalButtonText = runBtn.innerHTML;
+    runBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
 
     // Start progress simulation
     startProgressSimulation();
@@ -758,10 +849,6 @@ runBtn.onclick = async () => {
 
         // Stop progress simulation
         stopProgressSimulation(true);
-
-        console.log('Response data:', data);
-        console.log('doc_uid:', data.doc_uid);
-        console.log('db_error:', data.db_error);
 
         if (data.error) {
             throw new Error(data.error);
@@ -817,12 +904,15 @@ runBtn.onclick = async () => {
     } catch (err) {
         // Stop progress with error state
         stopProgressSimulation(false);
-        
+
         // Small delay to show error state
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         document.getElementById('processingStatus').classList.add('d-none');
-        alert('Error processing document: ' + err.message);
+        showError('Error processing document: ' + err.message, true);
+
+        // Restore button state
+        runBtn.innerHTML = '<i class="fas fa-brain me-2" aria-hidden="true"></i>Generate AI Summary';
         runBtn.disabled = false;
     }
 };
@@ -1312,9 +1402,16 @@ function escapeHtml(text) {
 // QC save
 document.getElementById('saveQc').onclick = async () => {
     if (!currentData) {
-        alert('No summary data to save feedback for');
+        showError('No summary data to save feedback for. Please generate a summary first.');
         return;
     }
+
+    const saveBtn = document.getElementById('saveQc');
+    const originalBtnText = saveBtn.innerHTML;
+
+    // Show loading state
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
 
     const payload = {
         doc_uid: currentData.doc_uid || null,
@@ -1338,14 +1435,23 @@ document.getElementById('saveQc').onclick = async () => {
             statusEl.className = 'mt-3 alert alert-success';
             statusEl.innerHTML = '<i class="fas fa-check-circle me-2"></i>QC feedback saved successfully!';
             statusEl.classList.remove('d-none');
+
+            // Auto-hide success message after 5 seconds
+            setTimeout(() => {
+                statusEl.classList.add('d-none');
+            }, 5000);
         } else {
             throw new Error(result.error || 'Failed to save feedback');
         }
     } catch (err) {
         const statusEl = document.getElementById('qcStatus');
         statusEl.className = 'mt-3 alert alert-danger';
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Error: ' + err.message;
+        statusEl.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Error: ' + escapeHtml(err.message);
         statusEl.classList.remove('d-none');
+    } finally {
+        // Restore button state
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalBtnText;
     }
 };
 </script>
