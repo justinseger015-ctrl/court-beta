@@ -850,6 +850,19 @@ runBtn.onclick = async () => {
         // Stop progress simulation
         stopProgressSimulation(true);
 
+        // Debug logging
+        console.log('=== UPLOAD RESPONSE DEBUG ===');
+        console.log('Full response data:', data);
+        console.log('doc_uid:', data.doc_uid);
+        console.log('db_error:', data.db_error);
+        console.log('Has fields?', data.fields ? 'Yes' : 'No');
+        console.log('Has errors?', data.errors ? 'Yes' : 'No');
+        if (data.db_error) {
+            console.error('DATABASE ERROR:', data.db_error);
+            alert('Database insertion failed: ' + data.db_error);
+        }
+        console.log('===========================');
+
         if (data.error) {
             throw new Error(data.error);
         }
