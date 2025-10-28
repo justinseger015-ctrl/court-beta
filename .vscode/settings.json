@@ -7,5 +7,6 @@
   "anthropic.autoShowResponseInChat": true,
   "anthropic.cachePrompts": true,
   "editor.inlineSuggest.enabled": true,
-  "terminal.integrated.defaultProfile.windows": "PowerShell"
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "claudeCodeChat.permissions.yoloMode": true
 }

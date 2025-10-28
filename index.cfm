@@ -1,19 +1,170 @@
-<!--- 
+<!---
 ================================================================================
-DocketWatch - Main Cases Dashboard
+DocketWatch - Main Cases Dashboard (index.cfm)
 ================================================================================
-This page provides the main interface for managing court cases within the 
-DocketWatch system. It allows users to:
 
-- View and filter cases by status (Review, Tracked, Removed)
-- Search cases by various criteria (tool, owner, state, county, courthouse, celebrity)
-- Perform bulk operations (track, remove, or set to review)
-- Add new cases manually
-- Configure column visibility
-- Search document OCR content
+PURPOSE:
+--------
+Main interface for managing and monitoring court cases. Provides comprehensive
+filtering, bulk operations, and real-time data updates for case tracking.
 
-The page uses DataTables for the main cases grid with server-side filtering
-and AJAX loading for optimal performance.
+KEY FEATURES:
+-------------
+1. CASE VIEWING & FILTERING
+   - View cases by status: Review (new), Tracked (monitored), Removed (archived)
+   - Filter by: Tool/Source, Owner, State, County, Courthouse, Celebrity
+   - Full-text search across document OCR content
+   - User-specific filter persistence via localStorage
+
+2. BULK OPERATIONS
+   - Track Cases: Move cases from Review to Tracked status
+   - Remove Cases: Archive unwanted cases
+   - Set to Review: Return tracked cases to review queue
+
+3. COLUMN CUSTOMIZATION
+   - User-specific column visibility preferences
+   - Saved per status (Review/Tracked/Removed)
+   - Persisted in database: docketwatch.dbo.column_visibility_defaults
+
+4. CASE MANAGEMENT
+   - Add new cases manually via modal form
+   - Quick access to case details, external court pages, PDFs
+   - Celebrity matching indicators
+   - Case priority visualization
+   - "Case not found" warnings for stale cases
+
+ARCHITECTURE:
+-------------
+┌─────────────────────────────────────────────────────────────────────┐
+│                         index.cfm (THIS FILE)                        │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. Server-Side (ColdFusion)                                        │
+│     - User authentication (getAuthUser)                             │
+│     - Load column visibility preferences from DB                    │
+│     - Query filter options (owners, celebrities, tools, etc.)      │
+│                                                                     │
+│  2. Client-Side (JavaScript/jQuery)                                │
+│     - DataTables grid with AJAX loading                            │
+│     - Filter state management (localStorage)                       │
+│     - Bulk action handlers                                         │
+│     - Column visibility modal                                      │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ AJAX Calls
+                                    ▼
+         ┌──────────────────────────────────────────────┐
+         │          AJAX Endpoints Used                 │
+         ├──────────────────────────────────────────────┤
+         │ cases_ajax.cfm          - Load case data    │
+         │ get_tools.cfm           - Filter options    │
+         │ get_states.cfm          - Filter options    │
+         │ get_counties.cfm        - Filter options    │
+         │ get_courthouses.cfm     - Filter options    │
+         │ get_celebrities.cfm     - Filter options    │
+         │ update_case_status_list.cfm - Bulk updates  │
+         │ insert_new_case.cfm     - Add new case      │
+         │ save_column_visibility.cfm - Save prefs     │
+         └──────────────────────────────────────────────┘
+
+DATABASE TABLES:
+----------------
+PRIMARY TABLES:
+  - docketwatch.dbo.cases                    Case records
+  - docketwatch.dbo.case_events              Docket entries/events
+  - docketwatch.dbo.documents                PDF documents with OCR
+  - docketwatch.dbo.case_celebrity_matches   Celebrity linkages
+
+REFERENCE TABLES:
+  - docketwatch.dbo.celebrities              Celebrity database
+  - docketwatch.dbo.tools                    Data source tools (PACER, UniCourt, etc.)
+  - docketwatch.dbo.courts                   Courthouses
+  - docketwatch.dbo.counties                 Counties
+  - docketwatch.dbo.states                   States
+
+USER TABLES:
+  - docketwatch.dbo.users                    User accounts
+  - docketwatch.dbo.column_visibility_defaults - Column prefs
+  - docketwatch.dbo.UserActivity             Activity logging
+
+JAVASCRIPT MODULES:
+-------------------
+1. LocalStorageManager (lines 520-543)
+   - Manages filter persistence across sessions
+   - Keys: tool, owner, courthouse, county, state, celebrity
+
+2. ColumnRenderers (lines 590-659)
+   - Custom rendering functions for DataTables columns
+   - Handles: dates, priorities, statuses, links, celebrity lists
+
+3. DataTable Configuration (lines 661-779)
+   - Server-side data loading from cases_ajax.cfm
+   - Column definitions with visibility defaults
+   - Sorting, paging, searching configuration
+
+4. Filter Management (lines 786-930)
+   - Cascading filter dropdowns (state → county → courthouse)
+   - Owner toggle buttons with multi-select
+   - Document OCR full-text search with debouncing
+
+5. Bulk Actions (lines 932-1001)
+   - SweetAlert2 confirmations
+   - Status updates via fetch API
+   - Table refresh after operations
+
+6. Column Visibility Modal (lines 1089-1153)
+   - Dynamic checkbox generation
+   - Per-status preference saving
+   - Database persistence
+
+URL PARAMETERS:
+---------------
+?status=[Review|Tracked|Removed]  - Initial status filter (default: Review)
+?id=[case_id]                     - Specific case (unused on this page)
+
+SESSION VARIABLES:
+------------------
+session.userActivityLogged        - Prevents duplicate activity logging
+
+AUTHENTICATION:
+---------------
+Requires authenticated user via Application.cfc
+Uses getAuthUser() to retrieve current username
+
+PERFORMANCE CONSIDERATIONS:
+---------------------------
+- DataTables uses client-side processing (serverSide: false)
+- Filter dropdowns reload asynchronously via AJAX
+- Debounced search input (300ms) prevents excessive queries
+- Column visibility stored in DB, loaded once per page load
+
+RELATED FILES:
+--------------
+Frontend:
+  - navbar.cfm                    Navigation bar
+  - head.cfm                      Common HTML head (CSS, meta)
+  - footer_script.cfm             Common scripts (jQuery, Bootstrap)
+
+Backend:
+  - Application.cfc               Authentication, session management
+  - includes/functions.cfm        Shared utility functions
+  - case_details.cfm              Individual case view
+  - add_blank_case.cfm            Manual case addition form
+
+MAINTENANCE NOTES:
+------------------
+- Column keys in JavaScript must match database column_key values
+- Tool IDs are hardcoded in updateFieldRequirements() (lines 1026-1032)
+- Priority colors defined in CSS (lines 182-186)
+- Status badge colors in ColumnRenderers.status (lines 627-635)
+
+TESTING:
+--------
+- Test with different user roles (userRole='User' required for filter)
+- Verify filter persistence across browser sessions
+- Check bulk operations with large selections (100+ cases)
+- Validate column visibility saves per status correctly
+
+LAST UPDATED: 2025 (see Git history for recent changes)
 ================================================================================
 --->
 
@@ -503,7 +654,19 @@ const allColumnKeys = [
 // Column visibility defaults from server-side ColdFusion
 const columnVisibilityDefaults = <cfoutput>#serializeJSON(visibilityMap)#</cfoutput>;
 
-// Utility function for debouncing user input to prevent excessive API calls
+/**
+ * Debounces a function call to prevent excessive API calls during rapid user input.
+ *
+ * @param {Function} func - The function to debounce
+ * @param {number} wait - Milliseconds to wait before executing (default: 300ms for search)
+ * @returns {Function} Debounced function that delays execution
+ *
+ * @example
+ * // Search input with 300ms debounce
+ * $('#documentSearch').on('input', debounce(function() {
+ *     $('#casesTable').DataTable().ajax.reload();
+ * }, 300));
+ */
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -516,7 +679,27 @@ function debounce(func, wait) {
     };
 }
 
-// Centralized localStorage management for filter persistence
+/**
+ * Centralized localStorage management for filter persistence across sessions.
+ *
+ * Stores user filter selections so they persist when the user returns to the page.
+ * Each filter (tool, owner, courthouse, etc.) is saved under a unique key.
+ *
+ * @property {Object} keys - Mapping of filter names to localStorage key names
+ * @property {Function} set - Save a filter value to localStorage
+ * @property {Function} get - Retrieve a filter value from localStorage
+ * @property {Function} clearAll - Remove all saved filter values
+ *
+ * @example
+ * // Save a filter selection
+ * LocalStorageManager.set('tool', '13'); // Save tool ID 13
+ *
+ * // Retrieve saved filter
+ * const savedTool = LocalStorageManager.get('tool'); // Returns '13'
+ *
+ * // Clear all filters
+ * LocalStorageManager.clearAll();
+ */
 const LocalStorageManager = {
     keys: {
         tool: 'selectedTool',
@@ -526,17 +709,17 @@ const LocalStorageManager = {
         state: 'selectedState',
         celebrity: 'selectedCelebrity'
     },
-    
+
     set(key, value) {
         if (this.keys[key]) {
             localStorage.setItem(this.keys[key], value);
         }
     },
-    
+
     get(key) {
         return this.keys[key] ? localStorage.getItem(this.keys[key]) : null;
     },
-    
+
     clearAll() {
         Object.values(this.keys).forEach(key => localStorage.removeItem(key));
     }
@@ -545,7 +728,18 @@ const LocalStorageManager = {
 
 
 <script>
-// Helper function to get selected owners as comma-separated string
+/**
+ * Gets all selected case owners from the owner filter toggle buttons.
+ *
+ * Scans all checked owner filter buttons and returns their values as a
+ * comma-separated string for passing to AJAX endpoints.
+ *
+ * @returns {string} Comma-separated list of owner usernames (e.g., "jsmith,bjones")
+ *
+ * @example
+ * // If "John Smith" and "Jane Doe" are selected
+ * getSelectedOwners(); // Returns "jsmith,jdoe"
+ */
 function getSelectedOwners() {
     const selected = [];
     $('.owner-filter-btn:checked').each(function() {
@@ -554,6 +748,25 @@ function getSelectedOwners() {
     return selected.join(',');
 }
 
+/**
+ * Reloads all filter dropdown options asynchronously based on current filter state.
+ *
+ * This function implements cascading filters where each dropdown's options depend
+ * on selections in other filters (e.g., counties depend on selected state).
+ * All dropdowns reload in parallel for optimal performance.
+ *
+ * Restores previously selected values from localStorage after reloading.
+ *
+ * @returns {Promise} Promise that resolves when all dropdowns are loaded
+ *
+ * @example
+ * // Reload all filters after user changes state selection
+ * reloadDropdownsAsync().then(function() {
+ *     $('#casesTable').DataTable().ajax.reload();
+ * });
+ *
+ * @see LocalStorageManager For filter persistence mechanism
+ */
 function reloadDropdownsAsync() {
     var filters = {
         status: $('#statusFilter').val(),
@@ -586,7 +799,29 @@ function reloadDropdownsAsync() {
     ));
 }
 
-// Column rendering utilities
+/**
+ * Column rendering utilities for DataTables custom cell display.
+ *
+ * Each method transforms raw data into formatted HTML for display in the DataTables grid.
+ * These renderers handle special formatting for dates, priorities, statuses, links, etc.
+ *
+ * @namespace ColumnRenderers
+ *
+ * @property {Function} defaultOrFallback - Returns data or fallback text if empty
+ * @property {Function} caseNumber - Renders case number with action buttons (view, external link, PDF)
+ * @property {Function} priority - Renders priority with color coding (high=red, medium=yellow, low=green)
+ * @property {Function} status - Renders status as colored badge (Review=warning, Tracked=success, Removed=secondary)
+ * @property {Function} dateFormat - Formats sortable date to human-readable display
+ * @property {Function} lastUpdated - Formats last updated date with "not found" warnings
+ * @property {Function} celebrities - Formats celebrity list with line breaks
+ *
+ * @example
+ * // Used in DataTables column definition
+ * {
+ *     data: "priority",
+ *     render: ColumnRenderers.priority
+ * }
+ */
 const ColumnRenderers = {
     defaultOrFallback: (data, fallback = "(None)") => data || fallback,
     
@@ -658,6 +893,29 @@ const ColumnRenderers = {
     celebrities: (data) => data ? data.replace(/, /g, "<br>") : "(None)"
 };
 
+/**
+ * Initializes the main DataTables instance for the cases grid.
+ *
+ * Configures the DataTables library with AJAX data loading, custom column rendering,
+ * sorting, paging, and column visibility based on user preferences.
+ *
+ * Data is loaded from cases_ajax.cfm with current filter parameters.
+ * Column visibility defaults are loaded from server-side (columnVisibilityDefaults).
+ *
+ * @returns {void}
+ *
+ * @fires ajax.reload - When filters change
+ *
+ * @see ColumnRenderers For custom column display logic
+ * @see cases_ajax.cfm For data source endpoint
+ *
+ * @example
+ * // Initialize table on page load
+ * initializeCasesTable();
+ *
+ * // Reload data after filter change
+ * $('#casesTable').DataTable().ajax.reload();
+ */
 function initializeCasesTable() {
     window.table = $('#casesTable').DataTable({
         dom: '<"dt-toolbar d-flex justify-content-between align-items-center mb-2"lfB>rt<"bottom"ip><"clear">',
@@ -934,7 +1192,26 @@ $(document).ready(function () {
  * ===============================
  */
 
-// Generic function to update case status with confirmation
+/**
+ * Updates the status of one or more cases with user confirmation.
+ *
+ * Displays a SweetAlert2 confirmation dialog before sending the status update
+ * to the server via update_case_status_list.cfm.
+ *
+ * Valid status values: 'Review', 'Tracked', 'Removed'
+ *
+ * @param {string} caseId - Comma-separated list of case IDs (e.g., "123,456,789")
+ * @param {string} newStatus - New status to set ('Review', 'Tracked', or 'Removed')
+ * @returns {void}
+ *
+ * @fires table.ajax.reload - Refreshes DataTable after successful update
+ *
+ * @example
+ * // Update multiple cases to "Tracked" status
+ * updateCaseStatus("123,456,789", "Tracked");
+ *
+ * @see update_case_status_list.cfm Backend endpoint for status updates
+ */
 function updateCaseStatus(caseId, newStatus) {
     Swal.fire({
         title: 'Are you sure?',
@@ -991,7 +1268,23 @@ $('#ReviewCases').on('click', function () {
     updateCaseStatus(selected.join(','), 'Review');
 });
 
-// Utility function to get selected case IDs
+/**
+ * Retrieves the IDs of all currently selected cases from checkboxes.
+ *
+ * Scans all checked row checkboxes in the DataTable and returns their values.
+ * Used for bulk operations (track, remove, set to review).
+ *
+ * @returns {Array<string>} Array of case ID strings
+ *
+ * @example
+ * // Get selected case IDs
+ * const selected = getSelectedCaseIds(); // Returns ["123", "456", "789"]
+ *
+ * // Use for bulk status update
+ * if (selected.length > 0) {
+ *     updateCaseStatus(selected.join(','), 'Tracked');
+ * }
+ */
 function getSelectedCaseIds() {
     const ids = [];
     $('.row-checkbox:checked').each(function () {
@@ -1005,7 +1298,24 @@ function getSelectedCaseIds() {
  * =======================
  */
 
-// Update form field requirements based on selected tool
+/**
+ * Updates the new case form field visibility and requirements based on selected tool.
+ *
+ * Different tools require different input fields:
+ * - Tool 2 (UniCourt): Requires case URL
+ * - Tools 13, 25 (PACER, Broward): Require case number
+ * - Other tools: May show case name field
+ *
+ * Fields are shown/hidden dynamically and required attributes are updated.
+ *
+ * @returns {void}
+ *
+ * @example
+ * // Called automatically when tool dropdown changes
+ * document.getElementById('toolSelect').addEventListener('change', updateFieldRequirements);
+ *
+ * @see submitNewCase For form submission logic
+ */
 function updateFieldRequirements() {
     const tool = document.getElementById('toolSelect').value;
     const caseUrlGroup = document.getElementById('caseUrlGroup');
@@ -1041,7 +1351,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// Submit new case form
+/**
+ * Submits the new case tracking form to the server.
+ *
+ * Validates required fields based on selected tool, displays loading indicator,
+ * and submits case data to insert_new_case.cfm. On success, redirects to the
+ * new case's detail page.
+ *
+ * @returns {void}
+ *
+ * @fires insert_new_case.cfm - Backend endpoint for case insertion
+ * @fires window.location.href - Redirects to case_details.cfm?id={case_id} on success
+ *
+ * @example
+ * // Called when "Submit" button is clicked in track case modal
+ * <button onclick="submitNewCase()">Submit</button>
+ *
+ * @see updateFieldRequirements For field visibility logic
+ * @see insert_new_case.cfm Backend endpoint
+ */
 function submitNewCase() {
     const tool = document.getElementById('toolSelect').value;
     const caseUrlEl = document.getElementById('caseUrl');
@@ -1121,7 +1449,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Save column visibility preferences
+/**
+ * Saves user column visibility preferences to the database.
+ *
+ * Collects all checkbox states from the column visibility modal and sends them
+ * to save_column_visibility.cfm for persistence. Preferences are saved per status
+ * (Review/Tracked/Removed) and per user.
+ *
+ * On success, reloads the page to apply the new column visibility settings.
+ *
+ * @returns {void}
+ *
+ * @fires save_column_visibility.cfm - Backend endpoint for saving preferences
+ * @fires location.reload - Refreshes page after successful save
+ *
+ * @example
+ * // Called when "Save" button is clicked in column visibility modal
+ * <button onclick="saveColumnVisibility()">Save</button>
+ *
+ * @see docketwatch.dbo.column_visibility_defaults Database table for preferences
+ */
 function saveColumnVisibility() {
     const status = $('#statusSelector').val();
     const updates = [];
